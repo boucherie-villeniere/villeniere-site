@@ -1,0 +1,515 @@
+---
+// Menu imprimable d'un temps fort (ex. /noel/menu), au format A5.
+// Les blocs de la carte sont répartis automatiquement sur les pages ;
+// « Livret » imprime 2 pages A5 par feuille A4, dans l'ordre de pliage.
+import QRCode from 'qrcode';
+import '../../styles/global.css';
+import CarteMenu from '../../components/CarteMenu.astro';
+import { getReglages, getTempsForts, type TempsFort } from '../../lib/data';
+
+export function getStaticPaths() {
+  return getTempsForts()
+    .filter((t) => (t.carte?.rubriques ?? []).length > 0)
+    .map((t) => ({ params: { tempsFort: t.slug }, props: { t } }));
+}
+
+const { t } = Astro.props as { t: TempsFort };
+const r = getReglages();
+const carte = t.carte!;
+const lienQR = carte.lienQR?.trim() ? new URL(carte.lienQR.trim(), Astro.site).href : new URL('/commander', Astro.site).href;
+const qr = await QRCode.toString(lienQR, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#8a6a32', light: '#0000' } });
+const lienAffiche = lienQR.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+const flocons = t.decor === 'flocons';
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>{carte.titre || t.titre} — menu à imprimer</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <style is:inline id="format-page">
+      @page {
+        size: A5 portrait;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="outils">
+      <div class="outils-texte">
+        <strong>Menu à imprimer</strong>
+        <span id="infos">Mise en page…</span>
+      </div>
+      <div class="outils-boutons" role="group" aria-label="Format">
+        <button type="button" class="format actif" data-format="a5">Pages A5</button>
+        <button type="button" class="format" data-format="livret">Livret (A4 plié)</button>
+        <button type="button" class="imprimer" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+      </div>
+      <p class="outils-aide">
+        Dans la fenêtre d’impression : <em>Destination « Enregistrer au format PDF »</em>, marges <em>Aucune</em>, <em>Graphiques d’arrière-plan</em> cochés.
+        En mode Livret : recto-verso, retourner sur le bord court. QR code → <code>{lienAffiche}</code>
+      </p>
+    </div>
+
+    <!-- Contenu à répartir (masqué). -->
+    <div id="source" hidden>
+      <CarteMenu carte={carte} mode="impression" />
+    </div>
+
+    <div id="pages"></div>
+
+    <!-- Gabarits de page -->
+    <template id="tpl-page">
+      <section class="page">
+        <div class="cadre" aria-hidden="true">
+          <img class="coin coin--hg" src="/brand/noel/coin.svg" alt="" />
+          <img class="coin coin--hd" src="/brand/noel/coin.svg" alt="" />
+          <img class="coin coin--bd" src="/brand/noel/coin.svg" alt="" />
+          <img class="coin coin--bg" src="/brand/noel/coin.svg" alt="" />
+        </div>
+        <div class="page-corps"><div class="page-contenu carte-menu carte-menu--impression"></div></div>
+      </section>
+    </template>
+
+    <template id="tpl-couverture">
+      <header class="couverture">
+        {
+          flocons && (
+            <div class="couverture-flocons" aria-hidden="true">
+              {[
+                [6, 8, 13, 1],
+                [16, 20, 8, 3],
+                [26, 4, 10, 2],
+                [70, 6, 9, 2],
+                [82, 18, 13, 1],
+                [92, 6, 8, 3],
+              ].map(([x, y, s, f]) => (
+                <img src={`/brand/noel/flocon-${f}.svg`} alt="" style={`left:${x}%;top:${y}mm;width:${s}px`} />
+              ))}
+            </div>
+          )
+        }
+        <img class="couverture-logo" src="/brand/logo.svg" alt="Villenière — Boucherie" />
+        {carte.titre && <h1>{carte.titre}</h1>}
+      </header>
+    </template>
+
+    <template id="tpl-dos">
+      <div class="dos">
+        <h2>Vous pouvez passer vos commandes :</h2>
+        <div class="dos-boutique">
+          <p class="dos-label">Directement en boutique</p>
+          <img src="/brand/logo.svg" alt="Villenière — Boucherie" />
+          <p>{r.adresse}<br />{r.codePostal} {r.ville}</p>
+        </div>
+        <div class="dos-contacts">
+          {
+            r.telephone && (
+              <div>
+                <p class="dos-label">Par téléphone</p>
+                <p class="dos-numero">{r.telephone}</p>
+              </div>
+            )
+          }
+          {
+            r.sms && (
+              <div>
+                <p class="dos-label">Par SMS</p>
+                <p class="dos-numero">{r.sms}</p>
+              </div>
+            )
+          }
+        </div>
+        <div class="dos-qr">
+          <div class="dos-qr-code" set:html={qr} />
+          <div>
+            <p class="dos-label">En ligne</p>
+            <p class="dos-qr-texte">Scannez pour commander<br /><strong>{lienAffiche}</strong></p>
+          </div>
+        </div>
+        {flocons && <img class="dos-illu" src="/brand/noel/volaille.svg" alt="" />}
+      </div>
+    </template>
+
+    <script>
+      const pagesEl = document.getElementById('pages')!;
+      const source = document.querySelector('#source .carte-menu')!;
+      const blocs = [...source.children] as HTMLElement[];
+      const tpl = (id: string) => (document.getElementById(id) as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
+
+      let pagesA5: HTMLElement[] = [];
+
+      function nouvellePage() {
+        const page = tpl('tpl-page');
+        pagesEl.append(page);
+        pagesA5.push(page);
+        return page.querySelector('.page-contenu') as HTMLElement;
+      }
+      const deborde = (zone: HTMLElement) => zone.scrollHeight > zone.clientHeight + 1;
+
+      function paginer() {
+        pagesEl.innerHTML = '';
+        pagesA5 = [];
+        let zone = nouvellePage();
+        zone.append(tpl('tpl-couverture'));
+        for (let i = 0; i < blocs.length; i++) {
+          const b = blocs[i].cloneNode(true) as HTMLElement;
+          if (b.hasAttribute('data-nouvelle-page') && zone.querySelector('.cm-bloc')) zone = nouvellePage();
+          zone.append(b);
+          if (deborde(zone) && zone.querySelectorAll('.cm-bloc').length > 1) {
+            b.remove();
+            // Un titre ou un intertitre ne reste jamais seul en bas de page.
+            const aDeplacer: HTMLElement[] = [b];
+            let prec = zone.lastElementChild as HTMLElement | null;
+            while (prec && prec.hasAttribute('data-garder-avec-suite') && zone.querySelectorAll('.cm-bloc').length > 1) {
+              aDeplacer.unshift(prec);
+              prec.remove();
+              prec = zone.lastElementChild as HTMLElement | null;
+            }
+            zone = nouvellePage();
+            zone.append(...aDeplacer);
+          }
+        }
+        // Dernière page : contacts et QR code.
+        const dos = nouvellePage();
+        dos.closest('.page')!.classList.add('page--dos');
+        dos.append(tpl('tpl-dos'));
+      }
+
+      function livret() {
+        // Complète à un multiple de 4, puis imposition : (4,1) (2,3) pour 4 pages, etc.
+        const pages = [...pagesA5];
+        const dos = pages.pop()!;
+        while ((pages.length + 1) % 4 !== 0) {
+          const vide = tpl('tpl-page');
+          vide.classList.add('page--vide');
+          vide.querySelector('.cadre')!.remove();
+          pages.push(vide);
+        }
+        pages.push(dos);
+        const n = pages.length;
+        pagesEl.innerHTML = '';
+        for (let f = 0; f < n / 2; f++) {
+          const feuille = document.createElement('div');
+          feuille.className = 'feuille';
+          const [g, d] = f % 2 === 0 ? [n - 1 - f, f] : [f, n - 1 - f];
+          feuille.append(pages[g].cloneNode(true), pages[d].cloneNode(true));
+          pagesEl.append(feuille);
+        }
+        return n;
+      }
+
+      const infos = document.getElementById('infos')!;
+      const formatPage = document.getElementById('format-page')!;
+      function appliquer(format: string) {
+        document.body.dataset.format = format;
+        paginer();
+        let n = pagesA5.length;
+        if (format === 'livret') {
+          n = livret();
+          formatPage.textContent = '@page { size: A4 landscape; margin: 0; }';
+          infos.textContent = `${n} pages A5 → ${n / 4} feuille${n > 4 ? 's' : ''} A4 recto-verso`;
+        } else {
+          formatPage.textContent = '@page { size: A5 portrait; margin: 0; }';
+          infos.textContent = `${n} pages A5${n % 4 ? ` (un livret plié demande un multiple de 4 : ${Math.ceil(n / 4) * 4})` : ''}`;
+        }
+        document.querySelectorAll<HTMLButtonElement>('.format').forEach((b) => b.classList.toggle('actif', b.dataset.format === format));
+      }
+
+      document.querySelectorAll<HTMLButtonElement>('.format').forEach((b) => b.addEventListener('click', () => appliquer(b.dataset.format!)));
+      document.fonts.ready.then(() => {
+        // Attend aussi les images (dessins des encadrés) pour mesurer juste.
+        const imgs = [...source.querySelectorAll('img')].map((i) => (i.complete ? null : new Promise((r) => (i.onload = i.onerror = r))));
+        Promise.all(imgs).then(() => appliquer(new URLSearchParams(location.search).get('format') === 'livret' ? 'livret' : 'a5'));
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  body {
+    background: #e9e5de;
+    margin: 0;
+  }
+  #pages {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px 16px 64px;
+  }
+
+  /* Barre d'outils (écran uniquement) */
+  .outils {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 24px;
+    padding: 14px 24px;
+    background: var(--anthracite);
+    color: var(--papier);
+    font-size: 0.9rem;
+  }
+  .outils-texte {
+    display: flex;
+    gap: 14px;
+    align-items: baseline;
+  }
+  .outils-texte span {
+    color: #b9b3a9;
+  }
+  .outils-boutons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .outils button {
+    font: 500 0.82rem/1 var(--corps);
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid #4e4b48;
+    background: transparent;
+    color: var(--papier);
+    cursor: pointer;
+  }
+  .outils .format.actif {
+    border-color: var(--or);
+    color: var(--or);
+  }
+  .outils .imprimer {
+    background: var(--or);
+    border-color: var(--or);
+    color: var(--anthracite);
+  }
+  .outils-aide {
+    flex-basis: 100%;
+    margin: 0;
+    color: #b9b3a9;
+    font-size: 0.8rem;
+  }
+  .outils-aide code {
+    color: var(--or);
+  }
+
+  /* Page A5 */
+  .page {
+    position: relative;
+    width: 148mm;
+    height: 210mm;
+    background: #fff;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .cadre {
+    position: absolute;
+    inset: 5mm;
+    border: 1.6pt solid var(--or);
+  }
+  .cadre::after {
+    content: '';
+    position: absolute;
+    inset: 1.6mm;
+    border: 0.5pt solid var(--or);
+  }
+  .coin {
+    position: absolute;
+    width: 13mm;
+    z-index: 1;
+  }
+  .coin--hg {
+    top: 1.6mm;
+    left: 1.6mm;
+  }
+  .coin--hd {
+    top: 1.6mm;
+    right: 1.6mm;
+    transform: scaleX(-1);
+  }
+  .coin--bd {
+    bottom: 1.6mm;
+    right: 1.6mm;
+    transform: scale(-1, -1);
+  }
+  .coin--bg {
+    bottom: 1.6mm;
+    left: 1.6mm;
+    transform: scaleY(-1);
+  }
+  .page-corps {
+    position: absolute;
+    inset: 15mm 14mm 14mm;
+  }
+  .page-contenu {
+    height: 100%;
+    overflow: hidden;
+    font-size: 8.6pt;
+    line-height: 1.35;
+  }
+  .page--vide {
+    background: #fff;
+  }
+
+  /* Ajustements de la carte pour l'A5 */
+  #pages .carte-menu--impression .cm-titre {
+    font-size: 17pt;
+    margin: 0.9em 0 0.45em;
+  }
+  #pages .carte-menu--impression .cm-titre:first-child,
+  #pages .couverture + .cm-titre {
+    margin-top: 0.3em;
+  }
+  #pages .carte-menu--impression .cm-ligne {
+    padding: 0.22em 0;
+  }
+  #pages .carte-menu--impression .cm-prix {
+    font-size: 11pt;
+  }
+  #pages .carte-menu--impression .cm-variantes,
+  #pages .carte-menu--impression .cm-entetes {
+    grid-template-columns: 1fr repeat(var(--n), 13mm);
+  }
+  #pages .carte-menu--impression .cm-variantes .cm-prix {
+    font-size: 10pt;
+  }
+  #pages .carte-menu--impression .cm-entete {
+    font-size: 7.4pt;
+  }
+  #pages .carte-menu--impression .cm-encadres {
+    gap: 4mm;
+    margin: 0.4em 0 0.8em;
+  }
+  #pages .carte-menu--impression .cm-encadre {
+    padding: 2.5mm;
+  }
+  #pages .carte-menu--impression .cm-encadre img {
+    height: 15mm;
+  }
+
+  /* Couverture */
+  .couverture {
+    position: relative;
+    text-align: center;
+    padding-top: 2mm;
+  }
+  .couverture-logo {
+    width: 52mm;
+    margin: 0 auto 5mm;
+  }
+  .couverture h1 {
+    font: italic 500 19pt/1.1 var(--titre);
+    color: var(--anthracite);
+    margin: 0 auto 2mm;
+    max-width: 90mm;
+  }
+  .couverture-flocons img {
+    position: absolute;
+    opacity: 0.9;
+  }
+
+  /* Dos : contacts */
+  .dos {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6mm;
+    text-align: center;
+  }
+  .dos h2 {
+    font: italic 500 16pt/1.15 var(--titre);
+    color: var(--anthracite);
+    margin: 0;
+  }
+  .dos-label {
+    display: inline-block;
+    margin: 0 0 1.5mm;
+    padding: 0.6mm 4mm;
+    border: 0.5pt solid var(--or);
+    font-size: 7.5pt;
+    color: var(--gris);
+  }
+  .dos-boutique img {
+    width: 46mm;
+    margin: 1mm auto 2mm;
+  }
+  .dos-boutique p:last-child {
+    margin: 0;
+    font-size: 9pt;
+    color: var(--gris);
+  }
+  .dos-contacts {
+    display: flex;
+    gap: 10mm;
+  }
+  .dos-numero {
+    margin: 0;
+    font: italic 500 15pt/1 var(--titre);
+    color: var(--or-fonce);
+  }
+  .dos-qr {
+    display: flex;
+    align-items: center;
+    gap: 5mm;
+    text-align: left;
+  }
+  .dos-qr-code svg {
+    width: 26mm;
+    height: 26mm;
+    display: block;
+  }
+  .dos-qr-texte {
+    margin: 0;
+    font-size: 8.5pt;
+    color: var(--gris);
+  }
+  .dos-qr-texte strong {
+    color: var(--or-fonce);
+  }
+  .dos-illu {
+    width: 40mm;
+    opacity: 0.9;
+  }
+
+  /* Livret : 2 pages A5 sur une feuille A4 paysage */
+  .feuille {
+    display: flex;
+    width: 297mm;
+    height: 210mm;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+  }
+  .feuille .page {
+    box-shadow: none;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+    }
+    .outils {
+      display: none;
+    }
+    #pages {
+      display: block;
+      padding: 0;
+    }
+    .page,
+    .feuille {
+      box-shadow: none;
+      break-after: page;
+    }
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+</style>

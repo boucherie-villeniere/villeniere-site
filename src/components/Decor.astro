@@ -9,9 +9,11 @@ interface Props {
   type: TempsFort['decor'];
   /** Coins ornés (cadre façon menu de Noël). */
   coins?: boolean;
+  /** Motifs flottants (à couper quand le décor passe derrière du texte dense). */
+  motifs?: boolean;
   class?: string;
 }
-const { type, coins = type === 'flocons', class: classe } = Astro.props;
+const { type, coins = type === 'flocons', motifs = true, class: classe } = Astro.props;
 
 // Positions et tailles des motifs (en % du parent, taille en px).
 const places = [
@@ -30,7 +32,7 @@ const places = [
     <div class:list={['decor', classe]} aria-hidden="true">
       {coins &&
         ['hg', 'hd', 'bd', 'bg'].map((c) => <img class:list={['coin', `coin--${c}`]} src="/brand/noel/coin.svg" alt="" width="64" height="64" />)}
-      {places.map((p, i) =>
+      {motifs && places.map((p, i) =>
         type === 'flocons' ? (
           <img class="tf-motif" src={`/brand/noel/flocon-${p.f}.svg`} alt="" style={`left:${p.x}%;top:${p.y}%;width:${p.t}px;--r:${p.r}deg;--i:${i}`} />
         ) : (

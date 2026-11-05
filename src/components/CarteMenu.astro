@@ -1,0 +1,250 @@
+---
+// Carte d'un temps fort (ex. menu de Noël), saisie dans l'admin.
+// Rendu « à plat » : chaque titre, produit ou note est un bloc frère, ce qui
+// permet à la version imprimable de répartir les blocs sur les pages A5.
+import { prixCarte, UNITES_CARTE, type Carte, type ProduitCarte } from '../lib/data';
+
+interface Props {
+  carte: Carte;
+  mode?: 'web' | 'impression';
+}
+const { carte, mode = 'web' } = Astro.props;
+
+const estIntertitre = (p: ProduitCarte) => p.prix == null && !p.detail && !(p.prixVariantes ?? []).some((x) => x != null);
+const detailLong = (d?: string) => (d?.length ?? 0) > 34;
+const unite = (p: ProduitCarte) => UNITES_CARTE[p.unite ?? 'kg'];
+const ILLUSTRATIONS: Record<string, string> = {
+  melon: '/brand/noel/melon.svg',
+  'roti-allonge': '/brand/noel/roti-allonge.svg',
+  volaille: '/brand/noel/volaille.svg',
+};
+---
+
+<div class:list={['carte-menu', `carte-menu--${mode}`]}>
+  {
+    (carte.rubriques ?? []).map((r) => {
+      const colonnes = (r.colonnes ?? []).filter(Boolean);
+      return (
+        <>
+          <h2 class="cm-bloc cm-titre" data-nouvelle-page={r.nouvellePage ? '' : undefined} data-garder-avec-suite>
+            {r.titre}
+          </h2>
+          {r.intro && <p class="cm-bloc cm-intro">{r.intro}</p>}
+          {(r.encadres ?? []).length > 0 && (
+            <div class="cm-bloc cm-encadres">
+              {r.encadres!.map((e) => (
+                <div class="cm-encadre">
+                  {e.titre && <p class="cm-encadre-titre">{e.titre}</p>}
+                  {ILLUSTRATIONS[e.illustration] && <img src={ILLUSTRATIONS[e.illustration]} alt="" />}
+                  {e.texte && <p class="cm-encadre-texte">{e.texte}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+          {colonnes.length > 0 && (
+            <div class="cm-bloc cm-ligne cm-entetes" style={`--n:${colonnes.length}`} data-garder-avec-suite>
+              <span />
+              {colonnes.map((c) => (
+                <span class="cm-entete">{c}</span>
+              ))}
+            </div>
+          )}
+          {(r.produits ?? []).map((p) =>
+            estIntertitre(p) ? (
+              <p class="cm-bloc cm-intertitre" data-garder-avec-suite>
+                {p.nom}
+              </p>
+            ) : colonnes.length > 0 ? (
+              <div class="cm-bloc cm-ligne cm-variantes" style={`--n:${colonnes.length}`}>
+                <span class="cm-nom">
+                  {p.nom}
+                  {p.detail && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
+                </span>
+                {colonnes.map((_, i) => (
+                  <span class="cm-prix">{p.prixVariantes?.[i] != null ? <>{prixCarte(p.prixVariantes[i]!)}<small> €</small></> : '—'}</span>
+                ))}
+              </div>
+            ) : (
+              <div class="cm-bloc cm-ligne cm-produit">
+                <span class="cm-nom">
+                  {p.nom}
+                  {p.detail && !detailLong(p.detail) && <span class="cm-detail"> | {p.detail}</span>}
+                </span>
+                <span class="cm-points" aria-hidden="true" />
+                <span class="cm-prix">
+                  {p.prix != null ? (
+                    <>
+                      {prixCarte(p.prix)}
+                      <small> {unite(p)}</small>
+                    </>
+                  ) : null}
+                </span>
+                {p.detail && detailLong(p.detail) && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
+              </div>
+            ),
+          )}
+          {colonnes.length > 0 && (r.produits ?? []).some((p) => !estIntertitre(p)) && (
+            <p class="cm-bloc cm-mention">
+              prix par pièce
+            </p>
+          )}
+          {r.note && <p class="cm-bloc cm-note">{r.note}</p>}
+        </>
+      );
+    })
+  }
+  {carte.piedDeCarte && <p class="cm-bloc cm-pied">{carte.piedDeCarte}</p>}
+</div>
+
+<style>
+  .carte-menu {
+    --cm-or: var(--or-fonce);
+    color: var(--anthracite);
+  }
+  .cm-titre {
+    position: relative;
+    font: italic 500 1.9em/1.15 var(--titre);
+    color: var(--cm-or);
+    text-align: center;
+    margin: 1.6em 0 0.7em;
+    padding-bottom: 0.35em;
+  }
+  .cm-titre:first-child {
+    margin-top: 0;
+  }
+  .cm-titre::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: min(100%, 22em);
+    height: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, var(--or) 18%, var(--or) 82%, transparent);
+  }
+  .cm-intro,
+  .cm-note,
+  .cm-pied {
+    text-align: center;
+    font-style: italic;
+    color: var(--gris);
+    font-size: 0.92em;
+    margin: 0.5em auto 0.9em;
+    max-width: 34em;
+    white-space: pre-line;
+  }
+  .cm-pied {
+    color: var(--cm-or);
+    margin-top: 2em;
+  }
+  .cm-intertitre {
+    text-align: center;
+    font: italic 500 1.15em/1.3 var(--titre);
+    color: var(--cm-or);
+    margin: 0.9em 0 0.35em;
+  }
+  .cm-ligne {
+    display: grid;
+    align-items: baseline;
+    column-gap: 0.6em;
+    padding: 0.32em 0;
+  }
+  .cm-produit {
+    grid-template-columns: auto 1fr auto;
+  }
+  .cm-nom {
+    font-weight: 500;
+  }
+  .cm-detail {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--gris);
+    font-size: 0.86em;
+  }
+  .cm-detail--dessous {
+    display: block;
+    grid-column: 1 / -1;
+    margin-top: 0.1em;
+  }
+  .cm-points {
+    border-bottom: 1.5px dotted color-mix(in srgb, var(--or) 70%, transparent);
+    transform: translateY(-0.3em);
+    min-width: 1.5em;
+  }
+  .cm-prix {
+    font: italic 500 1.25em/1 var(--titre);
+    white-space: nowrap;
+    text-align: right;
+  }
+  .cm-prix small {
+    font: 400 0.62em/1 var(--corps);
+    font-style: normal;
+    color: var(--gris);
+  }
+  .cm-variantes,
+  .cm-entetes {
+    grid-template-columns: 1fr repeat(var(--n), 5.2em);
+    border-bottom: 1px solid color-mix(in srgb, var(--or) 30%, transparent);
+    padding: 0.5em 0;
+  }
+  .cm-entetes {
+    border-bottom: 0;
+    align-items: end;
+  }
+  .cm-entete {
+    font: italic 500 0.82em/1.2 var(--titre);
+    color: var(--cm-or);
+    text-align: center;
+  }
+  .cm-variantes .cm-prix {
+    text-align: center;
+  }
+  .cm-mention {
+    text-align: right;
+    font-size: 0.75em;
+    font-style: italic;
+    color: var(--cm-or);
+    margin: 0.3em 0 0;
+  }
+  .cm-encadres {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+    gap: 1em;
+    margin: 0.8em 0 1.2em;
+  }
+  .cm-encadre {
+    border: 1px solid var(--or);
+    padding: 1em;
+    text-align: center;
+  }
+  .cm-encadre img {
+    height: 5.5em;
+    width: auto;
+    margin: 0.4em auto;
+  }
+  .cm-encadre-titre {
+    font: italic 500 1.2em/1.2 var(--titre);
+    color: var(--cm-or);
+    margin: 0;
+  }
+  .cm-encadre-texte {
+    font-size: 0.84em;
+    color: var(--gris);
+    margin: 0;
+  }
+
+  /* Version web : un peu plus aérée */
+  .carte-menu--web {
+    font-size: 1.05rem;
+  }
+  @media (max-width: 560px) {
+    .carte-menu--web .cm-variantes,
+    .carte-menu--web .cm-entetes {
+      grid-template-columns: 1fr repeat(var(--n), 3.9em);
+      font-size: 0.92em;
+    }
+    .carte-menu--web .cm-entete {
+      font-size: 0.7em;
+    }
+  }
+</style>

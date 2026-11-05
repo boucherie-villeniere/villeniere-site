@@ -15,5 +15,150 @@ texte: |-
   Commandez en boutique, par téléphone ou par SMS. Pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins, à retrouver en boutique.
 bouton:
   texte: Voir le menu de Noël
-  lien: ''
+  lien: /noel#carte
 ordre: 1
+carte:
+  titre: Passez vos commandes pour les fêtes !
+  rubriques:
+    - titre: Foie gras
+      produits:
+        - nom: Foie gras frais
+          detail: lobe d’environ 500 g
+          prix: 95
+          unite: kg
+        - nom: Foie gras mi-cuit maison nature ou aux épices
+        - nom: Ballotin de 150 g
+          detail: 2 à 3 personnes
+          prix: 27.9
+          unite: piece
+        - nom: Ballotin de 300 g
+          detail: 4 à 6 personnes
+          prix: 49.9
+          unite: piece
+    - titre: Volailles festives
+      produits:
+        - nom: Poularde des Landes Label Rouge
+          detail: 4 à 6 pers.
+          prix: 20.9
+          unite: kg
+        - nom: Chapon des Landes Label Rouge
+          detail: 6 à 8 pers.
+          prix: 24.9
+          unite: kg
+        - nom: Poularde de la ferme Tauzin
+          detail: 4 à 6 pers.
+          prix: 25.9
+          unite: kg
+        - nom: Chapon de la ferme Tauzin
+          detail: 6 à 8 pers.
+          prix: 31.5
+          unite: kg
+        - nom: Poularde de Bresse
+          prix: 49.9
+          unite: kg
+        - nom: Chapon de Bresse
+          prix: 59.9
+          unite: kg
+        - nom: Pintade chaponnée ferme Tauzin
+          detail: 4 à 6 pers.
+          prix: 32.5
+          unite: kg
+        - nom: Oie fermière d’Anjou Label Rouge
+          detail: 8 à 12 pers.
+          prix: 38
+          unite: kg
+        - nom: Magret de canard IGP Sud-Ouest
+          detail: 1 pour 2 pers.
+          prix: 38.9
+          unite: kg
+      note: |-
+        Les volailles entières peuvent être farcies avec l’une de nos farces maison (environ 500 g par volaille).
+        Merci de nous en faire la demande lors de votre commande.
+    - titre: Nos rôtis de volailles festives
+      nouvellePage: true
+      intro: 'Les rôtis de volailles festives se présentent sous deux formes :'
+      encadres:
+        - illustration: melon
+          titre: Melon
+          texte: Nous utilisons un quart de volaille désossée, farcie de la farce fine de votre choix. Il est formé en melon (comme une grosse paupiette).
+        - illustration: roti-allonge
+          titre: Rôti allongé
+          texte: Nous farcissons une demi-volaille désossée. Il est formé comme un rôti classique.
+      colonnes:
+        - Pommes caramélisées et châtaignes
+        - Morilles et crème
+        - Figue et foie gras
+      produits:
+        - nom: Rôti de poularde en melon
+          detail: Pour 3 pers., 600 g environ
+          unite: la-piece
+          prixVariantes: [24, 26, 29]
+        - nom: Rôti de poularde allongé
+          detail: Pour 5-6 pers., 1,2 kg environ
+          unite: la-piece
+          prixVariantes: [45, 49, 53]
+        - nom: Rôti de chapon en melon
+          detail: Pour 4 pers., 900 g environ
+          unite: la-piece
+          prixVariantes: [36, 42, 45]
+        - nom: Rôti de chapon allongé
+          detail: Pour 9-10 pers., 1,8 kg environ
+          unite: la-piece
+          prixVariantes: [69, 78, 82]
+      note: La base de notre farce fine est composée de viande de porc et de veau, de foies de volaille, le tout haché avec un mélange d’herbes et d’aromates, ainsi que du cognac.
+    - titre: Bœuf
+      nouvellePage: true
+      produits:
+        - nom: Côte de bœuf maturée
+          prix: 40.9
+          unite: kg
+        - nom: Filet de bœuf en rôti ou en tournedos
+          prix: 59.9
+          unite: kg
+        - nom: Filet de bœuf brut
+          detail: pour bœuf Wellington
+          prix: 68.5
+          unite: kg
+    - titre: Agneau
+      produits:
+        - nom: Carré de côtes premières
+          detail: 6/7 côtes
+          prix: 35
+          unite: la-piece
+        - nom: Carré de côtes découvertes
+          detail: 5 côtes
+          prix: 27.5
+          unite: la-piece
+        - nom: Noisette d’agneau
+          detail: petit rôti dans le filet
+          prix: 42.9
+          unite: kg
+        - nom: Gigot d’agneau avec os
+          detail: pour vos gigots de 7 heures
+          prix: 37.5
+          unite: kg
+    - titre: Mais aussi
+      produits:
+        - nom: Boudin blanc nature
+          prix: 24.9
+          unite: kg
+        - nom: Boudin blanc aux morilles
+          prix: 29.9
+          unite: kg
+        - nom: Pâtés en croûte maison Nonam
+        - nom: Le Festif
+          detail: Cochon du Perche, foie gras, magret de canard, confit d’échalotes aux fruits secs
+          prix: 88
+          unite: kg
+        - nom: Canard, pain d’épices, cranberries
+          detail: Cochon du Perche, canard sauvage, pain d’épices maison, cranberries, noisettes torréfiées
+          prix: 85
+          unite: kg
+        - nom: Accompagnements
+        - nom: Gratin dauphinois maison
+          prix: 15.9
+          unite: kg
+        - nom: Sauce morille maison
+          detail: prix à compléter
+  piedDeCarte: Et pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins ! À retrouver en boutique.
+  lienQR: ''

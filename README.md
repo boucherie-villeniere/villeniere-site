@@ -41,6 +41,12 @@ Page réservée à la boutique (mot de passe = secret `COMMANDES_MOT_DE_PASSE`, 
 
 Récapitulatif du matin : chaque jour de retrait à 8 h (Paris), un e-mail liste les commandes du jour (`src/worker.ts`, déclencheur `triggers.crons` dans `wrangler.jsonc`).
 
+## Temps forts (Noël, Halloween, Galette…)
+
+Admin → « Temps forts » : dates de début/fin (vérifiées dans le navigateur, rien à republier le jour J), popup à l'ouverture et/ou bloc sur l'accueil, page dédiée (`/noel`…), décor, image, texte. Aperçu avant la date : `/?apercu=noel`.
+
+**Carte** (même fiche) : rubriques, produits, prix, variantes en colonnes (ex. farces), encadrés illustrés. Affichée sur la page du temps fort ; version imprimable A5 sur `/<page>/menu` (répartition automatique, mode « Livret » = 2 pages A5 par A4 dans l'ordre de pliage, QR code vers la page de commande). Dessins de la charte : `public/brand/noel` (extraits de `Villeniere_MenuNoel-assets.ai`).
+
 ## Mise en ligne (Cloudflare Workers)
 
 1. Dépôt GitHub `boucherie-villeniere/villeniere-site` (public : aucun secret dedans, `.env` est ignoré).

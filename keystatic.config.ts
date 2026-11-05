@@ -329,6 +329,76 @@ export default config({
           { label: 'Bouton' },
         ),
         ordre: fields.integer({ label: 'Priorité', description: 'Si deux temps forts se chevauchent, le plus petit nombre passe devant.', defaultValue: 10 }),
+        carte: fields.object(
+          {
+            titre: fields.text({ label: 'Titre de la carte', description: 'En couverture du menu imprimé, ex. « Passez vos commandes pour les fêtes ! »' }),
+            rubriques: fields.array(
+              fields.object({
+                titre: fields.text({ label: 'Titre de la rubrique', description: 'Ex. Foie gras, Volailles festives, Bœuf…' }),
+                intro: fields.text({ label: 'Texte d’introduction', multiline: true }),
+                encadres: fields.array(
+                  fields.object({
+                    illustration: fields.select({
+                      label: 'Dessin',
+                      options: [
+                        { label: 'Rôti en melon', value: 'melon' },
+                        { label: 'Rôti allongé', value: 'roti-allonge' },
+                        { label: 'Volaille rôtie', value: 'volaille' },
+                        { label: 'Aucun', value: 'aucun' },
+                      ],
+                      defaultValue: 'aucun',
+                    }),
+                    titre: fields.text({ label: 'Titre' }),
+                    texte: fields.text({ label: 'Texte', multiline: true }),
+                  }),
+                  { label: 'Encadrés illustrés (ex. Melon / Rôti allongé)', itemLabel: (p) => p.fields.titre.value || 'Encadré' },
+                ),
+                colonnes: fields.array(fields.text({ label: 'Nom de la variante' }), {
+                  label: 'Variantes en colonnes (optionnel)',
+                  description: 'Ex. les farces : « pommes caramélisées et châtaignes », « morilles et crème »… Chaque produit aura alors un prix par variante.',
+                  itemLabel: (p) => p.value,
+                }),
+                produits: fields.array(
+                  fields.object({
+                    nom: fields.text({ label: 'Nom', description: 'Sans prix ni précision, la ligne devient un intertitre (ex. « Accompagnements »).' }),
+                    detail: fields.text({ label: 'Précision', description: 'Ex. « 4 à 6 pers. », « lobe d’environ 500 g ».' }),
+                    prix: fields.number({ label: 'Prix', step: 0.01 }),
+                    unite: fields.select({
+                      label: 'Unité',
+                      options: [
+                        { label: '€/kg', value: 'kg' },
+                        { label: '€', value: 'piece' },
+                        { label: '€ la pièce', value: 'la-piece' },
+                        { label: '€/pers.', value: 'pers' },
+                      ],
+                      defaultValue: 'kg',
+                    }),
+                    prixVariantes: fields.array(fields.number({ label: 'Prix', step: 0.01 }), {
+                      label: 'Prix par variante (dans l’ordre des colonnes)',
+                      itemLabel: (p) => String(p.value ?? ''),
+                    }),
+                  }),
+                  {
+                    label: 'Produits',
+                    itemLabel: (p) => `${p.fields.nom.value}${p.fields.prix.value != null ? ` — ${p.fields.prix.value} €` : ''}`,
+                  },
+                ),
+                note: fields.text({ label: 'Note en bas de rubrique', multiline: true }),
+                nouvellePage: fields.checkbox({ label: 'Commencer une nouvelle page (menu imprimé)', defaultValue: false }),
+              }),
+              { label: 'Rubriques', itemLabel: (p) => p.fields.titre.value || 'Rubrique' },
+            ),
+            piedDeCarte: fields.text({ label: 'Mot de la fin', multiline: true, description: 'Ex. la sélection de vins.' }),
+            lienQR: fields.text({
+              label: 'Lien du QR code (menu imprimé)',
+              description: 'Laissez vide pour la page de commande du site.',
+            }),
+          },
+          {
+            label: 'Carte / menu',
+            description: 'Affichée sur la page du temps fort et imprimable en PDF (adresse de la page + /menu, ex. /noel/menu).',
+          },
+        ),
       },
     }),
 

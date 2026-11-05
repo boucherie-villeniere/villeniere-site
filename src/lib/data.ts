@@ -157,7 +157,38 @@ export interface TempsFort {
   texte?: string;
   bouton?: { texte?: string; lien?: string };
   ordre: number;
+  carte?: Carte;
 }
+
+export interface ProduitCarte {
+  nom: string;
+  detail?: string;
+  prix?: number | null;
+  unite?: 'kg' | 'piece' | 'la-piece' | 'pers';
+  prixVariantes?: (number | null)[];
+}
+
+export interface RubriqueCarte {
+  titre: string;
+  intro?: string;
+  encadres?: { illustration: 'melon' | 'roti-allonge' | 'volaille' | 'aucun'; titre?: string; texte?: string }[];
+  colonnes?: string[];
+  produits?: ProduitCarte[];
+  note?: string;
+  nouvellePage?: boolean;
+}
+
+export interface Carte {
+  titre?: string;
+  rubriques?: RubriqueCarte[];
+  piedDeCarte?: string;
+  lienQR?: string;
+}
+
+export const UNITES_CARTE: Record<string, string> = { kg: '€/kg', piece: '€', 'la-piece': '€ la pièce', pers: '€/pers.' };
+
+/** Prix façon menu : « 95,00 ». */
+export const prixCarte = (n: number) => n.toFixed(2).replace('.', ',');
 
 /** Temps forts activés (les dates sont vérifiées dans le navigateur, voir TempsForts.astro). */
 export const getTempsForts = () =>

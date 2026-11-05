@@ -4,6 +4,7 @@
 import Base from '../layouts/Base.astro';
 import Decor from '../components/Decor.astro';
 import Photo from '../components/Photo.astro';
+import CarteMenu from '../components/CarteMenu.astro';
 import { getReglages, getTempsForts, lienTempsFort, paragraphes, type TempsFort } from '../lib/data';
 
 export function getStaticPaths() {
@@ -14,6 +15,7 @@ const { t } = Astro.props as { t: TempsFort };
 const r = getReglages();
 const lien = lienTempsFort(t);
 const versPage = lien === `/${t.slug}`;
+const aUneCarte = (t.carte?.rubriques ?? []).length > 0;
 ---
 
 <Base title={t.nom} description={t.accroche ?? t.titre} image={t.image ?? undefined}>
@@ -53,6 +55,24 @@ const versPage = lien === `/${t.slug}`;
       </div>
     </div>
   </section>
+
+  {
+    aUneCarte && (
+      <section class="section tf-carte" id="carte" aria-label="La carte">
+        <div class="conteneur tf-carte-cadre">
+          <Decor type={t.decor} motifs={false} />
+          <div class="tf-carte-corps">
+            <CarteMenu carte={t.carte!} />
+            <p class="tf-carte-actions">
+              <a class="bouton bouton--contour" href={`/${t.slug}/menu`}>
+                Télécharger le menu (PDF) <span class="fleche" aria-hidden="true">→</span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 </Base>
 
 <style>
@@ -92,6 +112,22 @@ const versPage = lien === `/${t.slug}`;
     margin-top: 1.6em;
     color: var(--gris);
     font-size: 0.95rem;
+  }
+  .tf-carte-cadre {
+    position: relative;
+    max-width: 880px;
+    background: var(--blanc);
+    border: 1px solid var(--or);
+    outline: 1px solid var(--or);
+    outline-offset: 6px;
+    padding: clamp(40px, 7vw, 80px) clamp(18px, 6vw, 72px);
+  }
+  .tf-carte-corps {
+    position: relative;
+  }
+  .tf-carte-actions {
+    text-align: center;
+    margin-top: 2.5em;
   }
   @media (max-width: 800px) {
     .tf-grille.avec-image {
