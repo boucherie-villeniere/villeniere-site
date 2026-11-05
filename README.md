@@ -45,7 +45,9 @@ Récapitulatif du matin : chaque jour de retrait à 8 h (Paris), un e-mail liste
 
 Admin → « Temps forts » : dates de début/fin (vérifiées dans le navigateur, rien à republier le jour J), popup à l'ouverture et/ou bloc sur l'accueil, page dédiée (`/noel`…), décor, image, texte. Aperçu avant la date : `/?apercu=noel`.
 
-**Carte** (même fiche) : rubriques, produits, prix, variantes en colonnes (ex. farces), encadrés illustrés. Affichée sur la page du temps fort ; version imprimable A5 sur `/<page>/menu` (répartition automatique, mode « Livret » = 2 pages A5 par A4 dans l'ordre de pliage, QR code vers la page de commande). Dessins de la charte : `public/brand/noel` (extraits de `Villeniere_MenuNoel-assets.ai`).
+**Carte** (même fiche) : rubriques, produits, prix, variantes en colonnes (ex. farces), encadrés illustrés. Affichée sur la page du temps fort. **Commande en ligne** depuis la carte (bouton « + » sur chaque ligne, panier en bas de page) : à activer dans « Commande en ligne » de la carte, avec date limite et fenêtre de retrait ; jours et créneaux = ceux du click & collect. Produits au kilo : prix estimé avec le « poids moyen » saisi, sinon « à la pesée ». Les commandes arrivent dans le planning avec l'étiquette du temps fort (`src/lib/evenement.ts`).
+
+Version imprimable A5 réservée à la boutique : `/commandes/menu/<page>` (mot de passe du planning ; répartition automatique, mode « Livret » = 2 pages A5 par A4 dans l'ordre de pliage, QR code vers la page de commande). Dessins de la charte : `public/brand/noel` (extraits de `Villeniere_MenuNoel-assets.ai`).
 
 ## Mise en ligne (Cloudflare Workers)
 

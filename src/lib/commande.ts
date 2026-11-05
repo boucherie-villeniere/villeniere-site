@@ -46,6 +46,10 @@ export interface ReglesRetrait {
   heureLimite: number;
   joursAvance: number;
   fermetures: string[];
+  /** Fenêtre d'un temps fort (ex. Noël) : retrait entre `du` et `au`, commandes jusqu'à `limite`. */
+  du?: string | null;
+  au?: string | null;
+  limite?: string | null;
 }
 
 export interface PlatCommandable {
@@ -55,6 +59,7 @@ export interface PlatCommandable {
   unite: string;
   jours: Jour[];
   quantiteMax: number;
+  aLaPesee?: boolean;
 }
 
 /** Date (AAAA-MM-JJ) et heure actuelles à Paris, quel que soit le fuseau du serveur. */
@@ -103,9 +108,13 @@ export const platDisponible = (plat: PlatCommandable, iso: string) =>
 export function datesDeRetrait(regles: ReglesRetrait, plats: PlatCommandable[], now = new Date()): string[] {
   if (!regles.actif) return [];
   const { date, heure } = maintenantParis(now);
+  if (regles.limite && date > regles.limite) return [];
   const premier = heure < regles.heureLimite ? 1 : 2;
+  const ecart = (iso: string) => Math.round((Date.parse(`${iso}T12:00:00Z`) - Date.parse(`${date}T12:00:00Z`)) / 86_400_000);
+  const debut = regles.du ? Math.max(premier, ecart(regles.du)) : premier;
+  const fin = regles.au ? ecart(regles.au) : regles.joursAvance;
   const dates: string[] = [];
-  for (let i = premier; i <= regles.joursAvance; i++) {
+  for (let i = debut; i <= fin; i++) {
     const iso = ajouterJours(date, i);
     if (!regles.joursRetrait.includes(jourDeSemaine(iso))) continue;
     if (regles.fermetures.includes(iso)) continue;
@@ -123,6 +132,8 @@ export interface Commande {
   telephone: string;
   email?: string;
   remarque?: string;
+  /** Slug du temps fort quand on commande sa carte (ex. « noel »). */
+  evenement?: string;
 }
 
 export interface LigneValidee {
@@ -131,6 +142,8 @@ export interface LigneValidee {
   prix: number;
   unite: string;
   total: number;
+  /** Prix estimé (produit au kilo, ajusté à la pesée). */
+  aLaPesee?: boolean;
 }
 
 /** Vérifie une commande reçue ; renvoie les lignes chiffrées ou un message d'erreur. */
@@ -157,7 +170,14 @@ export function validerCommande(
       return { ok: false, erreur: 'Un des plats choisis n’est pas disponible ce jour-là.' };
     if (l.quantite > plat.quantiteMax)
       return { ok: false, erreur: `${plat.nom} : ${plat.quantiteMax} maximum par commande.` };
-    lignes.push({ nom: plat.nom, quantite: l.quantite, prix: plat.prix, unite: plat.unite, total: plat.prix * l.quantite });
+    lignes.push({
+      nom: plat.nom,
+      quantite: l.quantite,
+      prix: plat.prix,
+      unite: plat.unite,
+      total: plat.prix * l.quantite,
+      ...(plat.aLaPesee ? { aLaPesee: true } : {}),
+    });
   }
   if (lignes.length === 0) return { ok: false, erreur: 'Votre commande est vide.' };
   if ((c.remarque ?? '').length > 1000) return { ok: false, erreur: 'La remarque est trop longue.' };

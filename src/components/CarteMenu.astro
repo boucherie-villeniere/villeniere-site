@@ -3,12 +3,16 @@
 // Rendu « à plat » : chaque titre, produit ou note est un bloc frère, ce qui
 // permet à la version imprimable de répartir les blocs sur les pages A5.
 import { prixCarte, UNITES_CARTE, type Carte, type ProduitCarte } from '../lib/data';
+import { idProduit } from '../lib/evenement';
 
 interface Props {
   carte: Carte;
   mode?: 'web' | 'impression';
 }
 const { carte, mode = 'web' } = Astro.props;
+// Boutons « + » (masqués tant que la commande en ligne n'est pas ouverte, voir CommandeCarte.tsx).
+const boutons = mode === 'web' && !!carte.commande?.actif;
+const commandable = (p: ProduitCarte) => boutons && p.commandable !== false;
 
 const estIntertitre = (p: ProduitCarte) => p.prix == null && !p.detail && !(p.prixVariantes ?? []).some((x) => x != null);
 const detailLong = (d?: string) => (d?.length ?? 0) > 34;
@@ -60,12 +64,25 @@ const ILLUSTRATIONS: Record<string, string> = {
                   {p.nom}
                   {p.detail && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
                 </span>
-                {colonnes.map((_, i) => (
-                  <span class="cm-prix">{p.prixVariantes?.[i] != null ? <>{prixCarte(p.prixVariantes[i]!)}<small> €</small></> : '—'}</span>
-                ))}
+                {colonnes.map((c, i) =>
+                  p.prixVariantes?.[i] == null ? (
+                    <span class="cm-prix">—</span>
+                  ) : commandable(p) ? (
+                    <button type="button" class="cm-prix cm-ajouter cm-ajouter--prix" data-ajouter={idProduit(p, i)} aria-label={`Ajouter : ${p.nom}, ${c}`}>
+                      {prixCarte(p.prixVariantes[i]!)}
+                      <small> €</small>
+                      <span class="cm-plus" aria-hidden="true">+</span>
+                    </button>
+                  ) : (
+                    <span class="cm-prix">
+                      {prixCarte(p.prixVariantes[i]!)}
+                      <small> €</small>
+                    </span>
+                  ),
+                )}
               </div>
             ) : (
-              <div class="cm-bloc cm-ligne cm-produit">
+              <div class:list={['cm-bloc', 'cm-ligne', 'cm-produit', { 'cm-produit--commandable': commandable(p) && p.prix != null }]}>
                 <span class="cm-nom">
                   {p.nom}
                   {p.detail && !detailLong(p.detail) && <span class="cm-detail"> | {p.detail}</span>}
@@ -79,6 +96,11 @@ const ILLUSTRATIONS: Record<string, string> = {
                     </>
                   ) : null}
                 </span>
+                {commandable(p) && p.prix != null && (
+                  <button type="button" class="cm-ajouter cm-ajouter--rond" data-ajouter={idProduit(p)} aria-label={`Ajouter : ${p.nom}`}>
+                    <span class="cm-plus" aria-hidden="true">+</span>
+                  </button>
+                )}
                 {p.detail && detailLong(p.detail) && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
               </div>
             ),
@@ -231,6 +253,80 @@ const ILLUSTRATIONS: Record<string, string> = {
     font-size: 0.84em;
     color: var(--gris);
     margin: 0;
+  }
+
+  /* Commande en ligne : boutons « + » (visibles quand la commande est ouverte) */
+  .cm-ajouter {
+    display: none;
+  }
+  [data-commande-ouverte] .cm-produit--commandable {
+    grid-template-columns: auto 1fr auto auto;
+  }
+  [data-commande-ouverte] .cm-ajouter--rond {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: 1px solid var(--or);
+    border-radius: 999px;
+    background: var(--blanc);
+    color: var(--cm-or);
+    font: 400 1.2rem/1 var(--corps);
+    cursor: pointer;
+    align-self: center;
+    transition:
+      background-color 0.3s var(--ease-doux),
+      color 0.3s var(--ease-doux);
+  }
+  [data-commande-ouverte] .cm-ajouter--rond:hover,
+  [data-commande-ouverte] .cm-ajouter[data-quantite].cm-ajouter--rond {
+    background: var(--anthracite);
+    border-color: var(--anthracite);
+    color: var(--or);
+  }
+  [data-commande-ouverte] .cm-ajouter--prix {
+    position: relative;
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.15em;
+    padding: 0.45em 0.3em;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition:
+      border-color 0.3s var(--ease-doux),
+      background-color 0.3s var(--ease-doux);
+  }
+  [data-commande-ouverte] .cm-ajouter--prix:hover {
+    border-color: var(--or);
+  }
+  [data-commande-ouverte] .cm-ajouter--prix[data-quantite] {
+    background: var(--anthracite);
+    color: var(--blanc);
+  }
+  [data-commande-ouverte] .cm-ajouter--prix .cm-plus {
+    font: 400 0.75em/1 var(--corps);
+    color: var(--cm-or);
+  }
+  [data-commande-ouverte] .cm-ajouter[data-quantite]::after {
+    content: attr(data-quantite);
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--or);
+    color: var(--anthracite);
+    font: 600 0.68rem/18px var(--corps);
+    font-style: normal;
+    text-align: center;
   }
 
   /* Version web : un peu plus aérée */

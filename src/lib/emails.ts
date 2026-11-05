@@ -62,7 +62,7 @@ export function tableauLignes(lignes: LigneValidee[], total?: number, noteTotal 
           <strong>${l.quantite} ×</strong> ${echapper(l.nom)}
         </td>
         <td style="padding:10px 0;border-bottom:1px solid ${C.filet};font:15px/1.4 Arial,sans-serif;color:${C.encre};text-align:right;white-space:nowrap">
-          ${formaterPrix(l.total)}${l.unite === 'kg' ? '*' : ''}
+          ${l.aLaPesee && l.total === 0 ? 'à la pesée' : `${formaterPrix(l.total)}${l.unite === 'kg' || l.aLaPesee ? '*' : ''}`}
         </td>
       </tr>`,
     )

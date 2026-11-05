@@ -5,7 +5,10 @@ import Base from '../layouts/Base.astro';
 import Decor from '../components/Decor.astro';
 import Photo from '../components/Photo.astro';
 import CarteMenu from '../components/CarteMenu.astro';
-import { getReglages, getTempsForts, lienTempsFort, paragraphes, type TempsFort } from '../lib/data';
+import CommandeCarte from '../components/CommandeCarte.tsx';
+import { getClickCollect, getReglages, getTempsForts, lienTempsFort, paragraphes, type TempsFort } from '../lib/data';
+import { produitsCommandables, reglesEvenement } from '../lib/evenement';
+import '../styles/commander.css';
 
 export function getStaticPaths() {
   return getTempsForts().map((t) => ({ params: { tempsFort: t.slug }, props: { t } }));
@@ -16,6 +19,8 @@ const r = getReglages();
 const lien = lienTempsFort(t);
 const versPage = lien === `/${t.slug}`;
 const aUneCarte = (t.carte?.rubriques ?? []).length > 0;
+const cc = getClickCollect();
+const commande = aUneCarte && t.carte?.commande?.actif;
 ---
 
 <Base title={t.nom} description={t.accroche ?? t.titre} image={t.image ?? undefined}>
@@ -62,15 +67,28 @@ const aUneCarte = (t.carte?.rubriques ?? []).length > 0;
         <div class="conteneur tf-carte-cadre">
           <Decor type={t.decor} motifs={false} />
           <div class="tf-carte-corps">
+            {commande && t.carte!.commande!.message && (
+              <p class="tf-commande-aide" data-commande-aide hidden>
+                <span class="tf-plus" aria-hidden="true">+</span>
+                {t.carte!.commande!.message}
+              </p>
+            )}
             <CarteMenu carte={t.carte!} />
-            <p class="tf-carte-actions">
-              <a class="bouton bouton--contour" href={`/${t.slug}/menu`}>
-                Télécharger le menu (PDF) <span class="fleche" aria-hidden="true">→</span>
-              </a>
-            </p>
           </div>
         </div>
       </section>
+    )
+  }
+  {
+    commande && (
+      <CommandeCarte
+        client:load
+        evenement={t.slug}
+        nom={t.nom}
+        produits={produitsCommandables(t)}
+        regles={reglesEvenement(t, cc)}
+        mentionPaiement={cc.mentionPaiement}
+      />
     )
   }
 </Base>
@@ -125,9 +143,175 @@ const aUneCarte = (t.carte?.rubriques ?? []).length > 0;
   .tf-carte-corps {
     position: relative;
   }
-  .tf-carte-actions {
+  .tf-commande-aide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    max-width: 36em;
+    margin: 0 auto 2.6em;
+    padding: 14px 20px;
+    background: var(--papier);
+    color: var(--gris);
+    font-size: 0.95rem;
+    text-align: left;
+  }
+  .tf-plus {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--or);
+    border-radius: 999px;
+    color: var(--or-fonce);
+    font-size: 1.2rem;
+  }
+  /* Barre « Ma commande » et fenêtre de commande (CommandeCarte.tsx) */
+  :global(.cdc-barre) {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: min(620px, calc(100vw - 24px));
+    padding: 10px 10px 10px 22px;
+    background: var(--anthracite);
+    color: var(--papier);
+    border-radius: 999px;
+    box-shadow: 0 16px 40px rgba(21, 24, 27, 0.3);
+    transform: translate(-50%, 140%);
+    transition: transform 0.6s var(--ease-doux);
+  }
+  :global(.cdc-barre.visible) {
+    transform: translate(-50%, 0);
+  }
+  :global(.cdc-barre-texte) {
+    flex: 1;
+    display: grid;
+    line-height: 1.3;
+    animation: tf-pulse 0.5s var(--ease-doux);
+  }
+  :global(.cdc-barre-texte strong) {
+    font: italic 500 1.1rem/1.2 var(--titre);
+    color: var(--or);
+  }
+  :global(.cdc-barre-texte span) {
+    font-size: 0.88rem;
+    color: #d9d4cb;
+  }
+  @keyframes tf-pulse {
+    from {
+      transform: scale(1.04);
+    }
+  }
+  :global(.cdc-fenetre) {
+    width: min(640px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: var(--papier);
+    box-shadow: 0 30px 80px rgba(21, 24, 27, 0.35);
+  }
+  :global(.cdc-fenetre::backdrop) {
+    background: rgba(21, 24, 27, 0.55);
+  }
+  :global(.cdc-fenetre[open]) {
+    animation: tf-monte 0.5s var(--ease-doux);
+  }
+  @keyframes tf-monte {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+  }
+  :global(.cdc-contenu) {
+    position: relative;
+    padding: clamp(28px, 5vw, 44px) clamp(18px, 5vw, 40px);
+  }
+  :global(.cdc-contenu h2) {
+    margin: 0.1em 0 0.8em;
+  }
+  :global(.cdc-fermer) {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--blanc);
+    cursor: pointer;
+  }
+  :global(.cdc-fermer path) {
+    stroke: var(--anthracite);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+  :global(.cdc-lignes) {
+    list-style: none;
+    margin: 0 0 28px;
+    padding: 0;
+  }
+  :global(.cdc-lignes li) {
+    display: grid;
+    grid-template-columns: 1fr auto 6.5em;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--ligne);
+  }
+  :global(.cdc-nom) {
+    margin: 0;
+    font-weight: 500;
+    color: var(--anthracite);
+  }
+  :global(.cdc-info) {
+    margin: 2px 0 0;
+    font-size: 0.85rem;
+    color: var(--gris);
+  }
+  :global(.cdc-prix) {
+    margin: 0;
+    text-align: right;
+    font: italic 500 1.05rem/1 var(--titre);
+  }
+  :global(.cdc-vide) {
+    color: var(--gris);
+  }
+  :global(.cdc-total) {
+    padding: 18px 0 4px;
+  }
+  :global(.cdc-total p:first-child) {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+  :global(.cdc-total .bouton) {
+    margin-top: 16px;
+    width: 100%;
+    justify-content: center;
+  }
+  :global(.cdc-merci) {
     text-align: center;
-    margin-top: 2.5em;
+    padding: 20px 0;
+  }
+  @media (max-width: 560px) {
+    :global(.cdc-lignes li) {
+      grid-template-columns: 1fr auto;
+    }
+    :global(.cdc-prix) {
+      grid-column: 1 / -1;
+      text-align: left;
+    }
+    :global(.cdc-barre) {
+      gap: 12px;
+      padding-left: 18px;
+    }
   }
   @media (max-width: 800px) {
     .tf-grille.avec-image {

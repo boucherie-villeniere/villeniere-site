@@ -166,6 +166,9 @@ export interface ProduitCarte {
   prix?: number | null;
   unite?: 'kg' | 'piece' | 'la-piece' | 'pers';
   prixVariantes?: (number | null)[];
+  commandable?: boolean;
+  poids?: number | null;
+  quantiteMax?: number;
 }
 
 export interface RubriqueCarte {
@@ -183,6 +186,7 @@ export interface Carte {
   rubriques?: RubriqueCarte[];
   piedDeCarte?: string;
   lienQR?: string;
+  commande?: { actif?: boolean; dateLimite?: string | null; retraitDu?: string | null; retraitAu?: string | null; message?: string };
 }
 
 export const UNITES_CARTE: Record<string, string> = { kg: '€/kg', piece: '€', 'la-piece': '€ la pièce', pers: '€/pers.' };

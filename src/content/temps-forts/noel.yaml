@@ -26,6 +26,7 @@ carte:
           detail: lobe d’environ 500 g
           prix: 95
           unite: kg
+          poids: 0.5
         - nom: Foie gras mi-cuit maison nature ou aux épices
         - nom: Ballotin de 150 g
           detail: 2 à 3 personnes
@@ -160,5 +161,11 @@ carte:
           unite: kg
         - nom: Sauce morille maison
           detail: prix à compléter
+  commande:
+    actif: true
+    dateLimite: 2026-12-20
+    retraitDu: 2026-12-19
+    retraitAu: 2026-12-31
+    message: Commandez directement sur la carte avec le bouton +, puis retirez votre commande en boutique. Le règlement se fait au retrait.
   piedDeCarte: Et pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins ! À retrouver en boutique.
   lienQR: ''

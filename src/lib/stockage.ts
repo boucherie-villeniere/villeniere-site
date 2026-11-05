@@ -24,6 +24,8 @@ export interface CommandeEnregistree {
   lignes: LigneValidee[];
   total: number;
   statut: Statut;
+  /** Nom du temps fort (ex. « Noël ») si la commande vient de sa carte. */
+  evenement: string | null;
 }
 
 interface Ligne {
@@ -38,6 +40,7 @@ interface Ligne {
   lignes: string;
   total: number;
   statut: Statut;
+  evenement: string | null;
 }
 
 let tablePrete: Promise<unknown> | undefined;
@@ -60,6 +63,8 @@ function preparer(db: D1Database) {
       )`),
       db.prepare('CREATE INDEX IF NOT EXISTS commandes_date ON commandes (date)'),
     ])
+    // Colonne ajoutée après coup (commandes des temps forts) : sans effet si elle existe.
+    .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN evenement TEXT').run().catch(() => {}))
     .catch((e) => {
       tablePrete = undefined;
       throw e;
@@ -79,14 +84,17 @@ const versObjet = (l: Ligne): CommandeEnregistree => ({
   lignes: JSON.parse(l.lignes),
   total: l.total,
   statut: l.statut,
+  evenement: l.evenement ?? null,
 });
 
 export async function enregistrerCommande(db: D1Database, c: Omit<CommandeEnregistree, 'id' | 'creeLe' | 'statut'>) {
   await preparer(db);
   const id = crypto.randomUUID();
   await db
-    .prepare('INSERT INTO commandes (id, cree_le, date, creneau, nom, telephone, email, remarque, lignes, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(id, new Date().toISOString(), c.date, c.creneau, c.nom, c.telephone, c.email ?? null, c.remarque ?? null, JSON.stringify(c.lignes), c.total)
+    .prepare(
+      'INSERT INTO commandes (id, cree_le, date, creneau, nom, telephone, email, remarque, lignes, total, evenement) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(id, new Date().toISOString(), c.date, c.creneau, c.nom, c.telephone, c.email ?? null, c.remarque ?? null, JSON.stringify(c.lignes), c.total, c.evenement ?? null)
     .run();
   return id;
 }

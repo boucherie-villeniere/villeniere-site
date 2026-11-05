@@ -377,6 +377,13 @@ export default config({
                       label: 'Prix par variante (dans l’ordre des colonnes)',
                       itemLabel: (p) => String(p.value ?? ''),
                     }),
+                    commandable: fields.checkbox({ label: 'Commandable en ligne', defaultValue: true }),
+                    poids: fields.number({
+                      label: 'Poids moyen d’une pièce (kg)',
+                      description: 'Produits au kilo : sert à estimer le prix pour le client (ex. 2,2 pour une poularde). Le prix reste ajusté à la pesée.',
+                      step: 0.05,
+                    }),
+                    quantiteMax: fields.integer({ label: 'Quantité maximum par commande', defaultValue: 10, validation: { min: 1, max: 99 } }),
                   }),
                   {
                     label: 'Produits',
@@ -389,6 +396,23 @@ export default config({
               { label: 'Rubriques', itemLabel: (p) => p.fields.titre.value || 'Rubrique' },
             ),
             piedDeCarte: fields.text({ label: 'Mot de la fin', multiline: true, description: 'Ex. la sélection de vins.' }),
+            commande: fields.object(
+              {
+                actif: fields.checkbox({ label: 'Commande en ligne de cette carte', defaultValue: false }),
+                dateLimite: fields.date({ label: 'Dernier jour pour commander', description: 'Laissez vide : pas de date limite (hors heure limite habituelle).' }),
+                retraitDu: fields.date({ label: 'Retrait possible à partir du' }),
+                retraitAu: fields.date({ label: 'Retrait possible jusqu’au (inclus)' }),
+                message: fields.text({
+                  label: 'Message au-dessus du bouton de commande',
+                  multiline: true,
+                  defaultValue: 'Commandez en ligne, retirez en boutique : le règlement se fait au retrait.',
+                }),
+              },
+              {
+                label: 'Commande en ligne',
+                description: 'Jours et créneaux de retrait : ceux du click & collect habituel, limités aux dates ci-dessous.',
+              },
+            ),
             lienQR: fields.text({
               label: 'Lien du QR code (menu imprimé)',
               description: 'Laissez vide pour la page de commande du site.',
@@ -396,7 +420,7 @@ export default config({
           },
           {
             label: 'Carte / menu',
-            description: 'Affichée sur la page du temps fort et imprimable en PDF (adresse de la page + /menu, ex. /noel/menu).',
+            description: 'Affichée sur la page du temps fort. Menu à imprimer (PDF) : page « Commandes » du site, réservée à la boutique (ex. /commandes/menu/noel).',
           },
         ),
       },

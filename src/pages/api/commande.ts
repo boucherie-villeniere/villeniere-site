@@ -1,7 +1,8 @@
 import type { APIRoute } from 'astro';
 import { getSecret } from 'astro:env/server';
 import { env } from 'cloudflare:workers';
-import { getClickCollect, getPlats, getReglages } from '../../lib/data';
+import { getClickCollect, getPlats, getReglages, getTempsForts } from '../../lib/data';
+import { produitsCommandables, reglesEvenement } from '../../lib/evenement';
 import { formaterDate, formaterPrix, validerCommande, type Commande } from '../../lib/commande';
 import { bouton, encadreRetrait, envoyerEmail, echapper, gabarit, paragraphesHtml, tableauLignes } from '../../lib/emails';
 import { enregistrerCommande } from '../../lib/stockage';
@@ -21,14 +22,19 @@ export const POST: APIRoute = async ({ request }) => {
 
   const cc = getClickCollect();
   const r = getReglages();
-  const plats = getPlats();
-  const resultat = validerCommande(commande, cc, plats);
+  // Commande de la carte d'un temps fort (ex. Noël) ou click & collect habituel.
+  const evenement = commande.evenement ? getTempsForts().find((t) => t.slug === commande.evenement) : undefined;
+  if (commande.evenement && !evenement) return reponse(422, { erreur: 'Cette carte n’est plus disponible.' });
+  const plats = evenement ? produitsCommandables(evenement) : getPlats();
+  const regles = evenement ? reglesEvenement(evenement, cc) : cc;
+  const resultat = validerCommande(commande, regles, plats);
   if (!resultat.ok) return reponse(422, { erreur: resultat.erreur });
 
   const { lignes, total } = resultat;
   const c = commande as Commande;
   const quand = `${formaterDate(c.date)}, ${c.creneau}`;
-  const auPoids = lignes.some((l) => l.unite === 'kg');
+  const auPoids = lignes.some((l) => l.unite === 'kg' || l.aLaPesee);
+  const etiquette = evenement ? `${evenement.nom} — ` : '';
   const origine = new URL(request.url).origin;
   const cle = getSecret('RESEND_API_KEY');
   const expediteur = getSecret('COMMANDES_EXPEDITEUR');
@@ -46,6 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
       remarque: c.remarque?.trim() || null,
       lignes,
       total,
+      evenement: evenement?.nom ?? null,
     });
     enregistree = true;
   } catch (e) {
@@ -56,7 +63,7 @@ export const POST: APIRoute = async ({ request }) => {
   const pourBoucherie = gabarit({
     origine,
     r,
-    titre: 'Nouvelle commande',
+    titre: evenement ? `Nouvelle commande ${evenement.nom}` : 'Nouvelle commande',
     apercu: `${c.nom} — ${quand} — ${formaterPrix(total)}`,
     contenu: `
       ${encadreRetrait(quand, r)}
@@ -64,12 +71,12 @@ export const POST: APIRoute = async ({ request }) => {
       <p style="margin:0 0 20px"><a href="tel:${echapper(c.telephone.replace(/\s/g, ''))}" style="color:#15181B">${echapper(c.telephone)}</a>${
         c.email ? `<br><a href="mailto:${echapper(c.email)}" style="color:#15181B">${echapper(c.email)}</a>` : ''
       }</p>
-      ${tableauLignes(lignes, total, auPoids ? '* au poids : montant ajusté à la pesée' : '')}
+      ${tableauLignes(lignes, total, auPoids ? '* au poids : montant estimé, ajusté à la pesée' : '')}
       ${c.remarque ? `<p style="margin:0 0 24px;padding:12px 16px;background:#faf7f1"><strong>Remarque :</strong><br>${echapper(c.remarque).replace(/\n/g, '<br>')}</p>` : ''}
       ${enregistree ? bouton(`${origine}/commandes?jour=${c.date}`, 'Voir le planning') : ''}`,
   });
   try {
-    await envoyerEmail(cle, { to: cc.emailCommandes, sujet: `Commande — ${c.nom} — ${quand}`, html: pourBoucherie, replyTo: c.email, expediteur });
+    await envoyerEmail(cle, { to: cc.emailCommandes, sujet: `Commande ${etiquette}${c.nom} — ${quand}`, html: pourBoucherie, replyTo: c.email, expediteur });
   } catch (e) {
     console.error('[commande] échec envoi boucherie', e);
     if (!enregistree) return reponse(502, { erreur: 'La commande n’a pas pu être transmise. Merci de réessayer ou de nous appeler.' });

@@ -1,19 +1,25 @@
 ---
-// Menu imprimable d'un temps fort (ex. /noel/menu), au format A5.
+// Menu imprimable d'un temps fort, au format A5. Réservé à la boutique :
+// même mot de passe que le planning (/commandes), page non publique.
 // Les blocs de la carte sont répartis automatiquement sur les pages ;
 // « Livret » imprime 2 pages A5 par feuille A4, dans l'ordre de pliage.
+import { env } from 'cloudflare:workers';
 import QRCode from 'qrcode';
-import '../../styles/global.css';
-import CarteMenu from '../../components/CarteMenu.astro';
-import { getReglages, getTempsForts, type TempsFort } from '../../lib/data';
+import '../../../styles/global.css';
+import CarteMenu from '../../../components/CarteMenu.astro';
+import { COOKIE, jetonValide } from '../../../lib/acces';
+import { getReglages, getTempsForts } from '../../../lib/data';
 
-export function getStaticPaths() {
-  return getTempsForts()
-    .filter((t) => (t.carte?.rubriques ?? []).length > 0)
-    .map((t) => ({ params: { tempsFort: t.slug }, props: { t } }));
+export const prerender = false;
+
+if (!(await jetonValide(env.COMMANDES_MOT_DE_PASSE, Astro.cookies.get(COOKIE)?.value))) {
+  return Astro.redirect('/commandes', 302);
 }
+const t = getTempsForts().find((x) => x.slug === Astro.params.slug && (x.carte?.rubriques ?? []).length > 0);
+if (!t) return Astro.redirect('/commandes', 302);
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
-const { t } = Astro.props as { t: TempsFort };
 const r = getReglages();
 const carte = t.carte!;
 const lienQR = carte.lienQR?.trim() ? new URL(carte.lienQR.trim(), Astro.site).href : new URL('/commander', Astro.site).href;
@@ -40,6 +46,7 @@ const flocons = t.decor === 'flocons';
   <body>
     <div class="outils">
       <div class="outils-texte">
+        <a href="/commandes" class="retour">← Planning</a>
         <strong>Menu à imprimer</strong>
         <span id="infos">Mise en page…</span>
       </div>
@@ -261,6 +268,10 @@ const flocons = t.decor === 'flocons';
     display: flex;
     gap: 14px;
     align-items: baseline;
+  }
+  .outils-texte .retour {
+    color: var(--or);
+    text-decoration: none;
   }
   .outils-texte span {
     color: #b9b3a9;
