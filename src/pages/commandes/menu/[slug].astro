@@ -7,14 +7,17 @@ import { env } from 'cloudflare:workers';
 import QRCode from 'qrcode';
 import '../../../styles/global.css';
 import CarteMenu from '../../../components/CarteMenu.astro';
-import { COOKIE, jetonValide } from '../../../lib/acces';
+import { COOKIE, connecteAdmin, jetonValide } from '../../../lib/acces';
 import { getReglages, getTempsForts } from '../../../lib/data';
 
 export const prerender = false;
 
-if (!(await jetonValide(env.COMMANDES_MOT_DE_PASSE, Astro.cookies.get(COOKIE)?.value))) {
-  return Astro.redirect('/commandes', 302);
-}
+// Accès : connecté à l'admin (bouton en bas de la fiche du temps fort), ou au planning.
+const autorise =
+  import.meta.env.DEV ||
+  (await jetonValide(env.COMMANDES_MOT_DE_PASSE, Astro.cookies.get(COOKIE)?.value)) ||
+  (await connecteAdmin(Astro.cookies.get('keystatic-gh-access-token')?.value, import.meta.env.PUBLIC_KEYSTATIC_GITHUB_REPO));
+if (!autorise) return Astro.redirect('/keystatic', 302);
 const t = getTempsForts().find((x) => x.slug === Astro.params.slug && (x.carte?.rubriques ?? []).length > 0);
 if (!t) return Astro.redirect('/commandes', 302);
 Astro.response.headers.set('Cache-Control', 'no-store');
@@ -46,7 +49,6 @@ const flocons = t.decor === 'flocons';
   <body>
     <div class="outils">
       <div class="outils-texte">
-        <a href="/commandes" class="retour">← Planning</a>
         <strong>Menu à imprimer</strong>
         <span id="infos">Mise en page…</span>
       </div>

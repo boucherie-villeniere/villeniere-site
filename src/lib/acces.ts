@@ -39,3 +39,24 @@ export async function motDePasseCorrect(attendu: string | undefined, saisi: stri
   const [a, b] = await Promise.all([signer(attendu, 'verif'), signer(saisi, 'verif')]);
   return egal(a, b);
 }
+
+/**
+ * Connexion à l'admin Keystatic : le cookie posé par Keystatic contient un
+ * jeton GitHub. On vérifie auprès de GitHub que son titulaire peut modifier
+ * le dépôt du site (droit d'écriture), donc qu'il gère le site.
+ */
+export async function connecteAdmin(jeton: string | undefined, depot: string | undefined) {
+  if (!jeton || !depot) return false;
+  const entetes = { Authorization: `Bearer ${jeton}`, Accept: 'application/vnd.github+json', 'User-Agent': 'villeniere-site' };
+  try {
+    const moi = await fetch('https://api.github.com/user', { headers: entetes });
+    if (!moi.ok) return false;
+    const { login } = (await moi.json()) as { login: string };
+    const droits = await fetch(`https://api.github.com/repos/${depot}/collaborators/${encodeURIComponent(login)}/permission`, { headers: entetes });
+    if (!droits.ok) return false;
+    const { permission } = (await droits.json()) as { permission: string };
+    return ['admin', 'maintain', 'write'].includes(permission);
+  } catch {
+    return false;
+  }
+}

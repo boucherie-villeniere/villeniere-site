@@ -6,7 +6,7 @@ import { env } from 'cloudflare:workers';
 import '../styles/global.css';
 import { COOKIE, DUREE_JOURS, creerJeton, jetonValide, motDePasseCorrect } from '../lib/acces';
 import { ajouterJours, formaterPrix, jourDeSemaine, maintenantParis, ORDRE_JOURS } from '../lib/commande';
-import { getClickCollect, getTempsForts } from '../lib/data';
+import { getClickCollect } from '../lib/data';
 import { uniteAffichee } from '../lib/recap';
 import { changerStatut, commandesEntre, STATUTS, totauxParPlat, trierParCreneau, type Statut } from '../lib/stockage';
 
@@ -57,7 +57,6 @@ const lundi = ajouterJours(jour, -ORDRE_JOURS.indexOf(jourDeSemaine(jour)));
 const semaine = Array.from({ length: 7 }, (_, i) => ajouterJours(lundi, i));
 
 const cc = getClickCollect();
-const menus = getTempsForts().filter((t) => (t.carte?.rubriques ?? []).length > 0);
 let commandes: Awaited<ReturnType<typeof commandesEntre>> = [];
 let erreurBase = false;
 if (connecte) {
@@ -123,11 +122,6 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
               <span>Commandes</span>
             </a>
             <div class="barre-droite">
-              {menus.map((t) => (
-                <a class="lien-discret" href={`/commandes/menu/${t.slug}`}>
-                  Menu {t.nom} à imprimer
-                </a>
-              ))}
               <form method="post">
                 <input type="hidden" name="action" value="deconnexion" />
                 <button type="submit" class="lien-discret">Se déconnecter</button>

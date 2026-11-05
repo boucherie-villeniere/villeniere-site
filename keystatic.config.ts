@@ -1,4 +1,5 @@
 import { config, fields, collection, singleton } from '@keystatic/core';
+import { boutonImpression } from './src/keystatic/bouton-impression';
 
 // En local : édition directe des fichiers. En ligne : passer en mode GitHub
 // en renseignant PUBLIC_KEYSTATIC_GITHUB_REPO (ex. "eulst/villeniere-site").
@@ -420,9 +421,10 @@ export default config({
           },
           {
             label: 'Carte / menu',
-            description: 'Affichée sur la page du temps fort. Menu à imprimer (PDF) : page « Commandes » du site, réservée à la boutique (ex. /commandes/menu/noel).',
+            description: 'Affichée sur la page du temps fort. Le menu à imprimer (PDF) s’ouvre avec le bouton en bas de cette page.',
           },
         ),
+        imprimer: boutonImpression(),
       },
     }),
 
