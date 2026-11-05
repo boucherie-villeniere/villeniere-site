@@ -48,9 +48,12 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
     document.querySelectorAll('.carte-menu').forEach((c) => c.setAttribute('data-commande-ouverte', ''));
     document.querySelectorAll<HTMLElement>('[data-commande-aide]').forEach((el) => (el.hidden = false));
     const clic = (e: MouseEvent) => {
-      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-ajouter]');
-      if (!b) return;
-      changer(b.dataset.ajouter!, 1);
+      const cible = e.target as HTMLElement;
+      const plus = cible.closest<HTMLButtonElement>('[data-ajouter]');
+      const moins = cible.closest<HTMLButtonElement>('[data-retirer]');
+      if (plus) changer(plus.dataset.ajouter!, 1);
+      else if (moins) changer(moins.dataset.retirer!, -1);
+      else return;
       setPulse((n) => n + 1);
     };
     document.addEventListener('click', clic);
@@ -59,8 +62,8 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
 
   // Affiche la quantité choisie sur chaque bouton de la carte.
   useEffect(() => {
-    document.querySelectorAll<HTMLButtonElement>('[data-ajouter]').forEach((b) => {
-      const q = panier[b.dataset.ajouter!] ?? 0;
+    document.querySelectorAll<HTMLButtonElement>('[data-ajouter], [data-retirer]').forEach((b) => {
+      const q = panier[(b.dataset.ajouter ?? b.dataset.retirer)!] ?? 0;
       if (q > 0) b.dataset.quantite = String(q);
       else delete b.dataset.quantite;
     });

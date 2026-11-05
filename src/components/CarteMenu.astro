@@ -68,11 +68,17 @@ const ILLUSTRATIONS: Record<string, string> = {
                   p.prixVariantes?.[i] == null ? (
                     <span class="cm-prix">—</span>
                   ) : commandable(p) ? (
-                    <button type="button" class="cm-prix cm-ajouter cm-ajouter--prix" data-ajouter={idProduit(p, i)} aria-label={`Ajouter : ${p.nom}, ${c}`}>
-                      {prixCarte(p.prixVariantes[i]!)}
-                      <small> €</small>
-                      <span class="cm-plus" aria-hidden="true">+</span>
-                    </button>
+                    <span class="cm-cellule">
+                      <span class="cm-variante-nom">{c}</span>
+                      <button type="button" class="cm-retirer cm-retirer--prix" data-retirer={idProduit(p, i)} aria-label={`Retirer : ${p.nom}, ${c}`}>
+                        −
+                      </button>
+                      <button type="button" class="cm-prix cm-ajouter cm-ajouter--prix" data-ajouter={idProduit(p, i)} aria-label={`Ajouter : ${p.nom}, ${c}`}>
+                        {prixCarte(p.prixVariantes[i]!)}
+                        <small> €</small>
+                        <span class="cm-plus" aria-hidden="true">+</span>
+                      </button>
+                    </span>
                   ) : (
                     <span class="cm-prix">
                       {prixCarte(p.prixVariantes[i]!)}
@@ -97,9 +103,14 @@ const ILLUSTRATIONS: Record<string, string> = {
                   ) : null}
                 </span>
                 {commandable(p) && p.prix != null && (
-                  <button type="button" class="cm-ajouter cm-ajouter--rond" data-ajouter={idProduit(p)} aria-label={`Ajouter : ${p.nom}`}>
-                    <span class="cm-plus" aria-hidden="true">+</span>
-                  </button>
+                  <span class="cm-boutons">
+                    <button type="button" class="cm-retirer cm-retirer--rond" data-retirer={idProduit(p)} aria-label={`Retirer : ${p.nom}`}>
+                      −
+                    </button>
+                    <button type="button" class="cm-ajouter cm-ajouter--rond" data-ajouter={idProduit(p)} aria-label={`Ajouter : ${p.nom}`}>
+                      <span class="cm-plus" aria-hidden="true">+</span>
+                    </button>
+                  </span>
                 )}
                 {p.detail && detailLong(p.detail) && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
               </div>
@@ -255,12 +266,61 @@ const ILLUSTRATIONS: Record<string, string> = {
     margin: 0;
   }
 
-  /* Commande en ligne : boutons « + » (visibles quand la commande est ouverte) */
-  .cm-ajouter {
+  /* Commande en ligne : boutons « + » (visibles quand la commande est ouverte)
+     et « − » (apparaît dès qu'une quantité est choisie). */
+  .cm-ajouter,
+  .cm-retirer {
     display: none;
+  }
+  .cm-boutons,
+  .cm-cellule {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    align-self: center;
+  }
+  .cm-cellule {
+    justify-content: center;
+    gap: 2px;
+  }
+  [data-commande-ouverte] .cm-retirer[data-quantite] {
+    display: inline-grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--ligne);
+    border-radius: 999px;
+    background: var(--blanc);
+    color: var(--anthracite);
+    font: 400 1.1rem/1 var(--corps);
+    cursor: pointer;
+    animation: cm-apparait 0.35s var(--ease-doux);
+    transition: border-color 0.3s var(--ease-doux);
+  }
+  [data-commande-ouverte] .cm-retirer[data-quantite]:hover {
+    border-color: var(--or);
+  }
+  .cm-retirer--rond {
+    width: 30px;
+    height: 30px;
+  }
+  .cm-retirer--prix {
+    width: 24px;
+    height: 24px;
+    font-size: 0.95rem !important;
+  }
+  @keyframes cm-apparait {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
   }
   [data-commande-ouverte] .cm-produit--commandable {
     grid-template-columns: auto 1fr auto auto;
+  }
+  [data-commande-ouverte] .cm-variantes,
+  [data-commande-ouverte] .cm-entetes {
+    grid-template-columns: 1fr repeat(var(--n), 7em);
   }
   [data-commande-ouverte] .cm-ajouter--rond {
     position: relative;
@@ -333,6 +393,9 @@ const ILLUSTRATIONS: Record<string, string> = {
   .carte-menu--web {
     font-size: 1.05rem;
   }
+  .cm-variante-nom {
+    display: none;
+  }
   @media (max-width: 560px) {
     .carte-menu--web .cm-variantes,
     .carte-menu--web .cm-entetes {
@@ -341,6 +404,49 @@ const ILLUSTRATIONS: Record<string, string> = {
     }
     .carte-menu--web .cm-entete {
       font-size: 0.7em;
+    }
+    /* Commande ouverte : chaque variante sur sa ligne, nom au-dessus du prix */
+    [data-commande-ouverte].carte-menu--web .cm-entetes {
+      display: none;
+    }
+    [data-commande-ouverte].carte-menu--web .cm-variantes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0.8em 0;
+    }
+    [data-commande-ouverte].carte-menu--web .cm-variantes > .cm-nom {
+      flex-basis: 100%;
+    }
+    [data-commande-ouverte] .cm-cellule {
+      flex: 1 1 0;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-areas: 'nom nom' 'moins prix';
+      align-items: center;
+      gap: 4px;
+      padding: 6px;
+      border: 1px solid var(--ligne);
+      border-radius: 6px;
+    }
+    [data-commande-ouverte] .cm-variante-nom {
+      grid-area: nom;
+      display: block;
+      font: italic 500 0.78rem/1.2 var(--titre);
+      color: var(--cm-or);
+      text-align: center;
+    }
+    [data-commande-ouverte] .cm-cellule .cm-retirer {
+      grid-area: moins;
+    }
+    [data-commande-ouverte] .cm-cellule .cm-ajouter--prix {
+      grid-area: prix;
+      grid-column: 1 / -1;
+      font-size: 1rem;
+    }
+    [data-commande-ouverte] .cm-cellule .cm-retirer[data-quantite] + .cm-ajouter--prix {
+      grid-column: 2;
     }
   }
 </style>
