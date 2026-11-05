@@ -1,7 +1,7 @@
 actif: true
 messageFerme: Les commandes en ligne sont momentanément suspendues. Appelez-nous, on s’arrange !
 intro: Réservez votre poulet rôti et vos accompagnements, on vous les prépare pour l’heure choisie. Vous n’avez plus qu’à passer les récupérer.
-emailCommandes: commandes@exemple.fr
+emailCommandes: raphael@eulst.fr
 joursRetrait:
   - mar
   - mer
