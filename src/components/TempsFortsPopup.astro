@@ -1,0 +1,183 @@
+---
+// Popup des temps forts + script commun qui affiche les éléments
+// [data-temps-fort] seulement entre leurs dates (vérifiées dans le navigateur,
+// à l'heure de Paris : pas besoin de republier le site le jour J).
+// Aperçu avant la date : ajouter ?apercu=noel à l'adresse.
+import Decor from './Decor.astro';
+import { getTempsForts, lienTempsFort } from '../lib/data';
+
+const popups = getTempsForts().filter((t) => t.affichage === 'popup' || t.affichage === 'les-deux');
+---
+
+{
+  popups.map((t) => (
+    <dialog class="tf-popup" data-temps-fort={t.slug} data-debut={t.debut ?? ''} data-fin={t.fin ?? ''} aria-labelledby={`tf-titre-${t.slug}`}>
+      <div class:list={['tf-popup-corps', { 'avec-image': !!t.image }]}>
+        {t.image && <img class="tf-popup-image" src={t.image} alt="" loading="lazy" />}
+        <div class="tf-popup-texte">
+          <Decor type={t.decor} />
+          {t.surtitre && <p class="surtitre">{t.surtitre}</p>}
+          <h2 id={`tf-titre-${t.slug}`}>{t.titre}</h2>
+          {t.accroche && <p class="tf-popup-accroche">{t.accroche}</p>}
+          <a class="bouton" href={lienTempsFort(t)}>
+            {t.bouton?.texte || 'Découvrir'} <span class="fleche" aria-hidden="true">→</span>
+          </a>
+        </div>
+        <form method="dialog">
+          <button class="tf-fermer" aria-label="Fermer">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </form>
+      </div>
+    </dialog>
+  ))
+}
+
+<script>
+  const aujourdhui = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+  const apercu = new URLSearchParams(location.search).get('apercu');
+
+  const enCours = (el: HTMLElement) => {
+    const { tempsFort, debut, fin } = el.dataset;
+    if (apercu && apercu === tempsFort) return true;
+    return (!debut || debut <= aujourdhui) && (!fin || aujourdhui <= fin);
+  };
+
+  // Blocs de l'accueil et autres éléments datés.
+  document.querySelectorAll<HTMLElement>('[data-temps-fort]:not(dialog)').forEach((el) => {
+    if (enCours(el)) el.hidden = false;
+  });
+
+  // Popup : une seule, la première en cours, une fois par visite, jamais sur
+  // la page du temps fort lui-même.
+  const cle = (slug: string) => `tf-vu-${slug}`;
+  const dejaVu = (slug: string) => {
+    try {
+      return sessionStorage.getItem(cle(slug)) === '1';
+    } catch {
+      return false;
+    }
+  };
+  const popup = [...document.querySelectorAll<HTMLDialogElement>('dialog.tf-popup')].find((d) => {
+    const slug = d.dataset.tempsFort!;
+    if (location.pathname.replace(/\/$/, '') === `/${slug}`) return false;
+    return enCours(d) && (apercu === slug || !dejaVu(slug));
+  });
+
+  if (popup && typeof popup.showModal === 'function') {
+    setTimeout(() => {
+      popup.showModal();
+      try {
+        sessionStorage.setItem(cle(popup.dataset.tempsFort!), '1');
+      } catch {}
+    }, 900);
+    // Clic en dehors de la fenêtre = fermer.
+    popup.addEventListener('click', (e) => {
+      if (e.target === popup) popup.close();
+    });
+  }
+</script>
+
+<style>
+  .tf-popup {
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: var(--papier);
+    color: var(--texte);
+    box-shadow: 0 30px 80px rgba(21, 24, 27, 0.35);
+    overflow: auto;
+  }
+  .tf-popup::backdrop {
+    background: rgba(21, 24, 27, 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .tf-popup[open] {
+    animation: tf-entree 0.7s var(--ease-doux);
+  }
+  .tf-popup[open]::backdrop {
+    animation: tf-fond 0.7s var(--ease-doux);
+  }
+  @keyframes tf-entree {
+    from {
+      opacity: 0;
+      transform: translateY(24px) scale(0.98);
+    }
+  }
+  @keyframes tf-fond {
+    from {
+      opacity: 0;
+    }
+  }
+  .tf-popup-corps {
+    position: relative;
+    display: grid;
+  }
+  .tf-popup-corps.avec-image {
+    grid-template-columns: 0.9fr 1.1fr;
+  }
+  .tf-popup-image {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    object-fit: cover;
+  }
+  .tf-popup-texte {
+    position: relative;
+    padding: clamp(36px, 6vw, 56px) clamp(24px, 5vw, 48px);
+    text-align: center;
+    border: 1px solid var(--or);
+    margin: 10px;
+    border-radius: 3px;
+  }
+  .tf-popup-texte > :not(.decor) {
+    position: relative;
+  }
+  .tf-popup h2 {
+    font-size: clamp(1.7rem, 4vw, 2.3rem);
+    margin: 0.2em 0 0.5em;
+  }
+  .tf-popup-accroche {
+    color: var(--gris);
+    margin: 0 auto 1.6em;
+    max-width: 34ch;
+  }
+  .tf-fermer {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--blanc);
+    cursor: pointer;
+    transition: background-color 0.3s var(--ease-doux);
+  }
+  .tf-fermer:hover {
+    background: var(--or-clair);
+  }
+  .tf-fermer path {
+    stroke: var(--anthracite);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+  @media (max-width: 640px) {
+    .tf-popup-corps.avec-image {
+      grid-template-columns: 1fr;
+    }
+    .tf-popup-image {
+      min-height: 0;
+      aspect-ratio: 16 / 9;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tf-popup[open] {
+      animation-name: tf-fond;
+    }
+  }
+</style>

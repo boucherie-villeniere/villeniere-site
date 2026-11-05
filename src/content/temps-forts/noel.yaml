@@ -1,0 +1,19 @@
+nom: Noël
+actif: true
+debut: 2026-11-20
+fin: 2026-12-31
+affichage: les-deux
+decor: flocons
+surtitre: Noël 2026
+titre: Passez vos commandes pour les fêtes !
+accroche: Foie gras maison, volailles festives des Landes, de Bresse et de la ferme Tauzin, rôtis farcis à nos farces fines… Réservez dès maintenant.
+texte: |-
+  Pour les fêtes, la boucherie se met sur son trente-et-un : foie gras mi-cuit maison, nature ou aux épices, volailles festives Label Rouge, rôtis de poularde et de chapon farcis à la farce fine de votre choix.
+
+  Les volailles entières peuvent être farcies avec l’une de nos farces maison : pensez à le préciser lors de votre commande.
+
+  Commandez en boutique, par téléphone ou par SMS. Pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins, à retrouver en boutique.
+bouton:
+  texte: Voir le menu de Noël
+  lien: ''
+ordre: 1

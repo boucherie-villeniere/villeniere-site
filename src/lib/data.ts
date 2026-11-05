@@ -142,6 +142,32 @@ function collection<T extends { slug: string; nom: string; ordre: number }>(doss
     .sort((a, b) => a.ordre - b.ordre || a.nom.localeCompare(b.nom, 'fr'));
 }
 
+export interface TempsFort {
+  slug: string;
+  nom: string;
+  actif: boolean;
+  debut?: string | null;
+  fin?: string | null;
+  affichage: 'les-deux' | 'popup' | 'accueil' | 'page';
+  decor: 'flocons' | 'citrouilles' | 'couronne' | 'etoiles' | 'aucun';
+  surtitre?: string;
+  titre: string;
+  accroche?: string;
+  image?: string | null;
+  texte?: string;
+  bouton?: { texte?: string; lien?: string };
+  ordre: number;
+}
+
+/** Temps forts activés (les dates sont vérifiées dans le navigateur, voir TempsForts.astro). */
+export const getTempsForts = () =>
+  collection<TempsFort>('temps-forts')
+    .filter((t) => t.actif !== false)
+    .map((t) => ({ ...t, affichage: t.affichage ?? 'les-deux', decor: t.decor ?? 'etoiles' }));
+
+/** Lien du bouton d'un temps fort : celui saisi, sinon sa propre page. */
+export const lienTempsFort = (t: TempsFort) => t.bouton?.lien?.trim() || `/${t.slug}`;
+
 export const getViandes = () => collection<Viande>('viandes');
 export const getCuissons = () => collection<Cuisson>('cuissons');
 export const getMorceaux = () =>

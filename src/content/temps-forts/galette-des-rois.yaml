@@ -1,0 +1,17 @@
+nom: Galette des rois
+actif: true
+debut: 2027-01-02
+fin: 2027-01-31
+affichage: les-deux
+decor: couronne
+surtitre: Épiphanie
+titre: La galette des rois… version poulet !
+accroche: Notre galette feuilletée au poulet, avec sa fève cachée et sa couronne. Qui sera le roi ?
+texte: |-
+  Texte provisoire : chaque année en janvier, la boucherie revisite la galette des rois en version salée, au poulet. Une fève s’y cache : à vous de la trouver !
+
+  À commander en boutique, par téléphone ou par SMS.
+bouton:
+  texte: Commander
+  lien: ''
+ordre: 2

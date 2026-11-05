@@ -44,6 +44,7 @@ export default config({
     brand: { name: 'Villenière' },
     navigation: {
       'Click & collect': ['plats', 'clickCollect'],
+      'Temps forts': ['tempsForts'],
       'Nos produits': ['produits', 'viandes', 'cuissons', 'morceaux'],
       'Pages du site': ['accueil', 'boucherie'],
       'Infos pratiques': ['reglages'],
@@ -267,6 +268,67 @@ export default config({
         surCommande: fields.checkbox({ label: 'Sur commande uniquement', defaultValue: false }),
         actif: fields.checkbox({ label: 'Afficher sur le site', defaultValue: true }),
         ordre: fields.integer({ label: 'Ordre d’affichage', defaultValue: 10 }),
+      },
+    }),
+
+    tempsForts: collection({
+      label: 'Temps forts (Noël, Halloween, Galette…)',
+      path: 'src/content/temps-forts/*',
+      slugField: 'nom',
+      columns: ['nom', 'debut', 'fin'],
+      schema: {
+        nom: fields.slug({
+          name: { label: 'Nom (ex. Noël)', validation: { isRequired: true } },
+          slug: { label: 'Adresse de la page', description: 'Ex. « noel » donne boucherie-villeniere.fr/noel' },
+        }),
+        actif: fields.checkbox({
+          label: 'Activé',
+          description: 'Décochez pour tout masquer, quelles que soient les dates.',
+          defaultValue: true,
+        }),
+        debut: fields.date({ label: 'Visible à partir du', description: 'Laissez vide pour afficher dès maintenant.' }),
+        fin: fields.date({ label: 'Visible jusqu’au (inclus)', description: 'Laissez vide pour ne pas fixer de fin.' }),
+        affichage: fields.select({
+          label: 'Où l’afficher ?',
+          options: [
+            { label: 'Popup à l’ouverture du site + bloc sur l’accueil', value: 'les-deux' },
+            { label: 'Popup à l’ouverture du site', value: 'popup' },
+            { label: 'Bloc sur l’accueil', value: 'accueil' },
+            { label: 'Seulement sa page (lien à partager)', value: 'page' },
+          ],
+          defaultValue: 'les-deux',
+        }),
+        decor: fields.select({
+          label: 'Décor',
+          options: [
+            { label: 'Flocons (Noël)', value: 'flocons' },
+            { label: 'Citrouilles (Halloween)', value: 'citrouilles' },
+            { label: 'Couronne (Galette des rois)', value: 'couronne' },
+            { label: 'Étoiles', value: 'etoiles' },
+            { label: 'Aucun', value: 'aucun' },
+          ],
+          defaultValue: 'etoiles',
+        }),
+        surtitre: fields.text({ label: 'Surtitre', description: 'Petite ligne au-dessus du titre, ex. « Noël 2026 ».' }),
+        titre: fields.text({ label: 'Titre', validation: { isRequired: true } }),
+        accroche: fields.text({
+          label: 'Accroche',
+          description: 'Deux ou trois lignes, reprises dans la popup et le bloc de l’accueil.',
+          multiline: true,
+        }),
+        image: image('Image d’illustration', 'temps-forts'),
+        texte: paragraphe('Texte de la page'),
+        bouton: fields.object(
+          {
+            texte: fields.text({ label: 'Texte du bouton', defaultValue: 'Découvrir' }),
+            lien: fields.text({
+              label: 'Lien du bouton',
+              description: 'Laissez vide pour ouvrir la page du temps fort. Ex. « /commander » pour la page de commande.',
+            }),
+          },
+          { label: 'Bouton' },
+        ),
+        ordre: fields.integer({ label: 'Priorité', description: 'Si deux temps forts se chevauchent, le plus petit nombre passe devant.', defaultValue: 10 }),
       },
     }),
 

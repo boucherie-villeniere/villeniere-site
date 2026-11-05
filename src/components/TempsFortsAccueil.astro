@@ -1,0 +1,91 @@
+---
+// Bloc « temps fort » de la page d'accueil. Masqué par défaut, affiché par le
+// script de TempsFortsPopup.astro entre les dates choisies dans l'admin.
+import Decor from './Decor.astro';
+import Photo from './Photo.astro';
+import { getTempsForts, lienTempsFort } from '../lib/data';
+
+const blocs = getTempsForts().filter((t) => t.affichage === 'accueil' || t.affichage === 'les-deux');
+---
+
+{
+  blocs.map((t) => (
+    <section class="section tf-bloc" data-temps-fort={t.slug} data-debut={t.debut ?? ''} data-fin={t.fin ?? ''} hidden aria-labelledby={`tf-bloc-${t.slug}`}>
+      <div class="conteneur">
+        <div class:list={['tf-cadre', { 'avec-image': !!t.image }]}>
+          <Decor type={t.decor} />
+          {t.image && <Photo src={t.image} alt="" ratio="4 / 3" class="tf-photo" />}
+          <div class="tf-texte">
+            {t.surtitre && (
+              <p class="surtitre" data-reveal>
+                {t.surtitre}
+              </p>
+            )}
+            <h2 id={`tf-bloc-${t.slug}`} data-reveal style="--i:1">
+              {t.titre}
+            </h2>
+            {t.accroche && (
+              <p class="tf-accroche" data-reveal style="--i:2">
+                {t.accroche}
+              </p>
+            )}
+            <a class="bouton bouton--or" href={lienTempsFort(t)} data-reveal style="--i:3">
+              {t.bouton?.texte || 'Découvrir'} <span class="fleche" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  ))
+}
+
+<style>
+  .tf-cadre {
+    position: relative;
+    display: grid;
+    align-items: center;
+    gap: clamp(24px, 4vw, 56px);
+    padding: clamp(40px, 7vw, 88px) clamp(24px, 6vw, 80px);
+    background: var(--anthracite);
+    color: var(--papier);
+    border-radius: 4px;
+    outline: 1px solid var(--or);
+    outline-offset: -12px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .tf-cadre.avec-image {
+    grid-template-columns: 1fr 1.1fr;
+    text-align: left;
+  }
+  .tf-cadre > :not(.decor) {
+    position: relative;
+  }
+  .tf-texte {
+    max-width: 560px;
+    margin-inline: auto;
+  }
+  .avec-image .tf-texte {
+    margin-inline: 0;
+  }
+  .tf-texte h2 {
+    color: var(--blanc);
+    margin: 0.2em 0 0.45em;
+  }
+  .tf-texte .surtitre {
+    color: var(--or);
+  }
+  .tf-accroche {
+    color: #d9d4cb;
+    margin: 0 0 1.8em;
+  }
+  @media (max-width: 800px) {
+    .tf-cadre.avec-image {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+    .avec-image .tf-texte {
+      margin-inline: auto;
+    }
+  }
+</style>

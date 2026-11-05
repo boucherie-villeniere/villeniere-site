@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import Photo from '../components/Photo.astro';
 import BlocTextePhoto from '../components/BlocTextePhoto.astro';
 import StatutJour from '../components/StatutJour.astro';
+import TempsFortsAccueil from '../components/TempsFortsAccueil.astro';
 import { getAccueil, getPlats, getReglages, getClickCollect } from '../lib/data';
 import { formaterPrix, UNITES } from '../lib/commande';
 
@@ -52,6 +53,8 @@ const tel = r.telephone?.replace(/\s/g, '');
       {Array.from({ length: 8 }, () => <img src="/brand/frise-or.svg" alt="" width="513" height="40" />)}
     </div>
   </div>
+
+  <TempsFortsAccueil />
 
   {
     a.engagements.length > 0 && (

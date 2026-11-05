@@ -1,0 +1,101 @@
+---
+// Page d'un temps fort (ex. /noel). Toujours accessible tant que le temps fort
+// est activé dans l'admin, même hors de ses dates (lien à partager à l'avance).
+import Base from '../layouts/Base.astro';
+import Decor from '../components/Decor.astro';
+import Photo from '../components/Photo.astro';
+import { getReglages, getTempsForts, lienTempsFort, paragraphes, type TempsFort } from '../lib/data';
+
+export function getStaticPaths() {
+  return getTempsForts().map((t) => ({ params: { tempsFort: t.slug }, props: { t } }));
+}
+
+const { t } = Astro.props as { t: TempsFort };
+const r = getReglages();
+const lien = lienTempsFort(t);
+const versPage = lien === `/${t.slug}`;
+---
+
+<Base title={t.nom} description={t.accroche ?? t.titre} image={t.image ?? undefined}>
+  <header class="tf-entete">
+    <Decor type={t.decor} coins={false} />
+    <div class="conteneur">
+      {t.surtitre && <p class="surtitre" data-reveal>{t.surtitre}</p>}
+      <h1 data-reveal style="--i:1">{t.titre}</h1>
+      {t.accroche && <p class="chapo" data-reveal style="--i:2">{t.accroche}</p>}
+      <img class="frise" src="/brand/frise-or.svg" alt="" width="560" height="44" data-reveal style="--i:3" />
+    </div>
+  </header>
+
+  <section class="section tf-contenu">
+    <div class:list={['conteneur', 'tf-grille', { 'avec-image': !!t.image }]}>
+      {t.image && <Photo src={t.image} alt={t.titre} ratio="4 / 5" eager class="cadre-decale" />}
+      <div class="tf-texte">
+        {paragraphes(t.texte).map((p, i) => <p data-reveal style={`--i:${i}`}>{p}</p>)}
+        <div class="tf-actions" data-reveal>
+          {!versPage && (
+            <a class="bouton" href={lien}>
+              {t.bouton?.texte || 'Commander'} <span class="fleche" aria-hidden="true">→</span>
+            </a>
+          )}
+          {r.telephone && (
+            <a class:list={['bouton', { 'bouton--contour': !versPage }]} href={`tel:${r.telephone.replace(/\s/g, '')}`}>
+              Appeler la boutique · {r.telephone}
+            </a>
+          )}
+        </div>
+        {(r.sms || r.adresse) && (
+          <p class="tf-contacts" data-reveal>
+            {r.sms && <>Par SMS : <a href={`sms:${r.sms.replace(/\s/g, '')}`}>{r.sms}</a><br /></>}
+            En boutique : {r.adresse}, {r.codePostal} {r.ville}
+          </p>
+        )}
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .tf-entete {
+    position: relative;
+    padding-block: clamp(56px, 9vw, 112px) clamp(24px, 4vw, 48px);
+    text-align: center;
+  }
+  .tf-entete .conteneur {
+    position: relative;
+  }
+  .chapo {
+    margin-inline: auto;
+    color: var(--gris);
+    max-width: 52ch;
+  }
+  .frise {
+    margin: 32px auto 0;
+  }
+  .tf-grille {
+    max-width: 760px;
+  }
+  .tf-grille.avec-image {
+    max-width: var(--largeur);
+    display: grid;
+    grid-template-columns: 0.85fr 1fr;
+    gap: clamp(32px, 6vw, 96px);
+    align-items: center;
+  }
+  .tf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 2em;
+  }
+  .tf-contacts {
+    margin-top: 1.6em;
+    color: var(--gris);
+    font-size: 0.95rem;
+  }
+  @media (max-width: 800px) {
+    .tf-grille.avec-image {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
