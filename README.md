@@ -56,3 +56,4 @@ npm run dev
 - **Livraison** : réutilise le catalogue et la validation des commandes ; ajouter mode retrait/livraison, zones par code postal, frais, créneaux.
 - **Camion / marchés** : collection Keystatic « emplacements » (marché, adresse, coordonnées, jours, horaires) + carte Leaflet/OpenStreetMap + bloc « cette semaine ».
 - Paiement en ligne (Stripe Checkout) et quotas de plats par jour (stockage Netlify Blobs) si besoin.
+Mise en ligne : novembre 2026
