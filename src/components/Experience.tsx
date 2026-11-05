@@ -25,7 +25,7 @@ function lireHash(viandes: Viande[], cuissons: Cuisson[]) {
   return { viande, cuisson };
 }
 
-const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? (mot.endsWith('eau') ? 'x' : 's') : ''}`;
 
 export default function Experience({ viandes, cuissons, morceaux, questionViande, questionCuisson, messageFin, telephone }: Props) {
   const [choix, setChoix] = useState<{ viande?: string; cuisson?: string }>({});
