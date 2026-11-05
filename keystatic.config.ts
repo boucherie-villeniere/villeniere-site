@@ -56,7 +56,7 @@ export default config({
       schema: {
         annonce: fields.text({
           label: 'Bandeau d’annonce',
-          description: 'Message affiché en haut de toutes les pages (fermeture, nouveauté…). Laissez vide pour le masquer.',
+          description: 'Message qui défile en haut de toutes les pages (fermeture, nouveauté…). Laissez vide pour le masquer. Emoji acceptés : touche Windows + point (;) sur PC, Ctrl + Cmd + Espace sur Mac, ou copier-coller.',
         }),
         adresse: fields.text({ label: 'Adresse', validation: { isRequired: true } }),
         codePostal: fields.text({ label: 'Code postal', validation: { isRequired: true } }),

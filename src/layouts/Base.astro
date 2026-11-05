@@ -15,6 +15,13 @@ const r = getReglages();
 const titreComplet = title === 'Accueil' ? 'Boucherie Villenière — Romainville' : `${title} — Boucherie Villenière`;
 const canonique = new URL(Astro.url.pathname, Astro.site);
 
+// Bandeau d'annonce : le message est répété pour remplir les grands écrans,
+// et la piste est dupliquée pour une boucle sans à-coup. Durée proportionnelle
+// à la longueur pour garder la même vitesse quel que soit le message.
+const annonce = r.annonce?.trim();
+const repetitions = annonce ? Math.max(2, Math.ceil(240 / (annonce.length + 6))) : 0;
+const dureeAnnonce = annonce ? Math.round((annonce.length + 6) * repetitions * 0.22) : 0;
+
 const schema = {
   '@context': 'https://schema.org',
   '@type': 'ButcherShop',
@@ -58,7 +65,25 @@ const schema = {
   </head>
   <body>
     <a class="visuellement-cache" href="#contenu">Aller au contenu</a>
-    {r.annonce && <div class="annonce">{r.annonce}</div>}
+    {
+      annonce && (
+        <div class="annonce" style={`--duree:${dureeAnnonce}s`}>
+          <p class="visuellement-cache">{annonce}</p>
+          <div class="annonce-piste" aria-hidden="true">
+            {[0, 1].map(() => (
+              <span class="annonce-moitie">
+                {Array.from({ length: repetitions }, () => (
+                  <span class="annonce-item">
+                    {annonce}
+                    <span class="annonce-sep">✦</span>
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
+        </div>
+      )
+    }
     <Header />
     <main id="contenu">
       <slot />
@@ -88,8 +113,41 @@ const schema = {
   .annonce {
     background: var(--or);
     color: var(--anthracite);
-    text-align: center;
     font: 500 0.9rem/1.4 var(--corps);
-    padding: 10px var(--gouttiere);
+    padding: 10px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .annonce-piste {
+    display: flex;
+    width: max-content;
+    animation: annonce var(--duree, 40s) linear infinite;
+  }
+  .annonce:hover .annonce-piste {
+    animation-play-state: paused;
+  }
+  .annonce-moitie {
+    display: flex;
+  }
+  .annonce-item {
+    display: inline-flex;
+    align-items: center;
+  }
+  .annonce-sep {
+    font-size: 0.6em;
+    margin: 0 2.2em;
+    opacity: 0.55;
+  }
+  @keyframes annonce {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  /* Mouvement réduit : on garde le défilement (le message doit rester lisible
+     en entier) mais deux fois plus lent, comme la frise. */
+  @media (prefers-reduced-motion: reduce) {
+    .annonce-piste {
+      animation-duration: calc(var(--duree, 40s) * 2);
+    }
   }
 </style>
