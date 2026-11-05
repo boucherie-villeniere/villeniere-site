@@ -1,0 +1,12 @@
+nom: "Côtelettes d’agneau"
+viande: "agneau"
+cuissons:
+  - "a-griller"
+description: "Fines et tendres, à croquer du bout des doigts."
+conseil: "Feu vif, 2 min par face, une pointe de thym et de fleur de sel."
+temps: "2 min par face"
+personnes: "3 côtelettes par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 25

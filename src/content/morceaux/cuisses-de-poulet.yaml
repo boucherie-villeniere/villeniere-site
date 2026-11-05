@@ -1,0 +1,14 @@
+nom: "Cuisses de poulet"
+viande: "volaille"
+cuissons:
+  - "a-griller"
+  - "a-rotir"
+  - "a-mijoter"
+description: "Le morceau le plus moelleux et le plus polyvalent."
+conseil: "Au four avec des pommes de terre, en tajine, ou marinées au barbecue."
+temps: "45 min au four · 1 h mijotées"
+personnes: "1 cuisse par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 12

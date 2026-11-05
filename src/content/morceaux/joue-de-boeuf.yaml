@@ -1,0 +1,12 @@
+nom: "Joue de bœuf"
+viande: "boeuf"
+cuissons:
+  - "a-mijoter"
+description: "Une texture confite incomparable après une longue cuisson."
+conseil: "Faites-la mijoter la veille : elle est encore meilleure réchauffée."
+temps: "3 h à feu très doux"
+personnes: "250 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 9

@@ -1,0 +1,13 @@
+nom: "Poitrine de porc"
+viande: "porc"
+cuissons:
+  - "a-griller"
+  - "a-mijoter"
+description: "Fraîche ou demi-sel, généreuse et pleine de goût."
+conseil: "En tranches grillées, ou en morceau dans une potée ou un petit salé."
+temps: "4 min par face · 2 h mijotée"
+personnes: "200 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 22

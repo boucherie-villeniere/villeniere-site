@@ -1,0 +1,11 @@
+nom: Poulet rôti fermier
+actif: true
+description: Poulet fermier rôti à la broche, arrosé de son jus.
+prix: 16.9
+unite: piece
+precision: env. 1,4 kg, pour 4 personnes
+image: ''
+jours: []
+quantiteMax: 4
+allergenes: []
+ordre: 1

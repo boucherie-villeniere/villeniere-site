@@ -1,0 +1,12 @@
+nom: "Poule"
+viande: "volaille"
+cuissons:
+  - "a-mijoter"
+description: "La poule au pot : un bouillon incomparable."
+conseil: "Démarrez à l’eau froide avec légumes et bouquet garni."
+temps: "2 h 30 à frémissement"
+personnes: "5 à 6 personnes"
+image: ""
+surCommande: false
+actif: true
+ordre: 16

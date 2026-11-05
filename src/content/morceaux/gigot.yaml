@@ -1,0 +1,12 @@
+nom: "Gigot d’agneau"
+viande: "agneau"
+cuissons:
+  - "a-rotir"
+description: "Le grand classique du dimanche et de Pâques."
+conseil: "Piquez d’ail, four à 200 °C, puis reposez 15 min sous une feuille d’aluminium. Ou 7 heures à 120 °C pour un gigot à la cuillère."
+temps: "15 min par livre (rosé) · 7 h (confit)"
+personnes: "6 à 8 personnes"
+image: ""
+surCommande: false
+actif: true
+ordre: 27

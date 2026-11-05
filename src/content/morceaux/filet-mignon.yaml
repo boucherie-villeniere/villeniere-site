@@ -1,0 +1,12 @@
+nom: "Filet mignon"
+viande: "porc"
+cuissons:
+  - "a-rotir"
+description: "Le morceau le plus tendre du porc, sans gras."
+conseil: "Saisissez sur toutes les faces, puis 15 min au four. Une sauce moutarde et c’est parfait."
+temps: "20 à 25 min au total"
+personnes: "2 à 3 personnes"
+image: ""
+surCommande: false
+actif: true
+ordre: 19

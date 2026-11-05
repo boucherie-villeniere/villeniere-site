@@ -1,0 +1,56 @@
+---
+import Photo from './Photo.astro';
+import { paragraphes, type Bloc } from '../lib/data';
+
+interface Props {
+  bloc: Bloc;
+  inverse?: boolean;
+}
+const { bloc, inverse = false } = Astro.props;
+---
+
+<article class:list={['bloc', { inverse }]}>
+  <div class="bloc-photo cadre-decale">
+    <Photo src={bloc.image} alt={bloc.titre} ratio="5 / 4" />
+  </div>
+  <div class="bloc-texte">
+    <span class="bloc-filet"></span>
+    <h2 data-reveal style="--i:1">{bloc.titre}</h2>
+    {paragraphes(bloc.texte).map((p, i) => <p data-reveal style={`--i:${i + 2}`}>{p}</p>)}
+    <slot />
+  </div>
+</article>
+
+<style>
+  .bloc {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: clamp(32px, 6vw, 88px);
+  }
+  .bloc-photo {
+    margin-right: clamp(10px, 1.6vw, 20px);
+  }
+  .inverse .bloc-photo {
+    order: 2;
+  }
+  .bloc-texte {
+    max-width: 50ch;
+    color: var(--gris);
+  }
+  .bloc-filet {
+    display: block;
+    width: 64px;
+    height: 1px;
+    background: var(--or);
+    margin-bottom: 28px;
+  }
+  @media (max-width: 760px) {
+    .bloc {
+      grid-template-columns: 1fr;
+    }
+    .inverse .bloc-photo {
+      order: 0;
+    }
+  }
+</style>

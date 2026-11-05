@@ -1,0 +1,371 @@
+/* Charte Villenière : or #C2A063, anthracite #15181B, gris chaud #4E4B48.
+   Titres : Ivy Presto Display (italique) dans la charte, remplacée ici par
+   Playfair Display ; texte en Roboto, comme sur les menus. */
+@import '@fontsource/roboto/300.css';
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/500.css';
+@import '@fontsource/roboto/700.css';
+@import '@fontsource-variable/playfair-display/wght-italic.css';
+
+:root {
+  --or: #c2a063;
+  --or-fonce: #8a6a32; /* or lisible sur fond clair (contraste AA) */
+  --or-clair: #e9dcc0;
+  --anthracite: #15181b;
+  --gris: #4e4b48;
+  --texte: #2f3233;
+  --papier: #faf7f1;
+  --blanc: #ffffff;
+  --ligne: #e4dccb;
+
+  --titre: 'Playfair Display Variable', 'Ivy Presto Display', Georgia, serif;
+  --corps: 'Roboto', system-ui, sans-serif;
+
+  --ease: cubic-bezier(0.2, 0.75, 0.15, 1);
+  --ease-doux: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --largeur: 1240px;
+  --gouttiere: clamp(16px, 4vw, 40px);
+  --rayon: 4px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--papier);
+  color: var(--texte);
+  font: 400 1.0625rem/1.65 var(--corps);
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--titre);
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.12;
+  color: var(--anthracite);
+  margin: 0 0 0.5em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+h2 {
+  font-size: clamp(2rem, 4.2vw, 3.3rem);
+  line-height: 1.05;
+}
+h3 {
+  font-size: 1.4rem;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--or-fonce);
+  outline-offset: 3px;
+}
+
+.conteneur {
+  width: 100%;
+  max-width: var(--largeur);
+  margin-inline: auto;
+  padding-inline: var(--gouttiere);
+}
+
+.section {
+  padding-block: clamp(56px, 9vw, 112px);
+}
+
+.surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font: 500 0.78rem/1 var(--corps);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--or-fonce);
+  margin-bottom: 18px;
+}
+.surtitre::before,
+.surtitre::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+
+.chapo {
+  font-size: 1.2rem;
+  font-weight: 300;
+  max-width: 62ch;
+}
+
+/* Boutons : sobres, la couleur change en fondu et la flèche glisse. */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 14px 30px;
+  border: 1px solid var(--anthracite);
+  border-radius: 999px;
+  background: var(--anthracite);
+  color: var(--blanc);
+  font: 500 0.8rem/1 var(--corps);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.45s var(--ease),
+    border-color 0.45s var(--ease),
+    color 0.45s var(--ease);
+}
+.bouton:hover {
+  background: #33383d;
+  border-color: #33383d;
+}
+.bouton .fleche {
+  display: inline-block;
+  transition: transform 0.6s var(--ease);
+}
+.bouton:hover .fleche {
+  transform: translateX(4px);
+}
+.bouton--or {
+  background: var(--or);
+  border-color: var(--or);
+  color: var(--anthracite);
+}
+.bouton--or:hover {
+  background: #d1b47f;
+  border-color: #d1b47f;
+}
+.bouton--contour {
+  background: transparent;
+  color: var(--anthracite);
+}
+.bouton--contour:hover {
+  background: var(--anthracite);
+  color: var(--blanc);
+}
+.bouton[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Lien : le soulignement apparaît en fondu. */
+.lien {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+  transition:
+    text-decoration-color 0.4s var(--ease),
+    color 0.4s var(--ease);
+}
+.lien:hover,
+.lien[aria-current='page'] {
+  text-decoration-color: currentColor;
+}
+
+/* Cadre doré décalé derrière une photo. */
+.cadre-decale {
+  position: relative;
+  z-index: 0;
+}
+.cadre-decale::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1px solid var(--or);
+  transform: translate(clamp(10px, 1.6vw, 20px), clamp(10px, 1.6vw, 20px));
+}
+
+/* Zoom très lent et très doux des photos au survol (aller comme retour). */
+.zoom {
+  overflow: hidden;
+}
+.zoom img,
+.zoom .photo-a-venir {
+  transform: scale(1.001);
+  transition: transform 1.8s var(--ease-doux);
+  will-change: transform;
+}
+.zoom:hover img,
+.zoom:hover .photo-a-venir {
+  transform: scale(1.04);
+}
+
+/* Frise qui défile en continu. */
+.ruban {
+  overflow: hidden;
+  padding-block: 28px;
+  border-block: 1px solid var(--ligne);
+}
+.ruban-piste {
+  display: flex;
+  width: max-content;
+  animation: ruban 60s linear infinite;
+}
+.ruban-piste img {
+  height: 40px;
+  width: auto;
+  /* Les frises s'enchaînent bord à bord (léger chevauchement pour absorber la marge du SVG). */
+  margin-right: -3px;
+}
+@keyframes ruban {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* ——— Apparitions au scroll ———
+   Fondu + légère montée. La classe .anim est posée par Base.astro :
+   sans JavaScript, tout est visible d'emblée. */
+.anim [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 1.2s var(--ease-doux),
+    transform 1.2s var(--ease-doux);
+  transition-delay: calc(var(--i, 0) * 120ms);
+}
+.anim [data-reveal].visible {
+  opacity: 1;
+  transform: none;
+}
+/* Photos : fondu + léger dézoom, sans déplacement du cadre. */
+.anim [data-reveal='image'] {
+  transform: none;
+}
+.anim [data-reveal='image'] img,
+.anim [data-reveal='image'] .photo-a-venir {
+  transform: scale(1.08);
+  transition: transform 2s var(--ease-doux);
+}
+.anim [data-reveal='image'].visible img,
+.anim [data-reveal='image'].visible .photo-a-venir {
+  transform: scale(1.001);
+}
+.anim [data-reveal='image'].visible.zoom:hover img,
+.anim [data-reveal='image'].visible.zoom:hover .photo-a-venir {
+  transform: scale(1.04);
+}
+
+/* Double filet doré, comme sur les menus imprimés. */
+.cadre {
+  position: relative;
+  border: 3px solid var(--or);
+  padding: 8px;
+}
+.cadre > .cadre-interieur {
+  border: 1px solid var(--or);
+}
+
+.frise {
+  display: block;
+  width: min(560px, 90%);
+  height: auto;
+  margin: 0 auto;
+}
+
+.motif {
+  background-color: var(--anthracite);
+  background-image: linear-gradient(rgb(21 24 27 / 0.9), rgb(21 24 27 / 0.9)), url('/brand/motif.webp');
+  background-size: auto, 520px;
+  color: #ece6da;
+}
+.motif h2,
+.motif h3 {
+  color: var(--blanc);
+}
+.motif .surtitre {
+  color: var(--or);
+}
+
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Emplacement photo en attendant les vraies images. */
+.photo-a-venir {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background:
+    linear-gradient(rgb(236 227 208 / 0.86), rgb(236 227 208 / 0.86)),
+    url('/brand/motif.webp') center / 420px;
+  color: var(--gris);
+  font: 500 0.8rem/1.3 var(--corps);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 16px;
+}
+.photo-a-venir span {
+  background: var(--papier);
+  padding: 8px 14px;
+}
+
+/* Grain papier très léger sur tout le site. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* Mouvement réduit (réglage du système) : on garde les fondus et les
+   transitions de couleur, on supprime les déplacements ; la frise et le
+   macaron continuent, mais deux fois plus lentement. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .anim [data-reveal],
+  .anim [data-reveal='image'] img,
+  .anim [data-reveal='image'] .photo-a-venir {
+    transform: none !important;
+  }
+  .ruban-piste {
+    animation-duration: 120s;
+  }
+}

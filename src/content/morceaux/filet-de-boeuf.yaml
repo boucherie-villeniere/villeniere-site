@@ -1,0 +1,13 @@
+nom: "Filet / tournedos"
+viande: "boeuf"
+cuissons:
+  - "a-griller"
+  - "a-rotir"
+description: "Le morceau le plus tendre, tout en finesse."
+conseil: "En tournedos à la poêle, ou en rôti entier pour un bœuf Wellington."
+temps: "3 min par face (tournedos) · 20 min/kg au four"
+personnes: "150 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 6

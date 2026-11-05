@@ -1,0 +1,12 @@
+nom: "Côtes de porc"
+viande: "porc"
+cuissons:
+  - "a-griller"
+description: "Épaisses, avec l’os, d’un porc élevé en plein air."
+conseil: "Saisissez puis baissez le feu : le porc se mange cuit mais encore rosé à cœur."
+temps: "5 à 6 min par face"
+personnes: "1 côte par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 17

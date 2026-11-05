@@ -1,0 +1,12 @@
+nom: "Rôti de bœuf"
+viande: "boeuf"
+cuissons:
+  - "a-rotir"
+description: "Ficelé et bardé par nos soins, prêt à enfourner."
+conseil: "Four à 220 °C, salez seulement en fin de cuisson et laissez reposer 10 min."
+temps: "15 à 20 min par kg"
+personnes: "180 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 7

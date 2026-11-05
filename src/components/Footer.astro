@@ -1,0 +1,84 @@
+---
+import { getReglages } from '../lib/data';
+import Horaires from './Horaires.astro';
+
+const r = getReglages();
+const tel = (n?: string) => n?.replace(/\s/g, '');
+---
+
+<footer class="pied motif">
+  <div class="conteneur">
+    <img class="pied-logo" src="/brand/logo-clair.svg" alt="Boucherie Villenière" width="240" height="55" loading="lazy" />
+    <div class="pied-grille">
+      <div>
+        <h2 class="pied-titre">Nous trouver</h2>
+        <p>
+          {r.adresse}<br />
+          {r.codePostal} {r.ville}
+        </p>
+        {r.telephone && <p><a href={`tel:${tel(r.telephone)}`}>{r.telephone}</a></p>}
+        {r.sms && <p><a href={`sms:${tel(r.sms)}`}>{r.sms}</a> <small>(SMS uniquement)</small></p>}
+      </div>
+      <div>
+        <h2 class="pied-titre">Horaires</h2>
+        <Horaires />
+      </div>
+      <div>
+        <h2 class="pied-titre">Suivez-nous</h2>
+        <ul class="pied-liens">
+          {r.instagram && <li><a href={r.instagram} rel="noopener" target="_blank">Instagram</a></li>}
+          {r.facebook && <li><a href={r.facebook} rel="noopener" target="_blank">Facebook</a></li>}
+          <li><a href="/commander">Click &amp; collect</a></li>
+          <li><a href="/mentions-legales">Mentions légales</a></li>
+        </ul>
+      </div>
+    </div>
+    <p class="pied-bas">© {new Date().getFullYear()} Boucherie Villenière</p>
+  </div>
+</footer>
+
+<style>
+  .pied {
+    padding-block: 64px 32px;
+    font-size: 0.98rem;
+  }
+  .pied-logo {
+    width: 240px;
+    height: auto;
+    margin-bottom: 40px;
+  }
+  .pied-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 40px;
+  }
+  .pied-titre {
+    font-size: 1.3rem;
+    color: var(--or) !important;
+  }
+  .pied a {
+    color: #fff;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 5px;
+    transition: text-decoration-color 0.4s var(--ease), color 0.4s var(--ease);
+  }
+  .pied a:hover {
+    color: var(--or);
+    text-decoration-color: currentColor;
+  }
+  .pied-liens {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .pied-bas {
+    margin: 48px 0 0;
+    padding-top: 24px;
+    border-top: 1px solid rgb(194 160 99 / 0.3);
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+</style>

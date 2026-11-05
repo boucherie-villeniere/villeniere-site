@@ -1,0 +1,12 @@
+nom: "Bavette"
+viande: "boeuf"
+cuissons:
+  - "a-griller"
+description: "Fibres longues, goût prononcé : un classique de bistrot."
+conseil: "Cuisson vive et courte, puis tranchez dans le sens contraire des fibres."
+temps: "1 à 2 min par face"
+personnes: "1 personne (180 g)"
+image: ""
+surCommande: false
+actif: true
+ordre: 4

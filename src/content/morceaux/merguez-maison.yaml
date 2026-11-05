@@ -1,0 +1,12 @@
+nom: "Merguez maison"
+viande: "agneau"
+cuissons:
+  - "a-griller"
+description: "Notre recette maison, bien épicée."
+conseil: "Barbecue à feu moyen, sans les piquer."
+temps: "8 à 10 min"
+personnes: "2 à 3 par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 31

@@ -1,0 +1,46 @@
+---
+// Affiche la photo si elle est renseignée dans l'admin, sinon un emplacement réservé.
+// `reveler` : dévoilement de la photo au scroll ; `zoom` : léger zoom au survol.
+interface Props {
+  src?: string | null;
+  alt: string;
+  ratio?: string;
+  eager?: boolean;
+  reveler?: boolean;
+  zoom?: boolean;
+  position?: string;
+  i?: number;
+  class?: string;
+}
+const { src, alt, ratio = '4 / 3', eager = false, reveler = true, zoom = true, position = 'center', i = 0, class: classe } = Astro.props;
+---
+
+<div
+  class:list={['photo-cadre', classe, { zoom }]}
+  data-reveal={reveler ? 'image' : undefined}
+  style={`aspect-ratio:${ratio};--i:${i}`}
+>
+  {
+    src ? (
+      <img class="photo" src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" style={`object-position:${position}`} />
+    ) : (
+      <div class="photo-a-venir" role="img" aria-label={alt}>
+        <span>Photo à venir</span>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .photo-cadre {
+    position: relative;
+    overflow: hidden;
+  }
+  .photo,
+  .photo-a-venir {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: auto;
+  }
+</style>

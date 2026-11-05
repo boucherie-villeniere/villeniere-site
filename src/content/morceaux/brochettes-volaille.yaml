@@ -1,0 +1,12 @@
+nom: "Brochettes de volaille marinées"
+viande: "volaille"
+cuissons:
+  - "a-griller"
+description: "Préparées et marinées maison, prêtes à griller."
+conseil: "Grillez à feu moyen en les retournant souvent pour ne pas les dessécher."
+temps: "10 à 12 min"
+personnes: "2 brochettes par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 15

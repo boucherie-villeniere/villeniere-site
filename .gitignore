@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.netlify/
+.env
+.env.*
+!.env.example
+# Sources graphiques lourdes (.ai, PDF) : gardées dans Dropbox, pas dans le dépôt
+assets/
+# Réglages locaux de Claude Code
+.claude/

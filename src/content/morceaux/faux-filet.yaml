@@ -1,0 +1,13 @@
+nom: "Faux-filet"
+viande: "boeuf"
+cuissons:
+  - "a-griller"
+  - "a-rotir"
+description: "Tendre et bordé d’un fin gras qui fond à la cuisson."
+conseil: "Incisez légèrement le gras pour qu’il ne se rétracte pas."
+temps: "3 min par face"
+personnes: "1 personne (200 g)"
+image: ""
+surCommande: false
+actif: true
+ordre: 3

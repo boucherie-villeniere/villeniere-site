@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import EntetePage from '../components/EntetePage.astro';
+import { getReglages } from '../lib/data';
+
+const r = getReglages();
+---
+
+<Base title="Mentions légales">
+  <EntetePage titre="Mentions légales" />
+  <section class="section legal">
+    <div class="conteneur">
+      <h2>Éditeur du site</h2>
+      <p>
+        {r.legal.raisonSociale}<br />
+        {r.adresse}, {r.codePostal} {r.ville}<br />
+        SIRET : {r.legal.siret}<br />
+        {r.telephone && <>Téléphone : {r.telephone}<br /></>}
+        Responsable de la publication : {r.legal.responsable}
+      </p>
+
+      <h2>Hébergement</h2>
+      <p>{r.legal.hebergeur}</p>
+
+      <h2>Commandes en click &amp; collect</h2>
+      <p>
+        Les commandes passées sur ce site sont des réservations : le règlement s’effectue en boutique, au moment du retrait.
+        Les prix des produits vendus au poids sont indicatifs et ajustés à la pesée. S’agissant de denrées périssables, le droit de
+        rétractation ne s’applique pas (article L221-28 du Code de la consommation). Pour modifier ou annuler une commande,
+        contactez-nous par téléphone.
+      </p>
+
+      <h2>Données personnelles</h2>
+      <p>
+        Les informations saisies lors d’une commande (nom, téléphone, e-mail facultatif) servent uniquement à préparer votre commande
+        et à vous contacter à son sujet. Elles ne sont ni revendues ni utilisées à des fins publicitaires, et sont supprimées au
+        plus tard trois mois après le retrait. Vous pouvez demander à y accéder, les rectifier ou les supprimer en nous contactant.
+      </p>
+      <p>Ce site n’utilise pas de cookies publicitaires ni de traceurs de mesure d’audience nécessitant votre consentement.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal .conteneur {
+    max-width: 760px;
+  }
+  .legal h2 {
+    font-size: 1.5rem;
+    margin-top: 40px;
+  }
+</style>

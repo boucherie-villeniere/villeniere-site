@@ -1,0 +1,12 @@
+nom: "Jarret de porc"
+viande: "porc"
+cuissons:
+  - "a-mijoter"
+description: "Plein de collagène, il fond après une longue cuisson."
+conseil: "En potée ou braisé à la bière, avec des légumes racines."
+temps: "2 h 30 à feu doux"
+personnes: "1 jarret pour 2"
+image: ""
+surCommande: false
+actif: true
+ordre: 24

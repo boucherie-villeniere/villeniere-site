@@ -1,0 +1,29 @@
+annonce: ''
+adresse: 89 avenue du Président Wilson
+codePostal: '93230'
+ville: Romainville
+telephone: 01 41 71 88 02
+sms: 06 40 49 28 04
+email: ''
+instagram: https://www.instagram.com/villeniere/
+facebook: ''
+horaires:
+  - jour: lun
+    plages: À compléter
+  - jour: mar
+    plages: À compléter
+  - jour: mer
+    plages: À compléter
+  - jour: jeu
+    plages: À compléter
+  - jour: ven
+    plages: À compléter
+  - jour: sam
+    plages: À compléter
+  - jour: dim
+    plages: À compléter
+legal:
+  raisonSociale: À compléter
+  siret: À compléter
+  responsable: À compléter
+  hebergeur: Netlify, Inc. — 512 2nd Street, Suite 200, San Francisco, CA 94107, USA

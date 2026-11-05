@@ -1,0 +1,50 @@
+---
+import Base from '../layouts/Base.astro';
+import EntetePage from '../components/EntetePage.astro';
+import BlocTextePhoto from '../components/BlocTextePhoto.astro';
+import Photo from '../components/Photo.astro';
+import { getBoucherie } from '../lib/data';
+
+const b = getBoucherie();
+---
+
+<Base title="La boucherie" description={b.chapo}>
+  <EntetePage surtitre="La boucherie" titre={b.titre} chapo={b.chapo} />
+
+  {
+    b.chapitres.map((c, i) => (
+      <section class="section">
+        <div class="conteneur">
+          <BlocTextePhoto bloc={c} inverse={i % 2 === 1} />
+        </div>
+      </section>
+    ))
+  }
+
+  {
+    b.galerie.filter(Boolean).length > 0 && (
+      <section class="section">
+        <div class="conteneur">
+          <ul class="galerie">
+            {b.galerie.filter(Boolean).map((src) => (
+              <li>
+                <Photo src={src} alt="La boucherie Villenière" ratio="1 / 1" />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+</Base>
+
+<style>
+  .galerie {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+</style>

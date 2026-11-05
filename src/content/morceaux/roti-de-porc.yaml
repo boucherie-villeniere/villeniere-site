@@ -1,0 +1,12 @@
+nom: "Rôti de porc"
+viande: "porc"
+cuissons:
+  - "a-rotir"
+description: "Dans la longe ou l’échine, ficelé par nos soins."
+conseil: "Four à 180 °C, arrosez avec un peu d’eau et de vin blanc."
+temps: "45 min par kg"
+personnes: "180 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 20

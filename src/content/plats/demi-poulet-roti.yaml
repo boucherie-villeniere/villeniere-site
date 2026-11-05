@@ -1,0 +1,11 @@
+nom: Demi-poulet rôti
+actif: true
+description: La moitié d’un poulet fermier rôti, idéal pour deux.
+prix: 9.5
+unite: piece
+precision: pour 2 personnes
+image: ''
+jours: []
+quantiteMax: 4
+allergenes: []
+ordre: 2

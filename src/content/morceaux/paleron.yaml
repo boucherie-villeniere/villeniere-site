@@ -1,0 +1,12 @@
+nom: "Paleron"
+viande: "boeuf"
+cuissons:
+  - "a-mijoter"
+description: "Traversé d’un nerf qui devient gélatineux et fondant."
+conseil: "Idéal en bœuf bourguignon ou en daube, mouillé au vin rouge."
+temps: "2 h 30 à 3 h à feu doux"
+personnes: "200 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 8

@@ -1,0 +1,50 @@
+---
+import { getReglages } from '../lib/data';
+import { JOURS_LABELS, ORDRE_JOURS } from '../lib/commande';
+
+const horaires = [...getReglages().horaires].sort((a, b) => ORDRE_JOURS.indexOf(a.jour) - ORDRE_JOURS.indexOf(b.jour));
+---
+
+<dl class="horaires">
+  {
+    horaires.map((h) => (
+      <div data-jour={h.jour}>
+        <dt>{JOURS_LABELS[h.jour]}</dt>
+        <dd>{h.plages}</dd>
+      </div>
+    ))
+  }
+</dl>
+
+<script>
+  // Met en avant le jour courant (heure de Paris).
+  const jours = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+  const nom = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'Europe/Paris' }).format(new Date());
+  const idx = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(nom);
+  document.querySelectorAll(`.horaires [data-jour="${jours[idx]}"]`).forEach((el) => el.classList.add('aujourdhui'));
+</script>
+
+<style>
+  .horaires {
+    margin: 0;
+    display: grid;
+    gap: 4px;
+  }
+  .horaires div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 3px;
+    border-bottom: 1px dotted rgb(194 160 99 / 0.4);
+  }
+  dt {
+    font-weight: 500;
+  }
+  dd {
+    margin: 0;
+    text-align: right;
+  }
+  .aujourdhui {
+    color: var(--or);
+  }
+</style>

@@ -1,0 +1,29 @@
+{
+  "name": "villeniere-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/netlify": "^8.2.9",
+    "@astrojs/react": "^7.0.1",
+    "@fontsource-variable/playfair-display": "^5.3.0",
+    "@fontsource/roboto": "^5.3.0",
+    "@keystatic/astro": "^6.0.0",
+    "@keystatic/core": "^0.6.9",
+    "astro": "^7.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^5.9.3"
+  }
+}

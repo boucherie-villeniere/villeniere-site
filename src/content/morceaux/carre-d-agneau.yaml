@@ -1,0 +1,12 @@
+nom: "Carré d’agneau"
+viande: "agneau"
+cuissons:
+  - "a-rotir"
+description: "Paré et manchonné, une pièce de fête."
+conseil: "Saisissez côté gras, puis 15 min au four à 200 °C. Reposez 5 min avant de trancher."
+temps: "20 min au total"
+personnes: "2 côtes par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 26

@@ -1,0 +1,12 @@
+nom: "Poulet fermier entier"
+viande: "volaille"
+cuissons:
+  - "a-rotir"
+description: "Élevé en plein air, à la chair ferme et goûteuse."
+conseil: "Badigeonnez de beurre, arrosez toutes les 20 min, et finissez à four chaud pour une peau croustillante."
+temps: "1 h 15 à 180 °C pour 1,6 kg"
+personnes: "4 personnes"
+image: ""
+surCommande: false
+actif: true
+ordre: 11

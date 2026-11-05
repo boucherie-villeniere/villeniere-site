@@ -1,0 +1,13 @@
+nom: "Travers de porc"
+viande: "porc"
+cuissons:
+  - "a-griller"
+  - "a-rotir"
+description: "À laquer ou à griller : fondant et caramélisé."
+conseil: "Précuisez 1 h au four à 150 °C, puis laquez et finissez au grill."
+temps: "1 h 30 au total"
+personnes: "400 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 21

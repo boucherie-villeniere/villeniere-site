@@ -1,0 +1,12 @@
+nom: "Plat de côtes"
+viande: "boeuf"
+cuissons:
+  - "a-mijoter"
+description: "L’indispensable du pot-au-feu, avec l’os."
+conseil: "Associez-le à du gîte et de la macreuse pour un bouillon riche."
+temps: "3 h à petits frémissements"
+personnes: "300 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 10

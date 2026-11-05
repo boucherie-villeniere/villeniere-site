@@ -1,0 +1,12 @@
+nom: "Pintade fermière"
+viande: "volaille"
+cuissons:
+  - "a-rotir"
+description: "Un goût légèrement giboyeux, parfait pour changer du poulet."
+conseil: "Bardez-la pour qu’elle reste moelleuse, et arrosez souvent."
+temps: "1 h à 180 °C"
+personnes: "3 à 4 personnes"
+image: ""
+surCommande: false
+actif: true
+ordre: 14

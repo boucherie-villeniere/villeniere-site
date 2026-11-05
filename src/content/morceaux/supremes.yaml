@@ -1,0 +1,12 @@
+nom: "Suprêmes de volaille"
+viande: "volaille"
+cuissons:
+  - "a-griller"
+description: "Le blanc avec la peau et l’aileron, pour une cuisson juteuse."
+conseil: "Démarrez côté peau dans une poêle froide, puis finissez à feu moyen."
+temps: "8 min côté peau + 5 min"
+personnes: "1 suprême par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 13

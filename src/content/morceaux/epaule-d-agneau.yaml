@@ -1,0 +1,13 @@
+nom: "Épaule d’agneau"
+viande: "agneau"
+cuissons:
+  - "a-rotir"
+  - "a-mijoter"
+description: "Plus persillée que le gigot, elle devient confite."
+conseil: "Rôtie longuement avec des gousses d’ail en chemise, ou désossée en navarin."
+temps: "2 h à 160 °C"
+personnes: "4 à 5 personnes"
+image: ""
+surCommande: false
+actif: true
+ordre: 28

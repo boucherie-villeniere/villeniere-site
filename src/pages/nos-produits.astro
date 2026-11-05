@@ -1,0 +1,98 @@
+---
+import Base from '../layouts/Base.astro';
+import EntetePage from '../components/EntetePage.astro';
+import Experience from '../components/Experience.tsx';
+import Pictogramme from '../components/Pictogramme.tsx';
+import { getCuissons, getMorceaux, getProduits, getReglages, getViandes } from '../lib/data';
+import '../styles/produits.css';
+
+const p = getProduits();
+const viandes = getViandes();
+const cuissons = getCuissons();
+const morceaux = getMorceaux();
+const r = getReglages();
+---
+
+<Base title="Nos produits" description={p.chapo}>
+  <EntetePage surtitre="Nos produits" titre={p.titre} chapo={p.chapo} />
+
+  <section class="section xp-section" aria-label="Trouver le bon morceau">
+    <div class="conteneur">
+      <Experience
+        client:load
+        viandes={viandes}
+        cuissons={cuissons}
+        morceaux={morceaux}
+        questionViande={p.questionViande}
+        questionCuisson={p.questionCuisson}
+        messageFin={p.messageFin}
+        telephone={r.telephone}
+      />
+    </div>
+  </section>
+
+  <section class="section carte" aria-labelledby="carte-titre">
+    <div class="conteneur">
+      <p class="surtitre" data-reveal>Toute la carte</p>
+      <h2 id="carte-titre" data-reveal style="--i:1">Par viande, par cuisson</h2>
+      <div class="carte-liste">
+        {
+          viandes.map((v, i) => {
+            const mv = morceaux.filter((m) => m.viande === v.slug);
+            if (mv.length === 0) return null;
+            return (
+              <details class="carte-viande" data-reveal style={`--i:${i}`}>
+                <summary>
+                  <span class="carte-nom">{v.nom}</span>
+                  {v.provenance && !/compl[ée]ter/i.test(v.provenance) && <span class="carte-prov">{v.provenance}</span>}
+                  <span class="carte-n">{mv.length} morceaux</span>
+                  <span class="carte-signe" aria-hidden="true" />
+                </summary>
+                <div class="carte-contenu">
+                  {v.description && <p class="carte-desc">{v.description}</p>}
+                  <div class="carte-cuissons">
+                    {cuissons.map((c) => {
+                      const mc = mv.filter((m) => m.cuissons.includes(c.slug));
+                      if (mc.length === 0) return null;
+                      return (
+                        <div class="carte-cuisson">
+                          <h3>
+                            <Pictogramme nom={c.pictogramme} taille={28} />
+                            {c.nom}
+                          </h3>
+                          <ul>
+                            {mc.map((m) => (
+                              <li>
+                                <a href={`#${v.slug}/${c.slug}`} class="carte-morceau">
+                                  <span class="carte-morceau-nom">{m.nom}</span>
+                                  {m.surCommande && <span class="carte-morceau-temps">Sur commande</span>}
+                                  <span class="carte-fleche" aria-hidden="true">→</span>
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </details>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Un clic sur un morceau de la carte relance l'expérience sur la bonne étape.
+  document.querySelectorAll<HTMLAnchorElement>('.carte-morceau').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.pushState(null, '', a.hash);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      document.querySelector('.xp')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }),
+  );
+</script>

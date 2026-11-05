@@ -1,0 +1,31 @@
+---
+interface Props {
+  surtitre?: string;
+  titre: string;
+  chapo?: string;
+}
+const { surtitre, titre, chapo } = Astro.props;
+---
+
+<header class="entete-page">
+  <div class="conteneur">
+    {surtitre && <p class="surtitre" data-reveal>{surtitre}</p>}
+    <h1 data-reveal style="--i:1">{titre}</h1>
+    {chapo && <p class="chapo" data-reveal style="--i:3">{chapo}</p>}
+    <img class="frise" src="/brand/frise-or.svg" alt="" width="560" height="44" data-reveal style="--i:4" />
+  </div>
+</header>
+
+<style>
+  .entete-page {
+    padding-block: clamp(48px, 8vw, 96px) clamp(24px, 4vw, 48px);
+    text-align: center;
+  }
+  .chapo {
+    margin-inline: auto;
+    color: var(--gris);
+  }
+  .frise {
+    margin-top: 32px;
+  }
+</style>

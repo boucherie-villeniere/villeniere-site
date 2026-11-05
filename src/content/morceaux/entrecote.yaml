@@ -1,0 +1,12 @@
+nom: "Entrecôte"
+viande: "boeuf"
+cuissons:
+  - "a-griller"
+description: "Marbrée et savoureuse, le morceau des amateurs de goût."
+conseil: "Poêle très chaude, beurre en fin de cuisson, fleur de sel au moment de servir."
+temps: "2 à 3 min par face pour saignant"
+personnes: "1 personne (250 g)"
+image: ""
+surCommande: false
+actif: true
+ordre: 2

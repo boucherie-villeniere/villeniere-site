@@ -1,0 +1,12 @@
+nom: "Souris d’agneau"
+viande: "agneau"
+cuissons:
+  - "a-mijoter"
+description: "Le bas du gigot, qui se détache de l’os à la fourchette."
+conseil: "Braisez-la avec tomates, ail et romarin, à couvert."
+temps: "2 h 30 à feu doux"
+personnes: "1 souris par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 29

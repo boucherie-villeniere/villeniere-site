@@ -1,0 +1,14 @@
+nom: "Échine"
+viande: "porc"
+cuissons:
+  - "a-griller"
+  - "a-rotir"
+  - "a-mijoter"
+description: "Persillée, elle reste moelleuse quelle que soit la cuisson."
+conseil: "En tranches au barbecue, en rôti au four ou en sauté mijoté."
+temps: "5 min par face · 1 h au four · 1 h 30 mijotée"
+personnes: "200 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 18

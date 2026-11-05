@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import EntetePage from '../components/EntetePage.astro';
+import Commander from '../components/Commander.tsx';
+import { getClickCollect, getPlats, getReglages } from '../lib/data';
+import '../styles/commander.css';
+
+const cc = getClickCollect();
+const plats = getPlats();
+const r = getReglages();
+const regles = {
+  actif: cc.actif,
+  joursRetrait: cc.joursRetrait,
+  creneaux: cc.creneaux,
+  heureLimite: cc.heureLimite,
+  joursAvance: cc.joursAvance,
+  fermetures: cc.fermetures,
+};
+---
+
+<Base title="Click & collect" description="Commandez poulets rôtis et plats maison en ligne, retirez-les à la boucherie Villenière à l’heure qui vous arrange.">
+  <EntetePage surtitre="Click & collect" titre="Commandez, on vous le prépare" chapo={cc.intro} />
+
+  <section class="section commander">
+    <div class="conteneur">
+      {
+        cc.actif && plats.length > 0 ? (
+          <>
+            <p class="commander-limite">
+              Commande jusqu’à <strong>{cc.heureLimite} h la veille</strong> du retrait, à la boutique : {r.adresse}, {r.ville}.
+              <br />
+              {cc.mentionPaiement}
+            </p>
+            <Commander client:load plats={plats} regles={regles} mentionPaiement={cc.mentionPaiement} />
+          </>
+        ) : (
+          <div class="cc-vide">
+            <p>{cc.messageFerme}</p>
+            {r.telephone && (
+              <a class="bouton" href={`tel:${r.telephone.replace(/\s/g, '')}`}>
+                {r.telephone}
+              </a>
+            )}
+          </div>
+        )
+      }
+    </div>
+  </section>
+</Base>

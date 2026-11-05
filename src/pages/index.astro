@@ -1,0 +1,373 @@
+---
+import Base from '../layouts/Base.astro';
+import Photo from '../components/Photo.astro';
+import BlocTextePhoto from '../components/BlocTextePhoto.astro';
+import StatutJour from '../components/StatutJour.astro';
+import { getAccueil, getPlats, getReglages, getClickCollect } from '../lib/data';
+import { formaterPrix, UNITES } from '../lib/commande';
+
+const a = getAccueil();
+const r = getReglages();
+const cc = getClickCollect();
+const plats = getPlats().slice(0, 4);
+const tel = r.telephone?.replace(/\s/g, '');
+---
+
+<Base title="Accueil" description={a.sousTitre}>
+  <section class="hero">
+    <div class="conteneur hero-grille">
+      <div class="hero-texte">
+        <p class="surtitre" data-reveal>Boucherie · {r.ville}</p>
+        <h1 data-reveal style="--i:1">{a.titre}</h1>
+        {a.sousTitre && <p class="chapo" data-reveal style="--i:3">{a.sousTitre}</p>}
+        <div class="hero-actions" data-reveal style="--i:4">
+          {
+            cc.actif && (
+              <a class="bouton" href="/commander">
+                Commander en ligne <span class="fleche" aria-hidden="true">→</span>
+              </a>
+            )
+          }
+          <a class="bouton bouton--contour" href="/la-boucherie">Découvrir</a>
+        </div>
+        <div data-reveal style="--i:5" class="hero-statut"><StatutJour /></div>
+      </div>
+
+      <div class="hero-visuel">
+        <div class="cadre-decale">
+          <Photo src={a.image} alt="La devanture de la boucherie Villenière" ratio="4 / 5" position="58% center" eager />
+        </div>
+        <svg class="sceau" viewBox="0 0 120 120" aria-hidden="true">
+          <defs><path id="cercle" d="M60 60m-46 0a46 46 0 1 1 92 0a46 46 0 1 1-92 0"></path></defs>
+          <circle cx="60" cy="60" r="59" fill="#15181b"></circle>
+          <text><textPath href="#cercle" textLength="286" lengthAdjust="spacing">Boucherie · Romainville · Fait maison · </textPath></text>
+          <path d="M44 44h9l7 21 7-21h9L64 78h-8z" fill="#c2a063"></path>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <div class="ruban" aria-hidden="true">
+    <div class="ruban-piste">
+      {Array.from({ length: 8 }, () => <img src="/brand/frise-or.svg" alt="" width="513" height="40" />)}
+    </div>
+  </div>
+
+  {
+    a.engagements.length > 0 && (
+      <section class="section engagements">
+        <div class="conteneur">
+          <ol class="engagements-liste">
+            {a.engagements.map((e, i) => (
+              <li data-reveal style={`--i:${i}`}>
+                <span class="filet" />
+                <h2>{e.titre}</h2>
+                <p>{e.texte}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    cc.actif && plats.length > 0 && (
+      <section class="section motif cc">
+        <div class="conteneur">
+          <div class="entete-section">
+            <div>
+              <p class="surtitre" data-reveal>Click &amp; collect</p>
+              <h2 data-reveal style="--i:1">Commandez, on vous le prépare.</h2>
+            </div>
+            <p class="cc-intro" data-reveal style="--i:2">
+              {cc.intro}
+            </p>
+          </div>
+          <ul class="plats">
+            {plats.map((p, i) => (
+              <li data-reveal style={`--i:${i}`}>
+                <a href="/commander" class="plat">
+                  <Photo src={p.image} alt={p.nom} ratio="4 / 5" reveler={false} />
+                  <span class="plat-cta" aria-hidden="true">
+                    Commander <span class="fleche">→</span>
+                  </span>
+                  <div class="plat-texte">
+                    <h3>{p.nom}</h3>
+                    <span class="plat-prix">
+                      {formaterPrix(p.prix)} <small>/ {UNITES[p.unite]}</small>
+                    </span>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p class="cc-suite" data-reveal>
+            <a class="bouton bouton--or" href="/commander">
+              Voir tous les plats <span class="fleche" aria-hidden="true">→</span>
+            </a>
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    a.sections.map((s, i) => (
+      <section class="section">
+        <div class="conteneur">
+          <BlocTextePhoto bloc={s} inverse={i % 2 === 1} />
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="section visite">
+    <div class="conteneur visite-grille">
+      <div class="visite-texte">
+        <p class="surtitre" data-reveal>Venez nous voir</p>
+        <h2 data-reveal style="--i:1">{r.adresse}, {r.ville}</h2>
+        <div data-reveal style="--i:2"><StatutJour /></div>
+        <p class="visite-actions" data-reveal style="--i:3">
+          <a class="bouton" href="/infos-pratiques">Horaires &amp; accès <span class="fleche" aria-hidden="true">→</span></a>
+          {r.telephone && <a class="lien visite-tel" href={`tel:${tel}`}>{r.telephone}</a>}
+        </p>
+      </div>
+      <div class="cadre-decale">
+        <Photo src="/images/accueil/facade.webp" alt="La boutique, avenue du Président Wilson" ratio="3 / 2" />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* Hero */
+  .hero {
+    padding-block: clamp(32px, 6vw, 80px) clamp(56px, 8vw, 112px);
+  }
+  .hero-grille {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: center;
+    gap: clamp(40px, 7vw, 110px);
+  }
+  .hero h1 {
+    margin-bottom: 0.4em;
+  }
+  .hero .chapo {
+    max-width: 44ch;
+    color: var(--gris);
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 36px;
+  }
+  .hero-statut {
+    margin-top: 28px;
+  }
+  .hero-visuel {
+    position: relative;
+    margin-right: clamp(10px, 1.6vw, 20px);
+  }
+  .sceau {
+    position: absolute;
+    left: clamp(-56px, -4vw, -28px);
+    bottom: clamp(-56px, -4vw, -28px);
+    width: clamp(96px, 11vw, 132px);
+    animation: tourner 28s linear infinite;
+  }
+  .sceau text {
+    fill: var(--or);
+    font: 500 10.4px var(--corps);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+  .sceau path:last-child {
+    transform-origin: 60px 60px;
+    animation: tourner 28s linear infinite reverse;
+  }
+  @keyframes tourner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Engagements */
+  .engagements-liste {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(32px, 5vw, 72px);
+  }
+  .filet {
+    display: block;
+    width: 48px;
+    height: 1px;
+    background: var(--or);
+    margin: 0 0 26px;
+  }
+  .engagements h2 {
+    font-size: clamp(1.6rem, 2.4vw, 2rem);
+  }
+  .engagements p {
+    color: var(--gris);
+    max-width: 36ch;
+  }
+
+  /* Click & collect */
+  .entete-section {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: end;
+    gap: 32px 64px;
+    margin-bottom: clamp(40px, 6vw, 72px);
+  }
+  .entete-section h2 {
+    margin: 0;
+  }
+  .cc-intro {
+    margin: 0;
+    max-width: 44ch;
+    font-weight: 300;
+    font-size: 1.1rem;
+  }
+  .plats {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+  .plat {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    overflow: hidden;
+  }
+  .plat::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgb(21 24 27 / 0.92) 0%, rgb(21 24 27 / 0.2) 45%, transparent 70%);
+    pointer-events: none;
+  }
+  .plat-texte {
+    position: absolute;
+    inset: auto 0 0;
+    z-index: 1;
+    padding: 22px;
+  }
+  .plat h3 {
+    margin: 0 0 6px;
+    font-size: 1.45rem;
+    color: var(--blanc);
+  }
+  .plat-prix {
+    color: var(--or);
+    font-size: 1.05rem;
+  }
+  .plat-prix small {
+    color: #cfc7b8;
+  }
+  .plat-cta {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 1;
+    padding: 10px 14px;
+    background: var(--or);
+    color: var(--anthracite);
+    font: 500 0.72rem/1 var(--corps);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    opacity: 0;
+    transition: opacity 0.6s var(--ease-doux);
+  }
+  .plat:hover .plat-cta,
+  .plat:focus-visible .plat-cta {
+    opacity: 1;
+  }
+  .plat:hover :global(img),
+  .plat:hover :global(.photo-a-venir) {
+    transform: scale(1.04);
+  }
+  .plat :global(.photo-a-venir span) {
+    display: none;
+  }
+  .cc-suite {
+    margin: clamp(40px, 5vw, 64px) 0 0;
+    text-align: center;
+  }
+
+  /* Visite */
+  .visite {
+    background: var(--blanc);
+  }
+  .visite-grille {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: clamp(40px, 7vw, 110px);
+    align-items: center;
+  }
+  .visite h2 {
+    font-size: clamp(2rem, 3.6vw, 3rem);
+  }
+  .visite-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 28px;
+    margin-top: 36px;
+  }
+  .visite-tel {
+    font: 500 1rem/1 var(--corps);
+    letter-spacing: 0.08em;
+  }
+
+  @media (max-width: 1100px) {
+    .plats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 860px) {
+    .hero-grille,
+    .visite-grille,
+    .entete-section {
+      grid-template-columns: 1fr;
+    }
+    .hero-visuel {
+      max-width: 520px;
+      margin-left: 28px;
+    }
+    .engagements-liste {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 520px) {
+    .plats {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .plat-texte {
+      padding: 14px;
+    }
+    .plat h3 {
+      font-size: 1.1rem;
+    }
+    .plat-prix {
+      font-size: 0.9rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sceau,
+    .sceau path:last-child {
+      animation-duration: 56s;
+    }
+  }
+</style>

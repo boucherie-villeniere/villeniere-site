@@ -1,0 +1,15 @@
+nom: Gratin dauphinois maison
+actif: true
+description: Pommes de terre, crème, lait, une pointe d’ail et de muscade.
+prix: 6.5
+unite: part
+precision: pour 2 personnes
+image: ''
+jours:
+  - ven
+  - sam
+  - dim
+quantiteMax: 6
+allergenes:
+  - lait
+ordre: 4

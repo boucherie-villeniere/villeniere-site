@@ -1,0 +1,11 @@
+nom: Grenailles au jus
+actif: true
+description: Pommes de terre grenaille dorées sous la broche, dans le jus de cuisson.
+prix: 4.5
+unite: barquette
+precision: env. 500 g
+image: ''
+jours: []
+quantiteMax: 6
+allergenes: []
+ordre: 3

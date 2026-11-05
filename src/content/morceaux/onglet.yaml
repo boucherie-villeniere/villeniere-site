@@ -1,0 +1,12 @@
+nom: "Onglet"
+viande: "boeuf"
+cuissons:
+  - "a-griller"
+description: "Morceau du boucher, très tendre et au goût puissant."
+conseil: "À servir saignant avec des échalotes fondues."
+temps: "2 min par face"
+personnes: "1 personne (180 g)"
+image: ""
+surCommande: false
+actif: true
+ordre: 5

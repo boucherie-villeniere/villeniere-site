@@ -1,0 +1,12 @@
+nom: "Saucisses maison"
+viande: "porc"
+cuissons:
+  - "a-griller"
+description: "Fabriquées à la boutique, en boyau naturel."
+conseil: "Ne les piquez pas ! Cuisson douce pour qu’elles restent juteuses."
+temps: "12 à 15 min à feu moyen"
+personnes: "2 par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 23

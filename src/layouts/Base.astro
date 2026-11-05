@@ -1,0 +1,95 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { getReglages } from '../lib/data';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { title, description = 'Boucherie Villenière à Romainville : viandes d’éleveurs choisis, préparations maison, poulets rôtis et click & collect.', image = '/images/accueil/facade.webp' } = Astro.props;
+const r = getReglages();
+const titreComplet = title === 'Accueil' ? 'Boucherie Villenière — Romainville' : `${title} — Boucherie Villenière`;
+const canonique = new URL(Astro.url.pathname, Astro.site);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'ButcherShop',
+  name: 'Boucherie Villenière',
+  url: Astro.site?.href,
+  image: new URL(image, Astro.site).href,
+  telephone: r.telephone,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: r.adresse,
+    postalCode: r.codePostal,
+    addressLocality: r.ville,
+    addressCountry: 'FR',
+  },
+  sameAs: [r.instagram, r.facebook].filter(Boolean),
+  // Les horaires sont saisis en texte libre : Google les lit sur la fiche
+  // Google Business, inutile de risquer un format invalide ici.
+};
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titreComplet}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonique} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#15181b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content={titreComplet} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(image, Astro.site)} />
+    <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    <!-- Active les animations avant le premier affichage, pour éviter un flash du contenu. -->
+    <script is:inline>
+      if ('IntersectionObserver' in window) document.documentElement.classList.add('anim');
+    </script>
+  </head>
+  <body>
+    <a class="visuellement-cache" href="#contenu">Aller au contenu</a>
+    {r.annonce && <div class="annonce">{r.annonce}</div>}
+    <Header />
+    <main id="contenu">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<script>
+  // Révèle en fondu les éléments [data-reveal] quand ils entrent dans l'écran.
+  if (document.documentElement.classList.contains('anim')) {
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        for (const e of entrees) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add('visible');
+          observateur.unobserve(e.target);
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
+    );
+    document.querySelectorAll('[data-reveal]').forEach((el) => observateur.observe(el));
+  }
+</script>
+
+<style>
+  .annonce {
+    background: var(--or);
+    color: var(--anthracite);
+    text-align: center;
+    font: 500 0.9rem/1.4 var(--corps);
+    padding: 10px var(--gouttiere);
+  }
+</style>

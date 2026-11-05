@@ -1,0 +1,54 @@
+---
+// Une seule ligne « Aujourd'hui : … » au lieu du tableau complet des horaires.
+// Calculée dans le navigateur (heure de Paris), la page étant statique.
+import { getReglages } from '../lib/data';
+
+const horaires = Object.fromEntries(getReglages().horaires.map((h) => [h.jour, h.plages]));
+---
+
+<p class="statut" data-horaires={JSON.stringify(horaires)} hidden>
+  <span class="statut-point" aria-hidden="true"></span>
+  <span class="statut-texte"></span>
+</p>
+
+<script>
+  const JOURS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+  const court = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'Europe/Paris' }).format(new Date());
+  const jour = JOURS[['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(court)];
+
+  document.querySelectorAll<HTMLElement>('.statut').forEach((el) => {
+    const plages: string | undefined = JSON.parse(el.dataset.horaires ?? '{}')[jour];
+    if (!plages) return;
+    const ferme = /ferm/i.test(plages);
+    // Tant que les horaires ne sont pas saisis (pas de chiffres), on n'affiche rien.
+    if (!ferme && !/\d/.test(plages)) return;
+    el.querySelector('.statut-texte')!.textContent = ferme ? 'Fermé aujourd’hui' : `Aujourd’hui · ${plages}`;
+    el.classList.toggle('ferme', ferme);
+    el.hidden = false;
+  });
+</script>
+
+<style>
+  .statut {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font: 500 0.82rem/1.3 var(--corps);
+    letter-spacing: 0.08em;
+  }
+  .statut[hidden] {
+    display: none;
+  }
+  .statut-point {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #5f8f4e;
+    box-shadow: 0 0 0 4px rgb(95 143 78 / 0.18);
+  }
+  .ferme .statut-point {
+    background: #a3302a;
+    box-shadow: 0 0 0 4px rgb(163 48 42 / 0.15);
+  }
+</style>

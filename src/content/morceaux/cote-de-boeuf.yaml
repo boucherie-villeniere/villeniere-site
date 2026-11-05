@@ -1,0 +1,13 @@
+nom: "Côte de bœuf"
+viande: "boeuf"
+cuissons:
+  - "a-griller"
+  - "a-rotir"
+description: "La pièce reine : persillée, avec l’os qui donne du goût."
+conseil: "Sortez-la du frigo 1 h avant. Saisissez fort, puis finissez au four à 180 °C. Laissez reposer autant de temps qu’elle a cuit."
+temps: "4 min par face + 10 à 15 min au four"
+personnes: "2 à 3 personnes (1 kg)"
+image: ""
+surCommande: false
+actif: true
+ordre: 1

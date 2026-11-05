@@ -1,0 +1,12 @@
+nom: "Collier / sauté d’agneau"
+viande: "agneau"
+cuissons:
+  - "a-mijoter"
+description: "Parfait pour le navarin, le curry ou le tajine."
+conseil: "Faites bien colorer les morceaux avant de mouiller."
+temps: "1 h 30 à 2 h"
+personnes: "250 g par personne"
+image: ""
+surCommande: false
+actif: true
+ordre: 30

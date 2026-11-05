@@ -1,0 +1,82 @@
+---
+import Base from '../layouts/Base.astro';
+import EntetePage from '../components/EntetePage.astro';
+import Horaires from '../components/Horaires.astro';
+import { getReglages } from '../lib/data';
+
+const r = getReglages();
+const adresseComplete = `Boucherie Villenière, ${r.adresse}, ${r.codePostal} ${r.ville}`;
+const carte = `https://maps.google.com/maps?q=${encodeURIComponent(adresseComplete)}&z=16&output=embed`;
+const itineraire = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(adresseComplete)}`;
+const tel = (n?: string) => n?.replace(/\s/g, '');
+---
+
+<Base title="Infos pratiques" description={`Horaires, adresse et contact de la boucherie Villenière, ${r.adresse} à ${r.ville}.`}>
+  <EntetePage surtitre="Infos pratiques" titre="Horaires & accès" />
+
+  <section class="section infos">
+    <div class="conteneur infos-grille">
+      <div class="infos-texte">
+        <h2>Adresse</h2>
+        <p>
+          {r.adresse}<br />
+          {r.codePostal} {r.ville}
+        </p>
+        <p><a class="bouton bouton--contour" href={itineraire} target="_blank" rel="noopener">Itinéraire</a></p>
+
+        <h2>Horaires</h2>
+        <Horaires />
+
+        <h2>Contact</h2>
+        <ul class="contacts">
+          {r.telephone && <li>Téléphone : <a href={`tel:${tel(r.telephone)}`}>{r.telephone}</a></li>}
+          {r.sms && <li>SMS : <a href={`sms:${tel(r.sms)}`}>{r.sms}</a></li>}
+          {r.email && <li>E-mail : <a href={`mailto:${r.email}`}>{r.email}</a></li>}
+          {r.instagram && <li>Instagram : <a href={r.instagram} target="_blank" rel="noopener">@villeniere</a></li>}
+        </ul>
+      </div>
+      <div class="carte cadre">
+        <div class="cadre-interieur">
+          <iframe title="Plan d’accès à la boucherie Villenière" src={carte} loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .infos {
+    padding-top: 24px;
+  }
+  .infos-grille {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: clamp(32px, 6vw, 80px);
+    align-items: start;
+  }
+  .infos-texte h2 {
+    font-size: 1.6rem;
+    margin-top: 40px;
+  }
+  .infos-texte h2:first-child {
+    margin-top: 0;
+  }
+  .contacts {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 6px;
+  }
+  .carte iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3.4;
+    border: 0;
+  }
+  @media (max-width: 860px) {
+    .infos-grille {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
