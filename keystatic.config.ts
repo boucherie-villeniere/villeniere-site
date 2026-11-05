@@ -78,7 +78,7 @@ export default config({
             raisonSociale: fields.text({ label: 'Raison sociale' }),
             siret: fields.text({ label: 'SIRET' }),
             responsable: fields.text({ label: 'Responsable de la publication' }),
-            hebergeur: fields.text({ label: 'Hébergeur', defaultValue: 'Netlify, Inc. — 512 2nd Street, Suite 200, San Francisco, CA 94107, USA' }),
+            hebergeur: fields.text({ label: 'Hébergeur', defaultValue: 'Cloudflare, Inc. — 101 Townsend Street, San Francisco, CA 94107, USA' }),
           },
           { label: 'Mentions légales' },
         ),
@@ -187,6 +187,26 @@ export default config({
         mentionPaiement: fields.text({
           label: 'Mention paiement',
           defaultValue: 'Le règlement se fait en boutique, au moment du retrait.',
+        }),
+        emailClientObjet: fields.text({
+          label: 'E-mail au client : objet',
+          description: 'Envoyé automatiquement si le client a laissé son e-mail. Le détail de la commande, la date et l’adresse sont ajoutés automatiquement.',
+          defaultValue: 'Votre commande à la boucherie Villenière',
+        }),
+        emailClientTitre: fields.text({
+          label: 'E-mail au client : titre',
+          defaultValue: 'Merci pour votre commande !',
+        }),
+        emailClientIntro: fields.text({
+          label: 'E-mail au client : texte d’accueil',
+          description: 'Après « Bonjour [nom], ». Une ligne vide = nouveau paragraphe.',
+          multiline: true,
+          defaultValue: 'Nous avons bien reçu votre commande, nous vous la préparons avec soin.',
+        }),
+        emailClientFin: fields.text({
+          label: 'E-mail au client : message de fin',
+          multiline: true,
+          defaultValue: 'Un empêchement ? Appelez-nous, tout simplement. À très vite à la boutique !',
         }),
       },
     }),

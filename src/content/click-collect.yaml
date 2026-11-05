@@ -18,3 +18,7 @@ heureLimite: 18
 joursAvance: 7
 fermetures: []
 mentionPaiement: Le règlement se fait en boutique, au moment du retrait.
+emailClientObjet: Votre commande à la boucherie Villenière
+emailClientTitre: Merci pour votre commande !
+emailClientIntro: Nous avons bien reçu votre commande, nous vous la préparons avec soin.
+emailClientFin: Un empêchement ? Appelez-nous, tout simplement. À très vite à la boutique !

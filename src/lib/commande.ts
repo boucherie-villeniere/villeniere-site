@@ -74,7 +74,7 @@ export function maintenantParis(now = new Date()) {
   return { date: `${parts.year}-${parts.month}-${parts.day}`, heure: Number(parts.hour) };
 }
 
-function ajouterJours(iso: string, n: number) {
+export function ajouterJours(iso: string, n: number) {
   const d = new Date(`${iso}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);

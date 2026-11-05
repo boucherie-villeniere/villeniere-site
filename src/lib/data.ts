@@ -101,6 +101,10 @@ export interface ClickCollect {
   joursAvance: number;
   fermetures: string[];
   mentionPaiement?: string;
+  emailClientObjet?: string;
+  emailClientTitre?: string;
+  emailClientIntro?: string;
+  emailClientFin?: string;
 }
 
 export interface Plat {

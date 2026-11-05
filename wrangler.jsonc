@@ -4,7 +4,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "villeniere",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "./src/worker.ts",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -12,8 +12,15 @@
     "binding": "ASSETS"
   },
   "vars": {
-    "PUBLIC_KEYSTATIC_GITHUB_APP_SLUG": "boucherie-villeniere-keystatic"
+    "PUBLIC_KEYSTATIC_GITHUB_APP_SLUG": "boucherie-villeniere-keystatic",
+    // Adresse publique du site, pour les liens et le logo des e-mails envoyés
+    // hors visite (récapitulatif du matin). À changer au branchement du domaine.
+    "SITE_URL": "https://villeniere.christelle.workers.dev"
   },
+  // Commandes click & collect (créée automatiquement au premier déploiement).
+  "d1_databases": [{ "binding": "DB", "database_name": "villeniere-commandes" }],
+  // Récapitulatif du matin : 6 h et 7 h UTC, le code ne garde que 8 h à Paris.
+  "triggers": { "crons": ["0 6,7 * * *"] },
   "observability": { "enabled": true },
   // Ne pas effacer à chaque déploiement les variables saisies dans le tableau de bord.
   "keep_vars": true

@@ -30,7 +30,16 @@ npm run dev
 
 1. Le client choisit un jour (à partir du lendemain si avant l'heure limite, sinon du surlendemain), un créneau, ses plats et laisse nom + téléphone.
 2. `src/pages/api/commande.ts` revérifie tout côté serveur (dates, disponibilité des plats par jour, quantités max), puis envoie un e-mail à la boucherie (et un récapitulatif au client s'il a donné son e-mail).
-3. Paiement en boutique au retrait. Règles partagées navigateur/serveur : `src/lib/commande.ts`.
+3. La commande est enregistrée dans Cloudflare D1 (`src/lib/stockage.ts`, table créée automatiquement).
+4. Paiement en boutique au retrait. Règles partagées navigateur/serveur : `src/lib/commande.ts`.
+
+E-mails (`src/lib/emails.ts`, gabarit aux couleurs de la boutique) : un à la boucherie, un au client s'il a laissé son e-mail (objet, titre et textes modifiables dans l'admin, « Réglages du click & collect »).
+
+### Planning des commandes : `/commandes`
+
+Page réservée à la boutique (mot de passe = secret `COMMANDES_MOT_DE_PASSE`, connexion gardée 30 jours) : semaine en calendrier, détail du jour par créneau, quantités à préparer, statut de chaque commande (à préparer, prête, retirée, annulée). La page se rafraîchit toute seule toutes les 3 minutes.
+
+Récapitulatif du matin : chaque jour de retrait à 8 h (Paris), un e-mail liste les commandes du jour (`src/worker.ts`, déclencheur `triggers.crons` dans `wrangler.jsonc`).
 
 ## Mise en ligne (Cloudflare Workers)
 
@@ -42,8 +51,9 @@ npm run dev
 4. Secrets **d'exécution** (Settings → Variables and Secrets, type *Secret*) — lus à chaque requête :
    - `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET` (app GitHub « boucherie-villeniere-keystatic »)
    - `RESEND_API_KEY` (compte Resend, domaine `boucherie-villeniere.fr` vérifié par DNS)
+   - `COMMANDES_MOT_DE_PASSE` (accès à la page `/commandes`)
 5. Dans l'app GitHub (Settings → Developer settings → GitHub Apps), chaque adresse du site doit avoir son *Callback URL* : `https://<adresse>/api/keystatic/github/oauth/callback`.
-6. Domaine : Cloudflare → le Worker → Settings → Domains & Routes → *Custom domain*. Le domaine reste chez OVH (DNS et e-mails), on y ajoute les enregistrements demandés.
+6. Domaine : Cloudflare → le Worker → Settings → Domains & Routes → *Custom domain*. Le domaine reste chez OVH (DNS et e-mails), on y ajoute les enregistrements demandés. Mettre aussi à jour `SITE_URL` dans `wrangler.jsonc`.
 
 Tester localement comme en production : `npm run build` puis `npx astro preview`.
 

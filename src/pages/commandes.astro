@@ -1,0 +1,662 @@
+---
+// Planning des commandes click & collect, réservé à la boutique.
+// Une seule page : connexion (mot de passe), vue semaine + détail du jour,
+// changement de statut. Les formulaires fonctionnent sans JavaScript.
+import { env } from 'cloudflare:workers';
+import '../styles/global.css';
+import { COOKIE, DUREE_JOURS, creerJeton, jetonValide, motDePasseCorrect } from '../lib/acces';
+import { ajouterJours, formaterPrix, jourDeSemaine, maintenantParis, ORDRE_JOURS } from '../lib/commande';
+import { getClickCollect } from '../lib/data';
+import { uniteAffichee } from '../lib/recap';
+import { changerStatut, commandesEntre, STATUTS, totauxParPlat, trierParCreneau, type Statut } from '../lib/stockage';
+
+export const prerender = false;
+
+const motDePasse = env.COMMANDES_MOT_DE_PASSE;
+const url = new URL(Astro.request.url);
+const aujourdhui = maintenantParis().date;
+const dateValide = (d: string | null) => (d && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null);
+
+let connecte = await jetonValide(motDePasse, Astro.cookies.get(COOKIE)?.value);
+let erreur = '';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  const action = form.get('action');
+  const jour = dateValide(String(form.get('jour') ?? '')) ?? aujourdhui;
+
+  if (action === 'connexion') {
+    if (await motDePasseCorrect(motDePasse, String(form.get('mot-de-passe') ?? ''))) {
+      Astro.cookies.set(COOKIE, await creerJeton(motDePasse!), {
+        httpOnly: true,
+        secure: url.protocol === 'https:',
+        sameSite: 'lax',
+        path: '/commandes',
+        maxAge: DUREE_JOURS * 86_400,
+      });
+      return Astro.redirect(`/commandes?jour=${jour}`, 303);
+    }
+    // Ralentit les essais en série.
+    await new Promise((r) => setTimeout(r, 1200));
+    erreur = 'Mot de passe incorrect.';
+  } else if (action === 'deconnexion') {
+    Astro.cookies.delete(COOKIE, { path: '/commandes' });
+    return Astro.redirect('/commandes', 303);
+  } else if (action === 'statut' && connecte) {
+    await changerStatut(env.DB, String(form.get('id')), String(form.get('statut')) as Statut);
+    return Astro.redirect(`/commandes?jour=${jour}#${form.get('id')}`, 303);
+  }
+}
+
+Astro.response.headers.set('Cache-Control', 'no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+
+// Semaine (lundi → dimanche) contenant le jour choisi.
+const jour = dateValide(url.searchParams.get('jour')) ?? aujourdhui;
+const lundi = ajouterJours(jour, -ORDRE_JOURS.indexOf(jourDeSemaine(jour)));
+const semaine = Array.from({ length: 7 }, (_, i) => ajouterJours(lundi, i));
+
+const cc = getClickCollect();
+let commandes: Awaited<ReturnType<typeof commandesEntre>> = [];
+let erreurBase = false;
+if (connecte) {
+  try {
+    commandes = trierParCreneau(await commandesEntre(env.DB, semaine[0], semaine[6]), cc.creneaux);
+  } catch (e) {
+    console.error('[gestion] lecture impossible', e);
+    erreurBase = true;
+  }
+}
+
+const actives = (d: string) => commandes.filter((c) => c.date === d && c.statut !== 'annulee');
+const duJour = commandes.filter((c) => c.date === jour);
+const totaux = totauxParPlat(duJour);
+const parCreneau = new Map<string, typeof duJour>();
+for (const c of duJour) parCreneau.set(c.creneau, [...(parCreneau.get(c.creneau) ?? []), c]);
+
+const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('fr-FR', { ...o, timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`));
+const titreJour = fmt(jour, { weekday: 'long', day: 'numeric', month: 'long' });
+const titreSemaine = `${fmt(semaine[0], { day: 'numeric', month: 'short' })} – ${fmt(semaine[6], { day: 'numeric', month: 'short' })}`;
+const heureCommande = (iso: string) =>
+  new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).format(new Date(iso));
+const caJour = actives(jour).reduce((s, c) => s + c.total, 0);
+const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    {connecte && <meta http-equiv="refresh" content="180" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>Commandes — Villenière</title>
+  </head>
+  <body>
+    {
+      !connecte ? (
+        <main class="connexion">
+          <img src="/brand/logo.svg" alt="Villenière — Boucherie" width="220" />
+          <h1>Planning des commandes</h1>
+          {motDePasse ? (
+            <form method="post">
+              <input type="hidden" name="action" value="connexion" />
+              <input type="hidden" name="jour" value={jour} />
+              <label for="mdp">Mot de passe</label>
+              <input id="mdp" name="mot-de-passe" type="password" autocomplete="current-password" required autofocus />
+              {erreur && <p class="erreur" role="alert">{erreur}</p>}
+              <button class="bouton" type="submit">Entrer</button>
+            </form>
+          ) : (
+            <p class="erreur">
+              Accès non configuré : ajoutez le secret <code>COMMANDES_MOT_DE_PASSE</code> dans Cloudflare (Settings → Runtime variables and secrets).
+            </p>
+          )}
+        </main>
+      ) : (
+        <div class="gestion">
+          <header class="barre">
+            <a href="/commandes" class="marque">
+              <img src="/brand/logo.svg" alt="Villenière" width="130" />
+              <span>Commandes</span>
+            </a>
+            <form method="post">
+              <input type="hidden" name="action" value="deconnexion" />
+              <button type="submit" class="lien-discret">Se déconnecter</button>
+            </form>
+          </header>
+
+          <nav class="semaine" aria-label="Choisir un jour">
+            <div class="semaine-tete">
+              <a class="nav" href={`?jour=${ajouterJours(lundi, -7)}`} aria-label="Semaine précédente">←</a>
+              <span class="semaine-titre">{titreSemaine}</span>
+              <a class="nav" href={`?jour=${ajouterJours(lundi, 7)}`} aria-label="Semaine suivante">→</a>
+              {!semaine.includes(aujourdhui) && <a class="nav nav-auj" href="?">Aujourd’hui</a>}
+            </div>
+            <ol class="jours">
+              {semaine.map((d) => {
+                const n = actives(d).length;
+                const ferme = !cc.joursRetrait.includes(jourDeSemaine(d)) || cc.fermetures.includes(d);
+                return (
+                  <li>
+                    <a
+                      href={`?jour=${d}`}
+                      class:list={['jour', { actif: d === jour, auj: d === aujourdhui, ferme, plein: n > 0 }]}
+                      aria-current={d === jour ? 'date' : undefined}
+                    >
+                      <span class="jour-nom">{fmt(d, { weekday: 'short' }).replace('.', '')}</span>
+                      <span class="jour-num">{fmt(d, { day: 'numeric' })}</span>
+                      <span class="jour-n">{n > 0 ? n : ferme ? '—' : '0'}</span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+
+          <main class="detail">
+            <div class="detail-tete">
+              <h1>
+                {titreJour}
+                {jour === aujourdhui && <span class="pastille">Aujourd’hui</span>}
+              </h1>
+              <p>
+                {pluriel(actives(jour).length, 'commande')}
+                {caJour > 0 && <> · {formaterPrix(caJour)} estimés</>}
+              </p>
+            </div>
+
+            {erreurBase && <p class="erreur">Les commandes n’ont pas pu être chargées. Rechargez la page dans un instant.</p>}
+
+            {totaux.length > 0 && (
+              <section class="a-preparer" aria-labelledby="ap">
+                <h2 id="ap">À préparer</h2>
+                <ul>
+                  {totaux.map((t) => (
+                    <li>
+                      <strong>{t.quantite}</strong> <span class="unite">{uniteAffichee(t.unite, t.quantite)}</span> {t.nom}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {duJour.length === 0 && !erreurBase && <p class="vide">Aucune commande pour ce jour.</p>}
+
+            {[...parCreneau].map(([creneau, liste]) => (
+              <section class="creneau">
+                <h2>{creneau}</h2>
+                <ul class="cartes">
+                  {liste.map((c) => (
+                    <li id={c.id} class:list={['carte', `carte--${c.statut}`]}>
+                      <div class="carte-tete">
+                        <div>
+                          <h3>{c.nom}</h3>
+                          <a class="tel" href={`tel:${c.telephone.replace(/\s/g, '')}`}>{c.telephone}</a>
+                          {c.email && <a class="mail" href={`mailto:${c.email}`}>{c.email}</a>}
+                        </div>
+                        <span class:list={['statut', `statut--${c.statut}`]}>{STATUTS[c.statut]}</span>
+                      </div>
+                      <ul class="lignes">
+                        {c.lignes.map((l) => (
+                          <li>
+                            <span>
+                              <strong>{l.quantite} ×</strong> {l.nom}
+                            </span>
+                            <span>{formaterPrix(l.total)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p class="total">
+                        <span>Total estimé</span> <strong>{formaterPrix(c.total)}</strong>
+                      </p>
+                      {c.remarque && <p class="remarque">« {c.remarque} »</p>}
+                      <form method="post" class="actions">
+                        <input type="hidden" name="action" value="statut" />
+                        <input type="hidden" name="id" value={c.id} />
+                        <input type="hidden" name="jour" value={jour} />
+                        {(Object.keys(STATUTS) as Statut[])
+                          .filter((s) => s !== c.statut)
+                          .map((s) => (
+                            <button type="submit" name="statut" value={s} class:list={['action', `action--${s}`]}>
+                              {s === 'a-preparer' ? 'Remettre à préparer' : s === 'prete' ? 'Prête' : s === 'retiree' ? 'Retirée' : 'Annuler'}
+                            </button>
+                          ))}
+                      </form>
+                      <p class="recue">Reçue le {heureCommande(c.creeLe)}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </main>
+        </div>
+      )
+    }
+  </body>
+</html>
+
+<style>
+  body {
+    min-height: 100vh;
+  }
+
+  /* Connexion */
+  .connexion {
+    max-width: 360px;
+    margin: 0 auto;
+    padding: 12vh 16px 40px;
+    text-align: center;
+  }
+  .connexion img {
+    margin: 0 auto 28px;
+  }
+  .connexion h1 {
+    font-size: 1.8rem;
+    margin-bottom: 28px;
+  }
+  .connexion form {
+    display: grid;
+    gap: 10px;
+    text-align: left;
+  }
+  .connexion label {
+    font: 500 0.8rem/1 var(--corps);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gris);
+  }
+  .connexion input {
+    font: inherit;
+    padding: 12px 14px;
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon);
+    background: var(--blanc);
+  }
+  .connexion .bouton {
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .erreur {
+    color: #a2352b;
+    font-size: 0.95rem;
+  }
+
+  /* Barre */
+  .gestion {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 16px 80px;
+  }
+  .barre {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--ligne);
+  }
+  .marque {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+  }
+  .marque span {
+    font: 500 0.75rem/1 var(--corps);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--or-fonce);
+    padding-left: 14px;
+    border-left: 1px solid var(--ligne);
+  }
+  .lien-discret {
+    background: none;
+    border: 0;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--gris);
+    text-decoration: underline;
+    text-decoration-color: var(--ligne);
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+
+  /* Semaine */
+  .semaine {
+    padding: 24px 0 8px;
+  }
+  .semaine-tete {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .semaine-titre {
+    font: italic 500 1.3rem/1 var(--titre);
+    color: var(--anthracite);
+    min-width: 9.5em;
+    text-align: center;
+  }
+  .nav {
+    display: inline-grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--ligne);
+    border-radius: 999px;
+    text-decoration: none;
+    background: var(--blanc);
+    transition: border-color 0.3s var(--ease-doux);
+  }
+  .nav:hover {
+    border-color: var(--or);
+  }
+  .nav-auj {
+    margin-left: auto;
+    font-size: 0.85rem;
+  }
+  .jours {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .jour {
+    display: grid;
+    justify-items: center;
+    gap: 2px;
+    padding: 10px 4px 12px;
+    border: 1px solid var(--ligne);
+    border-radius: 6px;
+    background: var(--blanc);
+    text-decoration: none;
+    transition:
+      border-color 0.3s var(--ease-doux),
+      background-color 0.3s var(--ease-doux);
+  }
+  .jour:hover {
+    border-color: var(--or);
+  }
+  .jour-nom {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gris);
+  }
+  .jour-num {
+    font: italic 500 1.5rem/1.1 var(--titre);
+    color: var(--anthracite);
+  }
+  .jour-n {
+    min-width: 26px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font: 500 0.8rem/1.4 var(--corps);
+    text-align: center;
+    color: var(--gris);
+  }
+  .jour.plein .jour-n {
+    background: var(--or);
+    color: var(--anthracite);
+  }
+  .jour.ferme {
+    background: transparent;
+    opacity: 0.6;
+  }
+  .jour.auj .jour-nom {
+    color: var(--or-fonce);
+    font-weight: 700;
+  }
+  .jour.actif {
+    background: var(--anthracite);
+    border-color: var(--anthracite);
+    opacity: 1;
+  }
+  .jour.actif .jour-nom,
+  .jour.actif .jour-num {
+    color: var(--blanc);
+  }
+  .jour.actif .jour-n {
+    color: var(--blanc);
+  }
+
+  /* Détail du jour */
+  .detail-tete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 16px;
+    margin: 28px 0 20px;
+  }
+  .detail-tete h1 {
+    font-size: clamp(1.7rem, 5vw, 2.3rem);
+    margin: 0;
+  }
+  .detail-tete h1::first-letter {
+    text-transform: uppercase;
+  }
+  .detail-tete p {
+    margin: 0;
+    color: var(--gris);
+  }
+  .pastille {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--or-clair);
+    color: var(--or-fonce);
+    font: 500 0.72rem/1.4 var(--corps);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  h2 {
+    font: 500 0.78rem/1.4 var(--corps);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--or-fonce);
+    margin: 0 0 12px;
+  }
+  .a-preparer {
+    padding: 18px 20px;
+    background: var(--blanc);
+    border-left: 3px solid var(--or);
+    margin-bottom: 32px;
+  }
+  .a-preparer ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+  }
+  .a-preparer strong {
+    font: italic 600 1.6rem/1 var(--titre);
+    color: var(--anthracite);
+  }
+  .unite {
+    color: var(--gris);
+    font-size: 0.9rem;
+  }
+  .vide {
+    color: var(--gris);
+    padding: 40px 0;
+    text-align: center;
+  }
+
+  /* Créneaux et cartes */
+  .creneau {
+    margin-bottom: 32px;
+  }
+  .creneau > h2 {
+    font: italic 500 1.35rem/1.2 var(--titre);
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--anthracite);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--or);
+  }
+  .cartes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .carte {
+    background: var(--blanc);
+    border: 1px solid var(--ligne);
+    border-radius: 6px;
+    padding: 16px 18px 12px;
+    scroll-margin-top: 20px;
+    transition: opacity 0.3s var(--ease-doux);
+  }
+  .carte--retiree,
+  .carte--annulee {
+    opacity: 0.55;
+  }
+  .carte--annulee h3,
+  .carte--annulee .lignes {
+    text-decoration: line-through;
+  }
+  .carte-tete {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .carte h3 {
+    font: 500 1.05rem/1.3 var(--corps);
+    color: var(--anthracite);
+    margin: 0 0 2px;
+  }
+  .tel,
+  .mail {
+    display: block;
+    font-size: 0.92rem;
+    color: var(--gris);
+  }
+  .statut {
+    flex-shrink: 0;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font: 500 0.72rem/1.4 var(--corps);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .statut--a-preparer {
+    background: var(--or-clair);
+    color: var(--or-fonce);
+  }
+  .statut--prete {
+    background: #dcebd9;
+    color: #2f6b34;
+  }
+  .statut--retiree {
+    background: #e6e4e1;
+    color: var(--gris);
+  }
+  .statut--annulee {
+    background: #f3dcd8;
+    color: #a2352b;
+  }
+  .lignes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 0.95rem;
+  }
+  .lignes li,
+  .total {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--papier);
+  }
+  .total {
+    margin: 0;
+    border: 0;
+    padding-top: 8px;
+  }
+  .total span {
+    color: var(--gris);
+    font-size: 0.9rem;
+  }
+  .remarque {
+    margin: 8px 0 0;
+    padding: 8px 10px;
+    background: var(--papier);
+    color: var(--or-fonce);
+    font-size: 0.92rem;
+    font-style: italic;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .action {
+    font: 500 0.82rem/1 var(--corps);
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--ligne);
+    background: var(--blanc);
+    color: var(--anthracite);
+    cursor: pointer;
+    transition:
+      background-color 0.3s var(--ease-doux),
+      border-color 0.3s var(--ease-doux);
+  }
+  .action:hover {
+    border-color: var(--or);
+  }
+  .action--prete {
+    background: var(--anthracite);
+    border-color: var(--anthracite);
+    color: var(--blanc);
+  }
+  .action--prete:hover {
+    background: var(--gris);
+  }
+  .action--annulee {
+    margin-left: auto;
+    border-color: transparent;
+    color: #a2352b;
+  }
+  .recue {
+    margin: 10px 0 0;
+    font-size: 0.78rem;
+    color: #8c8781;
+  }
+
+  @media (max-width: 560px) {
+    .jours {
+      gap: 4px;
+    }
+    .jour {
+      padding: 8px 2px 10px;
+    }
+    .jour-num {
+      font-size: 1.25rem;
+    }
+    .jour-nom {
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+    }
+    .semaine-titre {
+      min-width: 0;
+      flex: 1;
+    }
+  }
+</style>
