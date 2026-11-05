@@ -11,6 +11,9 @@
     "directory": "./dist",
     "binding": "ASSETS"
   },
+  "vars": {
+    "PUBLIC_KEYSTATIC_GITHUB_APP_SLUG": "boucherie-villeniere-keystatic"
+  },
   "observability": { "enabled": true },
   // Ne pas effacer à chaque déploiement les variables saisies dans le tableau de bord.
   "keep_vars": true
