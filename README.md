@@ -34,7 +34,7 @@ npm run dev
 
 ## Mise en ligne (Netlify)
 
-1. Créer un dépôt GitHub privé et y pousser le projet.
+1. Créer un dépôt GitHub et y pousser le projet. **Le dépôt doit être public** : sur l'offre gratuite de Netlify, un dépôt privé n'accepte les commits que d'un seul auteur (les envois d'un développeur invité seraient bloqués). Aucun secret n'est dans le dépôt (`.env` est ignoré).
 2. Netlify → *Add new site* → importer le dépôt (build `npm run build`, détecté automatiquement).
 3. Variables d'environnement Netlify (voir `.env.example`) :
    - `RESEND_API_KEY` : créer un compte Resend, vérifier le domaine `boucherie-villeniere.fr` (enregistrements DNS).
