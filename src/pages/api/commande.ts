@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { getSecret } from 'astro:env/server';
 import { getClickCollect, getPlats } from '../../lib/data';
 import { formaterDate, formaterPrix, validerCommande, type Commande, type LigneValidee } from '../../lib/commande';
 
@@ -16,7 +17,8 @@ function tableau(lignes: LigneValidee[]) {
 }
 
 async function envoyerEmail(to: string, sujet: string, html: string, replyTo?: string) {
-  const cle = import.meta.env.RESEND_API_KEY;
+  // Lu à l'exécution (secret Cloudflare), pas figé au moment du build.
+  const cle = getSecret('RESEND_API_KEY');
   if (!cle) {
     // En local sans clé : on affiche le mail dans la console au lieu de l'envoyer.
     console.info(`\n[commande] e-mail non envoyé (RESEND_API_KEY absente)\nÀ : ${to}\nObjet : ${sujet}\n`);
@@ -26,7 +28,7 @@ async function envoyerEmail(to: string, sujet: string, html: string, replyTo?: s
     method: 'POST',
     headers: { Authorization: `Bearer ${cle}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: import.meta.env.COMMANDES_EXPEDITEUR ?? 'Boucherie Villenière <commandes@boucherie-villeniere.fr>',
+      from: getSecret('COMMANDES_EXPEDITEUR') || 'Boucherie Villenière <commandes@boucherie-villeniere.fr>',
       to,
       subject: sujet,
       html,

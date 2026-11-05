@@ -9,3 +9,5 @@ dist/
 assets/
 # Réglages locaux de Claude Code
 .claude/
+.wrangler/
+.dev.vars*

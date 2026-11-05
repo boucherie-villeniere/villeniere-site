@@ -1,0 +1,15 @@
+// Hébergement Cloudflare Workers (pages statiques + API de commande + admin Keystatic).
+// Les secrets (KEYSTATIC_*, RESEND_API_KEY) se règlent dans le tableau de bord
+// Cloudflare : Workers & Pages → villeniere → Settings → Variables and Secrets.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "villeniere",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true }
+}

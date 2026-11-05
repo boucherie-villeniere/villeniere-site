@@ -1,6 +1,6 @@
 # Boucherie Villenière — site
 
-Site vitrine + click & collect. Astro 7 (pages statiques), Keystatic (admin pour le boucher), hébergement Netlify.
+Site vitrine + click & collect. Astro 7 (pages statiques), Keystatic (admin pour le boucher), hébergement Cloudflare Workers (gratuit, usage commercial autorisé, pas de limite de publications gênante).
 
 ## Lancer en local
 
@@ -32,16 +32,20 @@ npm run dev
 2. `src/pages/api/commande.ts` revérifie tout côté serveur (dates, disponibilité des plats par jour, quantités max), puis envoie un e-mail à la boucherie (et un récapitulatif au client s'il a donné son e-mail).
 3. Paiement en boutique au retrait. Règles partagées navigateur/serveur : `src/lib/commande.ts`.
 
-## Mise en ligne (Netlify)
+## Mise en ligne (Cloudflare Workers)
 
-1. Créer un dépôt GitHub et y pousser le projet. **Le dépôt doit être public** : sur l'offre gratuite de Netlify, un dépôt privé n'accepte les commits que d'un seul auteur (les envois d'un développeur invité seraient bloqués). Aucun secret n'est dans le dépôt (`.env` est ignoré).
-2. Netlify → *Add new site* → importer le dépôt (build `npm run build`, détecté automatiquement).
-3. Variables d'environnement Netlify (voir `.env.example`) :
-   - `RESEND_API_KEY` : créer un compte Resend, vérifier le domaine `boucherie-villeniere.fr` (enregistrements DNS).
-   - `PUBLIC_KEYSTATIC_GITHUB_REPO` = `compte/depot`.
-4. Ouvrir `https://…/keystatic` en ligne : Keystatic propose de créer l'app GitHub et fournit les variables `KEYSTATIC_*` à ajouter dans Netlify.
-5. Inviter le boucher comme collaborateur du dépôt GitHub : il se connecte à `/keystatic` avec son compte, chaque « Save » republie le site (~1 min).
-6. Pointer le domaine `boucherie-villeniere.fr` vers Netlify, mettre à jour le lien en bio Instagram et la fiche Google.
+1. Dépôt GitHub `boucherie-villeniere/villeniere-site` (public : aucun secret dedans, `.env` est ignoré).
+2. Cloudflare → Workers & Pages → *Create* → *Import a repository* → ce dépôt. Build : `npm run build`, déploiement : `npx wrangler deploy` (config dans `wrangler.jsonc`).
+3. Variables **de build** (Settings → Build → Variables and secrets) — lues au moment du build :
+   - `PUBLIC_KEYSTATIC_GITHUB_REPO` = `boucherie-villeniere/villeniere-site`
+   - `PUBLIC_KEYSTATIC_GITHUB_APP_SLUG` = `boucherie-villeniere-keystatic`
+4. Secrets **d'exécution** (Settings → Variables and Secrets, type *Secret*) — lus à chaque requête :
+   - `KEYSTATIC_GITHUB_CLIENT_ID`, `KEYSTATIC_GITHUB_CLIENT_SECRET`, `KEYSTATIC_SECRET` (app GitHub « boucherie-villeniere-keystatic »)
+   - `RESEND_API_KEY` (compte Resend, domaine `boucherie-villeniere.fr` vérifié par DNS)
+5. Dans l'app GitHub (Settings → Developer settings → GitHub Apps), chaque adresse du site doit avoir son *Callback URL* : `https://<adresse>/api/keystatic/github/oauth/callback`.
+6. Domaine : Cloudflare → le Worker → Settings → Domains & Routes → *Custom domain*. Le domaine reste chez OVH (DNS et e-mails), on y ajoute les enregistrements demandés.
+
+Tester localement comme en production : `npm run build` puis `npx astro preview`.
 
 ## À compléter avant la mise en ligne
 
@@ -55,5 +59,5 @@ npm run dev
 
 - **Livraison** : réutilise le catalogue et la validation des commandes ; ajouter mode retrait/livraison, zones par code postal, frais, créneaux.
 - **Camion / marchés** : collection Keystatic « emplacements » (marché, adresse, coordonnées, jours, horaires) + carte Leaflet/OpenStreetMap + bloc « cette semaine ».
-- Paiement en ligne (Stripe Checkout) et quotas de plats par jour (stockage Netlify Blobs) si besoin.
+- Paiement en ligne (Stripe Checkout) et quotas de plats par jour (stockage Cloudflare KV ou D1) si besoin.
 Mise en ligne : novembre 2026
