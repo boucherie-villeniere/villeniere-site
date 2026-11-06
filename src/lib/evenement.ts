@@ -176,6 +176,7 @@ export function reglesEvenement(t: TempsFort, cc: ClickCollect): ReglesRetrait {
     actif: !!(cc.actif && c?.actif),
     joursRetrait: cc.joursRetrait,
     creneaux: cc.creneaux,
+    creneauxParJour: cc.creneauxParJour,
     heureLimite: cc.heureLimite,
     joursAvance: cc.joursAvance,
     fermetures: cc.fermetures,

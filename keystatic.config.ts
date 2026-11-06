@@ -168,9 +168,24 @@ export default config({
         }),
         joursRetrait: fields.multiselect({ label: 'Jours de retrait possibles', options: JOURS, defaultValue: ['mar', 'mer', 'jeu', 'ven', 'sam'] }),
         creneaux: fields.array(fields.text({ label: 'Créneau (ex. 11h – 12h)' }), {
-          label: 'Créneaux de retrait',
+          label: 'Créneaux de retrait habituels',
           itemLabel: (p) => p.value,
         }),
+        creneauxParJour: fields.array(
+          fields.object({
+            jour: fields.select({ label: 'Jour', options: JOURS, defaultValue: 'dim' }),
+            creneaux: fields.array(fields.text({ label: 'Créneau (ex. 11h – 12h)' }), {
+              label: 'Créneaux de ce jour',
+              description: 'Remplacent les créneaux habituels ce jour-là. Aucun créneau : pas de retrait ce jour-là.',
+              itemLabel: (p) => p.value,
+            }),
+          }),
+          {
+            label: 'Créneaux différents selon le jour',
+            description: 'Facultatif. Ex. le dimanche, seulement le matin. Les jours non listés gardent les créneaux habituels.',
+            itemLabel: (p) => `${p.fields.jour.value} : ${p.fields.creneaux.elements.map((c) => c.value).join(', ') || 'aucun'}`,
+          },
+        ),
         heureLimite: fields.integer({
           label: 'Heure limite de commande la veille',
           description: 'Ex. 18 = on peut commander jusqu’à 18h pour un retrait le lendemain.',

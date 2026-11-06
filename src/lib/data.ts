@@ -97,6 +97,7 @@ export interface ClickCollect {
   emailCommandes: string;
   joursRetrait: Jour[];
   creneaux: string[];
+  creneauxParJour: { jour: Jour; creneaux: string[] }[];
   heureLimite: number;
   joursAvance: number;
   fermetures: string[];
@@ -128,7 +129,12 @@ export const getBoucherie = () => lire<Boucherie>('boucherie');
 export const getProduits = () => lire<Produits>('produits');
 export const getClickCollect = () => {
   const c = lire<ClickCollect>('click-collect');
-  return { ...c, creneaux: c.creneaux ?? [], fermetures: (c.fermetures ?? []).filter(Boolean), joursRetrait: c.joursRetrait ?? [] };
+  return {
+    ...c,
+    creneaux: c.creneaux ?? [],
+    creneauxParJour: (c.creneauxParJour ?? []).map((e) => ({ jour: e.jour, creneaux: e.creneaux ?? [] })), fermetures: (c.fermetures ?? []).filter(Boolean),
+    joursRetrait: c.joursRetrait ?? [],
+  };
 };
 
 /** Lit tous les fichiers d'une collection Keystatic, triés par ordre puis par nom. */

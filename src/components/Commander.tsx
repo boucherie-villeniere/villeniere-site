@@ -163,7 +163,7 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
         <legend>
           <span className="cc-num">1</span> Quand passez-vous ?
         </legend>
-        <ChoixRetrait dates={dates} date={date} surDate={setDate} creneaux={regles.creneaux} creneau={creneau} surCreneau={setCreneau} />
+        <ChoixRetrait dates={dates} date={date} surDate={setDate} regles={regles} creneau={creneau} surCreneau={setCreneau} />
       </fieldset>
 
       <fieldset className="cc-etape">

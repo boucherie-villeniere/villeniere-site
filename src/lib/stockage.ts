@@ -122,8 +122,10 @@ export async function purgerCommandes(db: D1Database, avant: string) {
 /** Trie par créneau dans l'ordre défini dans l'admin, puis par heure de commande. */
 export function trierParCreneau(commandes: CommandeEnregistree[], creneaux: string[]) {
   const rang = (c: string) => {
+    const h = c.match(/(\d{1,2})\s*h\s*(\d{2})?/);
+    if (h) return Number(h[1]) * 60 + Number(h[2] ?? 0);
     const i = creneaux.indexOf(c);
-    return i === -1 ? creneaux.length : i;
+    return 10_000 + (i === -1 ? creneaux.length : i);
   };
   return [...commandes].sort((a, b) => a.date.localeCompare(b.date) || rang(a.creneau) - rang(b.creneau) || a.creeLe.localeCompare(b.creeLe));
 }

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ajouterJours, formaterDate, jourDeSemaine, ORDRE_JOURS } from '../lib/commande';
+import { ajouterJours, creneauxDuJour, formaterDate, jourDeSemaine, ORDRE_JOURS, type ReglesRetrait } from '../lib/commande';
 
 // Choix du retrait façon planning : un calendrier de jours, puis les horaires
 // du jour choisi. Les jours sont de vrais boutons radio : clavier et lecteurs d'écran OK.
@@ -8,7 +8,7 @@ interface Props {
   dates: string[];
   date: string;
   surDate: (d: string) => void;
-  creneaux: string[];
+  regles: Pick<ReglesRetrait, 'creneaux' | 'creneauxParJour'>;
   creneau: string;
   surCreneau: (c: string) => void;
 }
@@ -28,10 +28,16 @@ function semaines(dates: string[]) {
   return liste;
 }
 
-export default function ChoixRetrait({ dates, date, surDate, creneaux, creneau, surCreneau }: Props) {
+export default function ChoixRetrait({ dates, date, surDate, regles, creneau, surCreneau }: Props) {
   const grille = useMemo(() => semaines(dates), [dates]);
   const possibles = useMemo(() => new Set(dates), [dates]);
   const mois = [...new Set(grille.flat().filter((d) => possibles.has(d)).map((d) => format(d, { month: 'long', year: 'numeric' })))].join(' – ');
+
+  function choisirJour(d: string) {
+    surDate(d);
+    // L'horaire déjà choisi n'existe pas forcément ce jour-là.
+    if (!creneauxDuJour(regles, d).includes(creneau)) surCreneau('');
+  }
 
   return (
     <div className="cr">
@@ -41,7 +47,7 @@ export default function ChoixRetrait({ dates, date, surDate, creneaux, creneau, 
           const libre = possibles.has(d);
           return (
             <label key={d} className={`cr-jour${date === d ? ' actif' : ''}${libre ? '' : ' ferme'}`}>
-              <input type="radio" name="jour" value={d} checked={date === d} disabled={!libre} onChange={() => surDate(d)} aria-label={formaterDate(d)} />
+              <input type="radio" name="jour" value={d} checked={date === d} disabled={!libre} onChange={() => choisirJour(d)} aria-label={formaterDate(d)} />
               <span className="cr-jour-nom">{format(d, { weekday: 'short' }).replace('.', '')}</span>
               <span className="cr-jour-num">{format(d, { day: 'numeric' })}</span>
             </label>
@@ -53,7 +59,7 @@ export default function ChoixRetrait({ dates, date, surDate, creneaux, creneau, 
         <div className="cr-horaires">
           <p className="cr-horaires-titre">Horaires disponibles le {formaterDate(date)}</p>
           <div className="cc-creneaux" role="radiogroup" aria-label="Créneau de retrait">
-            {creneaux.map((c) => (
+            {creneauxDuJour(regles, date).map((c) => (
               <label key={c} className={`cc-creneau${creneau === c ? ' actif' : ''}`}>
                 <input type="radio" name="creneau" value={c} checked={creneau === c} onChange={() => surCreneau(c)} />
                 {c}

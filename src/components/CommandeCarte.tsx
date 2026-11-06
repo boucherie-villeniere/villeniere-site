@@ -404,7 +404,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
 
               <fieldset className="cc-etape">
                 <legend>Retrait en boutique</legend>
-                <ChoixRetrait dates={dates} date={date} surDate={setDate} creneaux={regles.creneaux} creneau={creneau} surCreneau={setCreneau} />
+                <ChoixRetrait dates={dates} date={date} surDate={setDate} regles={regles} creneau={creneau} surCreneau={setCreneau} />
               </fieldset>
 
               <fieldset className="cc-etape">

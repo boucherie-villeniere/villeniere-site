@@ -43,6 +43,8 @@ export interface ReglesRetrait {
   actif: boolean;
   joursRetrait: Jour[];
   creneaux: string[];
+  /** Exceptions : créneaux propres à certains jours de la semaine. */
+  creneauxParJour?: { jour: Jour; creneaux: string[] }[];
   heureLimite: number;
   joursAvance: number;
   fermetures: string[];
@@ -131,6 +133,12 @@ export function prixLigne(l: { aLaPesee?: boolean; sansEstimation?: boolean; tot
 export const platDisponible = (plat: PlatCommandable, iso: string) =>
   plat.jours.length === 0 || plat.jours.includes(jourDeSemaine(iso));
 
+/** Créneaux d'une date : ceux de l'exception du jour s'il y en a une, sinon la liste habituelle. */
+export function creneauxDuJour(regles: Pick<ReglesRetrait, 'creneaux' | 'creneauxParJour'>, iso: string) {
+  const exception = regles.creneauxParJour?.find((e) => e.jour === jourDeSemaine(iso));
+  return (exception ? exception.creneaux : regles.creneaux).filter(Boolean);
+}
+
 /**
  * Dates de retrait possibles : à partir du lendemain si l'on commande avant
  * l'heure limite, sinon du surlendemain ; hors jours fermés et fermetures.
@@ -148,6 +156,7 @@ export function datesDeRetrait(regles: ReglesRetrait, plats: PlatCommandable[], 
     const iso = ajouterJours(date, i);
     if (!regles.joursRetrait.includes(jourDeSemaine(iso))) continue;
     if (regles.fermetures.includes(iso)) continue;
+    if (creneauxDuJour(regles, iso).length === 0) continue;
     if (!plats.some((p) => platDisponible(p, iso))) continue;
     dates.push(iso);
   }
@@ -195,7 +204,7 @@ export function validerCommande(
   if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) return { ok: false, erreur: 'L’adresse e-mail semble incorrecte.' };
   if (!c.date || !datesDeRetrait(regles, plats, now).includes(c.date))
     return { ok: false, erreur: 'Cette date de retrait n’est plus disponible, merci d’en choisir une autre.' };
-  if (!c.creneau || !regles.creneaux.includes(c.creneau)) return { ok: false, erreur: 'Merci de choisir un créneau de retrait.' };
+  if (!c.creneau || !creneauxDuJour(regles, c.date).includes(c.creneau)) return { ok: false, erreur: 'Merci de choisir un créneau de retrait.' };
 
   const lignes: LigneValidee[] = [];
   for (const l of c.lignes ?? []) {
