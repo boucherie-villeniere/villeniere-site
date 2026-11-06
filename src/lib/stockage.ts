@@ -26,6 +26,9 @@ export interface CommandeEnregistree {
   statut: Statut;
   /** Nom du temps fort (ex. « Noël ») si la commande vient de sa carte. */
   evenement: string | null;
+  arrhesRecues: boolean;
+  /** Commande déjà saisie dans le logiciel de caisse. */
+  apitic: boolean;
 }
 
 interface Ligne {
@@ -41,6 +44,8 @@ interface Ligne {
   total: number;
   statut: Statut;
   evenement: string | null;
+  arrhes_recues: number | null;
+  apitic: number | null;
 }
 
 let tablePrete: Promise<unknown> | undefined;
@@ -65,6 +70,8 @@ function preparer(db: D1Database) {
     ])
     // Colonne ajoutée après coup (commandes des temps forts) : sans effet si elle existe.
     .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN evenement TEXT').run().catch(() => {}))
+    .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN arrhes_recues INTEGER DEFAULT 0').run().catch(() => {}))
+    .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN apitic INTEGER DEFAULT 0').run().catch(() => {}))
     .catch((e) => {
       tablePrete = undefined;
       throw e;
@@ -85,6 +92,8 @@ const versObjet = (l: Ligne): CommandeEnregistree => ({
   total: l.total,
   statut: l.statut,
   evenement: l.evenement ?? null,
+  arrhesRecues: !!l.arrhes_recues,
+  apitic: !!l.apitic,
 });
 
 export async function enregistrerCommande(db: D1Database, c: Omit<CommandeEnregistree, 'id' | 'creeLe' | 'statut'>) {
@@ -110,6 +119,23 @@ export async function changerStatut(db: D1Database, id: string, statut: Statut) 
   if (!(statut in STATUTS)) throw new Error('Statut inconnu');
   await preparer(db);
   await db.prepare('UPDATE commandes SET statut = ? WHERE id = ?').bind(statut, id).run();
+}
+
+/** Commandes de temps forts à venir dont les arrhes ne sont pas encore reçues. */
+export async function commandesSansArrhes(db: D1Database, depuis: string) {
+  await preparer(db);
+  const { results } = await db
+    .prepare("SELECT * FROM commandes WHERE evenement IS NOT NULL AND COALESCE(arrhes_recues, 0) = 0 AND statut != 'annulee' AND date >= ? ORDER BY date, cree_le")
+    .bind(depuis)
+    .all<Ligne>();
+  return results.map(versObjet);
+}
+
+export async function changerSuivi(db: D1Database, id: string, champ: 'arrhes' | 'apitic', valeur: boolean) {
+  await preparer(db);
+  // Le nom de colonne vient de cette liste fermée, jamais de la requête.
+  const colonne = champ === 'arrhes' ? 'arrhes_recues' : 'apitic';
+  await db.prepare(`UPDATE commandes SET ${colonne} = ? WHERE id = ?`).bind(valeur ? 1 : 0, id).run();
 }
 
 /** Supprime les commandes retirées avant `avant` (engagement des mentions légales). */

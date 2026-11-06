@@ -9,11 +9,105 @@
   margin-bottom: 40px;
 }
 
+/* Fil d'étapes */
+.cc {
+  scroll-margin-top: 84px;
+}
+.ce {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 0 0 24px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--anthracite);
+}
+.ce button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #b9b3a9;
+  font: 500 0.88rem/1.2 var(--corps);
+  cursor: default;
+}
+.ce-num {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.78rem;
+}
+.ce .actuelle button {
+  background: var(--or);
+  color: var(--anthracite);
+}
+.ce .faite button {
+  color: var(--or);
+  cursor: pointer;
+}
+.ce .faite button:hover {
+  color: var(--blanc);
+}
+@media (max-width: 560px) {
+  .ce li:not(.actuelle) .ce-nom {
+    display: none;
+  }
+  .ce {
+    grid-template-columns: auto 1fr auto;
+  }
+  .ce .faite ~ .actuelle,
+  .ce li {
+    min-width: 44px;
+  }
+  .ce:has(li:nth-child(1).actuelle) {
+    grid-template-columns: 1fr auto auto;
+  }
+  .ce:has(li:nth-child(3).actuelle) {
+    grid-template-columns: auto auto 1fr;
+  }
+}
+.cc-navigation {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.cc-retour {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: #ece6da;
+  font: 500 0.9rem/1 var(--corps);
+  cursor: pointer;
+}
+.cc-retour--clair {
+  color: var(--anthracite);
+}
+
 .cc-etape {
   border: 0;
-  margin: 0 0 48px;
-  padding: 0;
+  margin: 0 0 24px;
+  padding: clamp(18px, 4vw, 28px);
   min-width: 0;
+  border-top: 3px solid var(--or);
+  border-radius: 0 0 6px 6px;
+  background: var(--blanc);
+}
+.cc-etape[hidden] {
+  display: none;
 }
 .cc-etape legend {
   display: flex;
@@ -23,6 +117,11 @@
   color: var(--anthracite);
   margin-bottom: 20px;
   padding: 0;
+  float: left;
+  width: 100%;
+}
+.cc-etape legend + * {
+  clear: both;
 }
 .cc-num {
   display: inline-grid;
@@ -86,9 +185,9 @@
   cursor: pointer;
 }
 .cc-creneau.actif {
-  background: var(--anthracite);
-  border-color: var(--anthracite);
-  color: var(--blanc);
+  background: var(--or);
+  border-color: var(--or);
+  color: var(--anthracite);
 }
 .cc-creneau:has(input:focus-visible) {
   outline: 2px solid var(--or-fonce);
@@ -156,12 +255,12 @@
   cursor: default;
 }
 .cr-jour.actif {
-  background: var(--anthracite);
-  border-color: var(--anthracite);
+  background: var(--or);
+  border-color: var(--or);
 }
 .cr-jour.actif .cr-jour-nom,
 .cr-jour.actif .cr-jour-num {
-  color: var(--blanc);
+  color: var(--anthracite);
 }
 .cr-horaires {
   margin-top: 18px;

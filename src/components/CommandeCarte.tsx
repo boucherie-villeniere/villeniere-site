@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { datesDeRetrait, formaterDate, formaterPrix, libelleTotal, prixLigne, telephoneValide, type Commande, type ReglesRetrait } from '../lib/commande';
 import { demandeUnChoix, libelleFarce, ligneDepuisSlug, POIDS_MAX, POIDS_MIN, slugAvecOptions, type OptionsLigne, type ProduitCommandable } from '../lib/evenement';
 import ChoixRetrait from './ChoixRetrait';
+import Etapes from './Etapes';
 import type { FarceCarte } from '../lib/data';
 
 // Commande directe depuis la carte d'un temps fort (ex. menu de Noël).
@@ -34,6 +35,7 @@ type Etat =
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 const prixDeBase = (slug: string) => slug.split('|')[0];
 const SANS_FARCE = -1;
+const ETAPES = ['Votre panier', 'Retrait', 'Coordonnées'];
 
 export default function CommandeCarte({ evenement, nom, produits, farces, regles, mentionPaiement, arrhes, adresse }: Props) {
   const dates = useMemo(() => datesDeRetrait(regles, produits), [regles, produits]);
@@ -50,6 +52,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
   const [farce, setFarce] = useState(SANS_FARCE);
   const [pulse, setPulse] = useState(0);
   const [sansSauce, setSansSauce] = useState<Record<string, boolean>>({});
+  const [etape, setEtape] = useState(0);
   const fenetre = useRef<HTMLDialogElement>(null);
   const fenetreChoix = useRef<HTMLDialogElement>(null);
   const zoneErreur = useRef<HTMLParagraphElement>(null);
@@ -142,6 +145,14 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
       if (q > 0) b.dataset.quantite = String(q);
       else delete b.dataset.quantite;
     });
+    // Nombre d'articles choisis, affiché sur l'onglet de chaque rubrique.
+    document.querySelectorAll<HTMLElement>('.cm-rubrique').forEach((r) => {
+      const n = [...r.querySelectorAll<HTMLElement>('button[data-ajouter][data-quantite]')].reduce((s, b) => s + Number(b.dataset.quantite), 0);
+      const onglet = document.querySelector<HTMLElement>(`.cm-onglet[data-onglet="${r.dataset.rubrique}"]`);
+      if (!onglet) return;
+      if (n > 0) onglet.dataset.compte = String(n);
+      else delete onglet.dataset.compte;
+    });
   }, [panier]);
 
   const optionsChoix = (): OptionsLigne | null => {
@@ -173,24 +184,39 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
     zoneErreur.current?.focus({ preventScroll: true });
   }, [etat]);
 
+  function changerEtape(i: number) {
+    setEtape(i);
+    setEtat({ type: 'saisie' });
+    fenetre.current?.scrollTo({ top: 0 });
+  }
+
   async function envoyer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     if (f.get('site')) return; // champ piège anti-robots
     const telephone = String(f.get('telephone') ?? '');
-    const manque = plats.length === 0
-      ? sauceChoisie
-        ? `Ajoutez un plat : la ${sauce!.nom.toLowerCase()} l’accompagne et ne se commande pas seule.`
-        : 'Ajoutez au moins un produit depuis la carte.'
+    // On revient sur l'étape qui pose problème, avec le message à l'écran.
+    const probleme = plats.length === 0
+      ? {
+          etape: 0,
+          message: sauceChoisie ? `Ajoutez un plat : la ${sauce!.nom.toLowerCase()} l’accompagne et ne se commande pas seule.` : 'Ajoutez au moins un produit depuis la carte.',
+        }
       : !date
-        ? 'Choisissez le jour de retrait.'
+        ? { etape: 1, message: 'Choisissez le jour de retrait.' }
         : !creneau
-          ? 'Choisissez un horaire de retrait.'
-          : !telephoneValide(telephone)
-            ? 'Le numéro de téléphone semble incorrect : indiquez 10 chiffres, par exemple 06 12 34 56 78.'
-            : '';
-    if (manque) {
-      setEtat({ type: 'erreur', message: manque });
+          ? { etape: 1, message: 'Choisissez un horaire de retrait.' }
+          : etape < 2
+            ? null
+            : !telephoneValide(telephone)
+              ? { etape: 2, message: 'Le numéro de téléphone semble incorrect : indiquez 10 chiffres, par exemple 06 12 34 56 78.' }
+              : null;
+    if (probleme && probleme.etape <= etape) {
+      setEtape(probleme.etape);
+      setEtat({ type: 'erreur', message: probleme.message });
+      return;
+    }
+    if (etape < 2) {
+      changerEtape(etape + 1);
       return;
     }
     // La sauce ne part pas seule : elle est précisée sur chaque plat concerné.
@@ -223,6 +249,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
       });
       setPanier({});
       setSansSauce({});
+      setEtape(0);
       fenetre.current?.scrollTo({ top: 0 });
     } catch (err) {
       setEtat({ type: 'erreur', message: err instanceof Error ? err.message : 'Erreur inattendue.' });
@@ -247,6 +274,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
           tabIndex={nbArticles === 0 ? -1 : 0}
           onClick={() => {
             setEtat((x) => (x.type === 'ok' || x.type === 'erreur' ? { type: 'saisie' } : x));
+            setEtape(0);
             fenetre.current?.showModal();
           }}
         >
@@ -372,7 +400,9 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
             <form className="cc" onSubmit={envoyer} noValidate>
               <p className="surtitre">{nom}</p>
               <h2>Ma commande</h2>
+              <Etapes etapes={ETAPES} courante={etape} surChoix={changerEtape} />
 
+              <div hidden={etape !== 0}>
               {lignes.length === 0 ? (
                 <p className="cdc-vide">Votre commande est vide : ajoutez des produits depuis la carte avec le bouton +.</p>
               ) : (
@@ -403,13 +433,14 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
                   ))}
                 </ul>
               )}
+              </div>
 
-              <fieldset className="cc-etape">
+              <fieldset className="cc-etape" hidden={etape !== 1}>
                 <legend>Retrait en boutique</legend>
                 <ChoixRetrait dates={dates} date={date} surDate={setDate} regles={regles} creneau={creneau} surCreneau={setCreneau} />
               </fieldset>
 
-              <fieldset className="cc-etape">
+              <fieldset className="cc-etape" hidden={etape !== 2}>
                 <legend>Vos coordonnées</legend>
                 <div className="cc-grille">
                   <label className="cc-champ">
@@ -447,9 +478,16 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
                     {etat.message}
                   </p>
                 )}
-                <button className="bouton" type="submit" disabled={etat.type === 'envoi'}>
-                  {etat.type === 'envoi' ? 'Envoi…' : 'Valider ma commande'}
-                </button>
+                <div className="cc-navigation">
+                  {etape > 0 && (
+                    <button type="button" className="cc-retour cc-retour--clair" onClick={() => changerEtape(etape - 1)}>
+                      ← Retour
+                    </button>
+                  )}
+                  <button className="bouton" type="submit" disabled={etat.type === 'envoi'}>
+                    {etat.type === 'envoi' ? 'Envoi…' : etape < 2 ? 'Continuer' : 'Valider ma commande'}
+                  </button>
+                </div>
               </div>
               <p className="cc-rgpd">
                 Vos coordonnées servent uniquement à préparer votre commande.{' '}

@@ -1,0 +1,89 @@
+---
+// Suivi d'une commande à arrhes dans le planning : arrhes reçues, saisie dans
+// la caisse (Apitic), et SMS prêt à envoyer depuis le téléphone de la boutique.
+import { formaterDate } from '../lib/commande';
+import type { TempsFort } from '../lib/data';
+import type { CommandeEnregistree } from '../lib/stockage';
+
+interface Props {
+  commande: CommandeEnregistree;
+  temps: TempsFort;
+  /** Adresse de retour après l'action. */
+  retour: string;
+}
+const { commande: c, temps, retour } = Astro.props;
+const reglages = temps.carte?.commande;
+const montant = reglages?.montantArrhes;
+const limite = reglages?.dateLimite;
+const texteSms = [
+  `Bonjour ${c.nom}, c’est la boucherie Villenière.`,
+  `Pour valider votre commande ${temps.nom} (retrait le ${formaterDate(c.date)}, ${c.creneau}), merci de régler ${montant ? `${montant} € d’arrhes` : 'les arrhes'}${limite ? ` avant le ${formaterDate(limite)}` : ''}.`,
+  reglages?.modalitesArrhes?.trim(),
+]
+  .filter(Boolean)
+  .join(' ');
+const lienSms = `sms:${c.telephone.replace(/\s/g, '')}?&body=${encodeURIComponent(texteSms)}`;
+---
+
+<div class:list={['suivi', { 'suivi--recu': c.arrhesRecues }]}>
+  <p class="suivi-etat">
+    {c.arrhesRecues ? 'Arrhes reçues' : 'Arrhes à recevoir'}
+    {montant && <> · {montant} €</>}
+  </p>
+  <form method="post" class="suivi-actions">
+    <input type="hidden" name="action" value="suivi" />
+    <input type="hidden" name="id" value={c.id} />
+    <input type="hidden" name="retour" value={retour} />
+    <button type="submit" name="suivi" value={c.arrhesRecues ? 'arrhes:0' : 'arrhes:1'} class:list={['suivi-bouton', { 'suivi-bouton--fort': !c.arrhesRecues }]}>
+      {c.arrhesRecues ? 'Annuler la réception' : 'Marquer reçues'}
+    </button>
+    <button type="submit" name="suivi" value={c.apitic ? 'apitic:0' : 'apitic:1'} class:list={['suivi-bouton', { 'suivi-bouton--coche': c.apitic }]} aria-pressed={c.apitic ? 'true' : 'false'}>
+      {c.apitic ? '✓ Saisie dans Apitic' : 'Saisie dans Apitic ?'}
+    </button>
+    {!c.arrhesRecues && <a class="suivi-bouton" href={lienSms}>Préparer le SMS</a>}
+  </form>
+</div>
+
+<style>
+  .suivi {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--or-clair);
+  }
+  .suivi--recu {
+    background: #dcebd9;
+  }
+  .suivi-etat {
+    margin: 0 0 8px;
+    font-weight: 500;
+    font-size: 0.92rem;
+    color: var(--anthracite);
+  }
+  .suivi-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .suivi-bouton {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid var(--anthracite);
+    border-radius: 999px;
+    background: var(--blanc);
+    color: var(--anthracite);
+    font: 500 0.82rem/1.2 var(--corps);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .suivi-bouton--fort {
+    background: var(--anthracite);
+    color: var(--blanc);
+  }
+  .suivi-bouton--coche {
+    border-color: #2f6b34;
+    color: #2f6b34;
+  }
+</style>

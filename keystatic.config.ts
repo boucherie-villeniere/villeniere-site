@@ -454,6 +454,12 @@ export default config({
                 dateLimite: fields.date({ label: 'Dernier jour pour commander', description: 'Laissez vide : pas de date limite (hors heure limite habituelle).' }),
                 retraitDu: fields.date({ label: 'Retrait possible à partir du' }),
                 retraitAu: fields.date({ label: 'Retrait possible jusqu’au (inclus)' }),
+                montantArrhes: fields.number({ label: 'Montant des arrhes (€)', description: 'Repris dans le planning et le SMS préparé. Pensez à le garder cohérent avec la mention ci-dessous.', step: 1 }),
+                modalitesArrhes: fields.text({
+                  label: 'Comment payer les arrhes',
+                  description: 'Ajouté au SMS préparé depuis le planning. Ex. « Par Wero au 06… ou en boutique ».',
+                  multiline: true,
+                }),
                 mentionArrhes: fields.text({
                   label: 'Mention sur les arrhes',
                   description: 'Affichée sur la carte, dans la commande, la confirmation, les e-mails et le menu imprimé. Remplace la mention de paiement habituelle. Vide : pas d’arrhes.',

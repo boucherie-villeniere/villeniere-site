@@ -148,7 +148,7 @@ const flocons = t.decor === 'flocons';
     <script>
       const pagesEl = document.getElementById('pages')!;
       const source = document.querySelector('#source .carte-menu')!;
-      const blocs = [...source.children] as HTMLElement[];
+      const blocs = [...source.querySelectorAll('.cm-bloc')] as HTMLElement[];
       const tpl = (id: string) => (document.getElementById(id) as HTMLTemplateElement).content.firstElementChild!.cloneNode(true) as HTMLElement;
 
       let pagesA5: HTMLElement[] = [];

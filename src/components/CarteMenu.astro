@@ -1,7 +1,7 @@
 ---
 // Carte d'un temps fort (ex. menu de Noël), saisie dans l'admin.
-// Rendu « à plat » : chaque titre, produit ou note est un bloc frère, ce qui
-// permet à la version imprimable de répartir les blocs sur les pages A5.
+// Chaque titre, produit ou note est un bloc .cm-bloc : la version imprimable les
+// répartit sur les pages A5, la version web les range par rubrique dans des onglets.
 import { ALLERGENES_LABELS } from '../lib/commande';
 import { prixCarte, UNITES_CARTE, type Carte, type ProduitCarte } from '../lib/data';
 import { idProduit } from '../lib/evenement';
@@ -31,10 +31,22 @@ const ILLUSTRATIONS: Record<string, string> = {
 
 <div class:list={['carte-menu', `carte-menu--${mode}`]}>
   {
-    (carte.rubriques ?? []).map((r) => {
+    mode === 'web' && (carte.rubriques ?? []).length > 1 && (
+      <nav class="cm-onglets" aria-label="Rubriques de la carte" hidden>
+        {(carte.rubriques ?? []).map((r, i) => (
+          <button type="button" class="cm-onglet" data-onglet={i}>
+            {r.titre}
+          </button>
+        ))}
+      </nav>
+    )
+  }
+  {
+    (carte.rubriques ?? []).map((r, indexRubrique) => {
       const colonnes = (r.colonnes ?? []).filter(Boolean);
+      const suivante = (carte.rubriques ?? [])[indexRubrique + 1];
       return (
-        <>
+        <section class="cm-rubrique" data-rubrique={indexRubrique}>
           <h2 class="cm-bloc cm-titre" data-nouvelle-page={r.nouvellePage ? '' : undefined} data-garder-avec-suite>
             {r.titre}
           </h2>
@@ -136,7 +148,12 @@ const ILLUSTRATIONS: Record<string, string> = {
               Nos farces (environ {grammesFarce} g par volaille) : {farcesChiffrees.map((f) => `${f.nom}, ${prixCarte(f.prix100g!)} €/100 g`).join(' · ')}
             </p>
           )}
-        </>
+          {mode === 'web' && suivante && (
+            <button type="button" class="cm-suivante" data-onglet={indexRubrique + 1}>
+              Continuer : {suivante.titre} <span aria-hidden="true">→</span>
+            </button>
+          )}
+        </section>
       );
     })
   }
@@ -144,7 +161,105 @@ const ILLUSTRATIONS: Record<string, string> = {
   {carte.piedDeCarte && <p class="cm-bloc cm-pied">{carte.piedDeCarte}</p>}
 </div>
 
+<script>
+  // Une rubrique à la fois. Sans JavaScript, toute la carte reste affichée.
+  document.querySelectorAll<HTMLElement>('.carte-menu--web').forEach((carte) => {
+    const nav = carte.querySelector<HTMLElement>('.cm-onglets');
+    if (!nav) return;
+    const rubriques = [...carte.querySelectorAll<HTMLElement>('.cm-rubrique')];
+    const onglets = [...nav.querySelectorAll<HTMLElement>('.cm-onglet')];
+    const afficher = (i: number) => {
+      rubriques.forEach((r, j) => (r.hidden = j !== i));
+      onglets.forEach((o, j) => {
+        o.classList.toggle('actif', j === i);
+        if (j === i) o.setAttribute('aria-current', 'true');
+        else o.removeAttribute('aria-current');
+      });
+      onglets[i]?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'instant' });
+    };
+    nav.hidden = false;
+    carte.setAttribute('data-onglets', '');
+    afficher(0);
+    carte.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLElement>('[data-onglet]');
+      if (!b) return;
+      afficher(Number(b.dataset.onglet));
+      if (b.classList.contains('cm-suivante') || nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: 'start', behavior: 'instant' });
+    });
+  });
+</script>
+
 <style>
+  .cm-rubrique[hidden] {
+    display: none;
+  }
+  .cm-onglets {
+    position: sticky;
+    top: 68px;
+    z-index: 4;
+    display: flex;
+    gap: 6px;
+    margin: 0 0 1.6em;
+    padding: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-margin-top: 80px;
+    border-radius: 999px;
+    background: var(--anthracite);
+  }
+  .cm-onglet {
+    position: relative;
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #ece6da;
+    font: 500 0.88rem/1.2 var(--corps);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color 0.3s var(--ease-doux),
+      color 0.3s var(--ease-doux);
+  }
+  .cm-onglet:hover {
+    color: var(--or);
+  }
+  .cm-onglet.actif {
+    background: var(--or);
+    color: var(--anthracite);
+  }
+  .cm-onglet[data-compte]::after {
+    content: attr(data-compte);
+    display: inline-block;
+    min-width: 18px;
+    margin-left: 7px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--blanc);
+    color: var(--anthracite);
+    font-size: 0.72rem;
+    line-height: 18px;
+    text-align: center;
+  }
+  .cm-suivante {
+    display: none;
+  }
+  [data-onglets] .cm-suivante {
+    display: block;
+    margin: 2em 0 0 auto;
+    padding: 12px 20px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--or-clair);
+    color: var(--anthracite);
+    font: 500 0.92rem/1.2 var(--corps);
+    cursor: pointer;
+    transition: background-color 0.3s var(--ease-doux);
+  }
+  [data-onglets] .cm-suivante:hover {
+    background: var(--or);
+  }
   .carte-menu {
     --cm-or: var(--or-fonce);
     color: var(--anthracite);
@@ -346,9 +461,9 @@ const ILLUSTRATIONS: Record<string, string> = {
     padding: 0;
     border: 1px solid var(--or);
     border-radius: 999px;
-    background: var(--blanc);
-    color: var(--cm-or);
-    font: 400 1.2rem/1 var(--corps);
+    background: var(--or);
+    color: var(--anthracite);
+    font: 500 1.2rem/1 var(--corps);
     cursor: pointer;
     align-self: center;
     transition:
@@ -372,11 +487,11 @@ const ILLUSTRATIONS: Record<string, string> = {
       color 0.3s var(--ease-doux);
   }
   [data-commande-ouverte] .cm-prix-choix[data-quantite] {
-    background: var(--anthracite);
-    color: var(--blanc);
+    background: var(--or);
+    color: var(--anthracite);
   }
   [data-commande-ouverte] .cm-prix-choix[data-quantite] small {
-    color: #d9d4cb;
+    color: var(--anthracite);
   }
   [data-commande-ouverte] .cm-prix-choix[data-quantite]::after {
     content: attr(data-quantite);
@@ -387,8 +502,8 @@ const ILLUSTRATIONS: Record<string, string> = {
     height: 18px;
     padding: 0 4px;
     border-radius: 999px;
-    background: var(--or);
-    color: var(--anthracite);
+    background: var(--anthracite);
+    color: var(--blanc);
     font: 600 0.68rem/18px var(--corps);
     text-align: center;
   }
@@ -401,9 +516,9 @@ const ILLUSTRATIONS: Record<string, string> = {
     flex-shrink: 0;
     border: 1px solid var(--or);
     border-radius: 999px;
-    background: var(--blanc);
-    color: var(--cm-or);
-    font: 400 0.95rem/1 var(--corps);
+    background: var(--or);
+    color: var(--anthracite);
+    font: 500 0.95rem/1 var(--corps);
     cursor: pointer;
     transition: background-color 0.3s var(--ease-doux), color 0.3s var(--ease-doux);
   }

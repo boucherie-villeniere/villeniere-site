@@ -76,7 +76,7 @@ export const POST: APIRoute = async ({ request }) => {
       }</p>
       ${tableauLignes(lignes, total, auPoids ? '* au poids : montant estimé, ajusté à la pesée' : '')}
       ${c.remarque ? `<p style="margin:0 0 24px;padding:12px 16px;background:#faf7f1"><strong>Remarque :</strong><br>${echapper(c.remarque).replace(/\n/g, '<br>')}</p>` : ''}
-      ${arrhes ? `<p style="margin:0 0 24px"><strong style="color:#15181B">Arrhes à demander au client.</strong> Mention affichée : ${echapper(arrhes)}</p>` : ''}
+      ${arrhes ? `<p style="margin:0 0 24px"><strong style="color:#15181B">Arrhes à demander au client${evenement?.carte?.commande?.montantArrhes ? ` : ${evenement.carte.commande.montantArrhes} €` : ''}.</strong> Suivi dans le planning.</p>` : ''}
       ${enregistree ? bouton(`${origine}/commandes?jour=${c.date}`, 'Voir le planning') : ''}`,
   });
   try {

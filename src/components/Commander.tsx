@@ -12,6 +12,7 @@ import {
   type ReglesRetrait,
 } from '../lib/commande';
 import ChoixRetrait from './ChoixRetrait';
+import Etapes from './Etapes';
 import type { Plat } from '../lib/data';
 
 interface Props {
@@ -28,6 +29,7 @@ type Etat =
   | { type: 'ok'; total: string; date: string; creneau: string; lignes: { nom: string; quantite: number }[] };
 
 const CLE_PANIER = 'commande-click-collect';
+const ETAPES = ['Retrait', 'Vos plats', 'Coordonnées'];
 
 export default function Commander({ plats, regles, mentionPaiement, adresse }: Props) {
   // Les dates sont calculées dans le navigateur : la page est statique et
@@ -38,6 +40,8 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
   const [quantites, setQuantites] = useState<Record<string, number>>({});
   const [etat, setEtat] = useState<Etat>({ type: 'saisie' });
   const [restaure, setRestaure] = useState(false);
+  const [etape, setEtape] = useState(0);
+  const racine = useRef<HTMLFormElement>(null);
   const zoneErreur = useRef<HTMLParagraphElement>(null);
   const zoneMerci = useRef<HTMLDivElement>(null);
 
@@ -76,24 +80,39 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
     cible.focus({ preventScroll: true });
   }, [etat]);
 
+  function changerEtape(i: number) {
+    setEtape(i);
+    setEtat({ type: 'saisie' });
+    racine.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }
+
   async function envoyer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     if (f.get('site')) return; // champ piège anti-robots
     const telephone = String(f.get('telephone') ?? '');
-    const manque = !date
-      ? 'Choisissez le jour de retrait, tout en haut du formulaire.'
+    // On revient sur l'étape qui pose problème, avec le message à l'écran.
+    const probleme = !date
+      ? { etape: 0, message: 'Choisissez le jour de retrait.' }
       : !creneau
-      ? 'Choisissez un horaire de retrait, tout en haut du formulaire.'
-      : lignes.length === 0
-        ? 'Ajoutez au moins un plat à votre commande.'
-        : !String(f.get('nom') ?? '').trim()
-          ? 'Indiquez votre nom.'
-          : !telephoneValide(telephone)
-            ? 'Le numéro de téléphone semble incorrect : indiquez 10 chiffres, par exemple 06 12 34 56 78.'
-            : '';
-    if (manque) {
-      setEtat({ type: 'erreur', message: manque });
+        ? { etape: 0, message: 'Choisissez un horaire de retrait.' }
+        : lignes.length === 0
+          ? { etape: 1, message: 'Ajoutez au moins un plat à votre commande.' }
+          : etape < 2
+            ? null
+            : !String(f.get('nom') ?? '').trim()
+              ? { etape: 2, message: 'Indiquez votre nom.' }
+              : !telephoneValide(telephone)
+                ? { etape: 2, message: 'Le numéro de téléphone semble incorrect : indiquez 10 chiffres, par exemple 06 12 34 56 78.' }
+                : null;
+    if (probleme && probleme.etape <= etape) {
+      setEtape(probleme.etape);
+      setEtat({ type: 'erreur', message: probleme.message });
+      return;
+    }
+    if (etape < 2) {
+      setEtat({ type: 'saisie' });
+      changerEtape(etape + 1);
       return;
     }
     const commande: Commande = {
@@ -158,18 +177,15 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
   }
 
   return (
-    <form className="cc" onSubmit={envoyer} noValidate>
-      <fieldset className="cc-etape">
-        <legend>
-          <span className="cc-num">1</span> Quand passez-vous ?
-        </legend>
+    <form className="cc" ref={racine} onSubmit={envoyer} noValidate>
+      <Etapes etapes={ETAPES} courante={etape} surChoix={changerEtape} />
+      <fieldset className="cc-etape" hidden={etape !== 0}>
+        <legend>Quand passez-vous ?</legend>
         <ChoixRetrait dates={dates} date={date} surDate={setDate} regles={regles} creneau={creneau} surCreneau={setCreneau} />
       </fieldset>
 
-      <fieldset className="cc-etape">
-        <legend>
-          <span className="cc-num">2</span> Votre commande
-        </legend>
+      <fieldset className="cc-etape" hidden={etape !== 1}>
+        <legend>Votre commande</legend>
         <ul className="cc-plats">
           {platsDuJour.map((p) => {
             const q = quantites[p.slug] ?? 0;
@@ -204,10 +220,8 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
         </ul>
       </fieldset>
 
-      <fieldset className="cc-etape">
-        <legend>
-          <span className="cc-num">3</span> Vos coordonnées
-        </legend>
+      <fieldset className="cc-etape" hidden={etape !== 2}>
+        <legend>Vos coordonnées</legend>
         <div className="cc-grille">
           <label className="cc-champ">
             <span>Nom *</span>
@@ -246,9 +260,16 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
             {auPoids && ' Les produits au kilo sont ajustés à la pesée.'}
           </p>
         </div>
-        <button className="bouton bouton--or sur-sombre" type="submit" disabled={etat.type === 'envoi'}>
-          {etat.type === 'envoi' ? 'Envoi…' : 'Valider ma commande'}
-        </button>
+        <div className="cc-navigation">
+          {etape > 0 && (
+            <button type="button" className="cc-retour" onClick={() => changerEtape(etape - 1)}>
+              ← Retour
+            </button>
+          )}
+          <button className="bouton bouton--or sur-sombre" type="submit" disabled={etat.type === 'envoi'}>
+            {etat.type === 'envoi' ? 'Envoi…' : etape < 2 ? 'Continuer' : 'Valider ma commande'}
+          </button>
+        </div>
       </div>
       <p className="cc-rgpd">
         Vos coordonnées servent uniquement à préparer votre commande.{' '}

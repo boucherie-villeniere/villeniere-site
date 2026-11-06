@@ -39,6 +39,8 @@ E-mails (`src/lib/emails.ts`, gabarit aux couleurs de la boutique) : un à la bo
 
 Page réservée à la boutique (mot de passe = secret `COMMANDES_MOT_DE_PASSE`, connexion gardée 30 jours) : semaine en calendrier, détail du jour par créneau, quantités à préparer, statut de chaque commande (à préparer, prête, retirée, annulée). La page se rafraîchit toute seule toutes les 3 minutes.
 
+Arrhes (temps forts) : montant, modalités et mention dans « Commande en ligne ». Le planning suit chaque commande (arrhes reçues, saisie dans la caisse Apitic, SMS préparé depuis le téléphone) et liste les arrhes à recevoir (`/commandes?vue=arrhes`).
+
 Récapitulatif du matin : chaque jour de retrait à 8 h (Paris), un e-mail liste les commandes du jour (`src/worker.ts`, déclencheur `triggers.crons` dans `wrangler.jsonc`). La même tâche supprime chaque jour les commandes retirées depuis plus de 90 jours, comme annoncé dans les mentions légales.
 
 ## Temps forts (Noël, Halloween, Galette…)

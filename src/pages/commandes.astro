@@ -6,9 +6,10 @@ import { env } from 'cloudflare:workers';
 import '../styles/global.css';
 import { COOKIE, DUREE_JOURS, creerJeton, jetonValide, motDePasseCorrect } from '../lib/acces';
 import { ajouterJours, formaterPrix, jourDeSemaine, libelleTotal, maintenantParis, ORDRE_JOURS, prixLigne, sansEstimation } from '../lib/commande';
-import { getClickCollect } from '../lib/data';
+import SuiviArrhes from '../components/SuiviArrhes.astro';
+import { getClickCollect, getTempsForts } from '../lib/data';
 import { uniteAffichee } from '../lib/recap';
-import { changerStatut, commandesEntre, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
+import { changerStatut, changerSuivi, commandesEntre, commandesSansArrhes, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
 
 export const prerender = false;
 
@@ -42,6 +43,12 @@ if (Astro.request.method === 'POST') {
   } else if (action === 'deconnexion') {
     Astro.cookies.delete(COOKIE, { path: '/commandes' });
     return Astro.redirect('/commandes', 303);
+  } else if (action === 'suivi' && connecte) {
+    const [champ, valeur] = String(form.get('suivi') ?? '').split(':');
+    if (champ === 'arrhes' || champ === 'apitic') await changerSuivi(env.DB, String(form.get('id')), champ, valeur === '1');
+    // Retour uniquement vers cette page, jamais vers une adresse fournie de l'extérieur.
+    const retour = String(form.get('retour') ?? '');
+    return Astro.redirect(retour.startsWith('?') ? `/commandes${retour}` : '/commandes', 303);
   } else if (action === 'statut' && connecte) {
     await changerStatut(env.DB, String(form.get('id')), String(form.get('statut')) as Statut);
     return Astro.redirect(`/commandes?jour=${jour}#${form.get('id')}`, 303);
@@ -57,11 +64,20 @@ const lundi = ajouterJours(jour, -ORDRE_JOURS.indexOf(jourDeSemaine(jour)));
 const semaine = Array.from({ length: 7 }, (_, i) => ajouterJours(lundi, i));
 
 const cc = getClickCollect();
+const vueArrhes = url.searchParams.get('vue') === 'arrhes';
+// Temps forts qui demandent des arrhes, retrouvés par le nom enregistré sur la commande.
+const aArrhes = new Map(
+  getTempsForts()
+    .filter((t) => t.carte?.commande?.mentionArrhes?.trim())
+    .map((t) => [t.nom, t]),
+);
+let aRelancer: Awaited<ReturnType<typeof commandesSansArrhes>> = [];
 let commandes: Awaited<ReturnType<typeof commandesEntre>> = [];
 let erreurBase = false;
 if (connecte) {
   try {
     commandes = trierParCreneau(await commandesEntre(env.DB, semaine[0], semaine[6]), cc.creneaux);
+    aRelancer = (await commandesSansArrhes(env.DB, aujourdhui)).filter((c) => aArrhes.has(c.evenement!));
   } catch (e) {
     console.error('[gestion] lecture impossible', e);
     erreurBase = true;
@@ -124,6 +140,11 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
               <span>Commandes</span>
             </a>
             <div class="barre-droite">
+              {aArrhes.size > 0 && (
+                <a href={vueArrhes ? '?' : '?vue=arrhes'} class:list={['lien-arrhes', { actif: vueArrhes }]}>
+                  Arrhes à recevoir <span class="lien-arrhes-n">{aRelancer.length}</span>
+                </a>
+              )}
               <form method="post">
                 <input type="hidden" name="action" value="deconnexion" />
                 <button type="submit" class="lien-discret">Se déconnecter</button>
@@ -131,6 +152,30 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
             </div>
           </header>
 
+          {vueArrhes ? (
+            <main class="detail">
+              <div class="detail-tete">
+                <h1>Arrhes à recevoir</h1>
+                <p>{pluriel(aRelancer.length, 'commande')}, de la plus proche à la plus lointaine</p>
+              </div>
+              {aRelancer.length === 0 && <p class="tout-pret">Toutes les arrhes sont reçues.</p>}
+              <ul class="cartes">
+                {aRelancer.map((c) => (
+                  <li class="carte">
+                    <span class="evenement">{c.evenement}</span>
+                    <h3>{c.nom}</h3>
+                    <a class="tel" href={`tel:${c.telephone.replace(/\s/g, '')}`}>{c.telephone}</a>
+                    <p class="retrait">Retrait : <a href={`?jour=${c.date}#${c.id}`}>{fmt(c.date, { weekday: 'long', day: 'numeric', month: 'long' })}, {c.creneau}</a></p>
+                    <p class="total">
+                      <span>Total estimé</span> <strong>{libelleTotal(c.lignes)}</strong>
+                    </p>
+                    <SuiviArrhes commande={c} temps={aArrhes.get(c.evenement!)!} retour="?vue=arrhes" />
+                  </li>
+                ))}
+              </ul>
+            </main>
+          ) : (
+          <>
           <nav class="semaine" aria-label="Choisir un jour">
             <div class="semaine-tete">
               <a class="nav" href={`?jour=${ajouterJours(lundi, -7)}`} aria-label="Semaine précédente">←</a>
@@ -230,6 +275,9 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                       </p>
                       {c.lignes.some((l) => l.aLaPesee) && <p class="pesee">* au poids : montant estimé, à ajuster à la pesée</p>}
                       {c.remarque && <p class="remarque">« {c.remarque} »</p>}
+                      {c.evenement && aArrhes.has(c.evenement) && c.statut !== 'annulee' && (
+                        <SuiviArrhes commande={c} temps={aArrhes.get(c.evenement)!} retour={`?jour=${jour}#${c.id}`} />
+                      )}
                       <form method="post" class="actions">
                         <input type="hidden" name="action" value="statut" />
                         <input type="hidden" name="id" value={c.id} />
@@ -255,6 +303,8 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
               </section>
             ))}
           </main>
+          </>
+          )}
         </div>
       )
     }
@@ -511,6 +561,35 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
   .a-preparer strong {
     font: italic 600 1.6rem/1 var(--titre);
     color: var(--anthracite);
+  }
+  .lien-arrhes {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--or-clair);
+    color: var(--anthracite);
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .lien-arrhes.actif {
+    background: var(--or);
+  }
+  .lien-arrhes-n {
+    min-width: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--anthracite);
+    color: var(--blanc);
+    font-size: 0.78rem;
+    line-height: 22px;
+    text-align: center;
+  }
+  .retrait {
+    margin: 8px 0 0;
+    font-size: 0.92rem;
   }
   .tout-pret {
     padding: 14px 20px;
