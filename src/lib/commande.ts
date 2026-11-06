@@ -60,6 +60,8 @@ export interface PlatCommandable {
   jours: Jour[];
   quantiteMax: number;
   aLaPesee?: boolean;
+  sansEstimation?: boolean;
+  farce?: string;
 }
 
 /** Date (AAAA-MM-JJ) et heure actuelles à Paris, quel que soit le fuseau du serveur. */
@@ -97,6 +99,27 @@ export function formaterDate(iso: string) {
 
 export const formaterPrix = (n: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+
+/** Numéro français : mêmes règles dans le navigateur et sur le serveur. */
+export const telephoneValide = (t: string) => /^(\+33|0)[1-9]\d{8}$/.test(t.replace(/[\s.\-]/g, ''));
+
+export const UNITES_CARTE: Record<string, string> = { kg: '€/kg', piece: '€', 'la-piece': '€ la pièce', pers: '€/pers.' };
+
+/** Prix façon menu : « 95,00 ». */
+export const prixCarte = (n: number) => n.toFixed(2).replace('.', ',');
+
+/** Ligne dont le prix n'est connu qu'à la pesée (aucun montant à annoncer). */
+export const sansEstimation = (l: { aLaPesee?: boolean; sansEstimation?: boolean; total: number }) =>
+  !!l.sansEstimation || (!!l.aLaPesee && l.total === 0);
+
+/** Total affiché : ne dit jamais « 0,00 € » quand des produits restent à peser. */
+export function libelleTotal(lignes: { aLaPesee?: boolean; sansEstimation?: boolean; quantite: number; total: number }[]) {
+  const total = lignes.reduce((s, l) => s + l.total, 0);
+  const n = lignes.filter(sansEstimation).reduce((s, l) => s + l.quantite, 0);
+  if (n === 0) return formaterPrix(total);
+  const pesee = `${n} produit${n > 1 ? 's' : ''} à la pesée`;
+  return total > 0 ? `${formaterPrix(total)} + ${pesee}` : pesee;
+}
 
 export const platDisponible = (plat: PlatCommandable, iso: string) =>
   plat.jours.length === 0 || plat.jours.includes(jourDeSemaine(iso));
@@ -144,6 +167,10 @@ export interface LigneValidee {
   total: number;
   /** Prix estimé (produit au kilo, ajusté à la pesée). */
   aLaPesee?: boolean;
+  /** Aucun montant estimé : le prix sera connu à la pesée. */
+  sansEstimation?: boolean;
+  /** Farce choisie (volaille entière). */
+  farce?: string;
 }
 
 /** Vérifie une commande reçue ; renvoie les lignes chiffrées ou un message d'erreur. */
@@ -155,8 +182,7 @@ export function validerCommande(
 ): { ok: true; lignes: LigneValidee[]; total: number } | { ok: false; erreur: string } {
   if (!regles.actif) return { ok: false, erreur: 'Les commandes en ligne sont suspendues pour le moment.' };
   if (!c.nom?.trim() || c.nom.length > 120) return { ok: false, erreur: 'Merci d’indiquer votre nom.' };
-  const tel = (c.telephone ?? '').replace(/[\s.\-]/g, '');
-  if (!/^(\+33|0)[1-9]\d{8}$/.test(tel)) return { ok: false, erreur: 'Le numéro de téléphone semble incorrect.' };
+  if (!telephoneValide(c.telephone ?? '')) return { ok: false, erreur: 'Le numéro de téléphone semble incorrect.' };
   if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) return { ok: false, erreur: 'L’adresse e-mail semble incorrecte.' };
   if (!c.date || !datesDeRetrait(regles, plats, now).includes(c.date))
     return { ok: false, erreur: 'Cette date de retrait n’est plus disponible, merci d’en choisir une autre.' };
@@ -177,6 +203,8 @@ export function validerCommande(
       unite: plat.unite,
       total: plat.prix * l.quantite,
       ...(plat.aLaPesee ? { aLaPesee: true } : {}),
+      ...(plat.sansEstimation ? { sansEstimation: true } : {}),
+      ...(plat.farce ? { farce: plat.farce } : {}),
     });
   }
   if (lignes.length === 0) return { ok: false, erreur: 'Votre commande est vide.' };

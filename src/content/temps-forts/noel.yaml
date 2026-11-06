@@ -26,6 +26,7 @@ carte:
           detail: lobe d’environ 500 g
           prix: 95
           unite: kg
+          saisie: piece
           poids: 0.5
         - nom: Foie gras mi-cuit maison nature ou aux épices
         - nom: Ballotin de 150 g
@@ -42,32 +43,64 @@ carte:
           detail: 4 à 6 pers.
           prix: 20.9
           unite: kg
+          saisie: personnes
+          personnesMin: 4
+          personnesMax: 6
+          farce: true
         - nom: Chapon des Landes Label Rouge
           detail: 6 à 8 pers.
           prix: 24.9
           unite: kg
+          saisie: personnes
+          personnesMin: 6
+          personnesMax: 8
+          farce: true
         - nom: Poularde de la ferme Tauzin
           detail: 4 à 6 pers.
           prix: 25.9
           unite: kg
+          saisie: personnes
+          personnesMin: 4
+          personnesMax: 6
+          farce: true
         - nom: Chapon de la ferme Tauzin
           detail: 6 à 8 pers.
           prix: 31.5
           unite: kg
+          saisie: personnes
+          personnesMin: 6
+          personnesMax: 8
+          farce: true
         - nom: Poularde de Bresse
           prix: 49.9
           unite: kg
+          saisie: personnes
+          personnesMin: 4
+          personnesMax: 6
+          farce: true
         - nom: Chapon de Bresse
           prix: 59.9
           unite: kg
+          saisie: personnes
+          personnesMin: 6
+          personnesMax: 8
+          farce: true
         - nom: Pintade chaponnée ferme Tauzin
           detail: 4 à 6 pers.
           prix: 32.5
           unite: kg
+          saisie: personnes
+          personnesMin: 4
+          personnesMax: 6
+          farce: true
         - nom: Oie fermière d’Anjou Label Rouge
           detail: 8 à 12 pers.
           prix: 38
           unite: kg
+          saisie: personnes
+          personnesMin: 8
+          personnesMax: 12
+          farce: true
         - nom: Magret de canard IGP Sud-Ouest
           detail: 1 pour 2 pers.
           prix: 38.9
@@ -159,6 +192,8 @@ carte:
         - nom: Gratin dauphinois maison
           prix: 15.9
           unite: kg
+          allergenes:
+            - lait
         - nom: Sauce morille maison
           detail: prix à compléter
   commande:
@@ -167,5 +202,10 @@ carte:
     retraitDu: 2026-12-19
     retraitAu: 2026-12-31
     message: Commandez directement sur la carte avec le bouton +, puis retirez votre commande en boutique. Le règlement se fait au retrait.
+  farces:
+    - nom: Pommes caramélisées et châtaignes
+    - nom: Morilles et crème
+    - nom: Figue et foie gras
+  mentionAllergenes: 'Allergènes : liste complète disponible sur demande en boutique.'
   piedDeCarte: Et pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins ! À retrouver en boutique.
   lienQR: ''

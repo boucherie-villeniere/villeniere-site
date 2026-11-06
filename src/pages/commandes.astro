@@ -5,10 +5,10 @@
 import { env } from 'cloudflare:workers';
 import '../styles/global.css';
 import { COOKIE, DUREE_JOURS, creerJeton, jetonValide, motDePasseCorrect } from '../lib/acces';
-import { ajouterJours, formaterPrix, jourDeSemaine, maintenantParis, ORDRE_JOURS } from '../lib/commande';
+import { ajouterJours, formaterPrix, jourDeSemaine, libelleTotal, maintenantParis, ORDRE_JOURS, sansEstimation } from '../lib/commande';
 import { getClickCollect } from '../lib/data';
 import { uniteAffichee } from '../lib/recap';
-import { changerStatut, commandesEntre, STATUTS, totauxParPlat, trierParCreneau, type Statut } from '../lib/stockage';
+import { changerStatut, commandesEntre, STATUTS, totauxParFarce, totauxParPlat, trierParCreneau, type Statut } from '../lib/stockage';
 
 export const prerender = false;
 
@@ -71,6 +71,7 @@ if (connecte) {
 const actives = (d: string) => commandes.filter((c) => c.date === d && c.statut !== 'annulee');
 const duJour = commandes.filter((c) => c.date === jour);
 const totaux = totauxParPlat(duJour);
+const farces = totauxParFarce(duJour);
 const parCreneau = new Map<string, typeof duJour>();
 for (const c of duJour) parCreneau.set(c.creneau, [...(parCreneau.get(c.creneau) ?? []), c]);
 
@@ -79,7 +80,7 @@ const titreJour = fmt(jour, { weekday: 'long', day: 'numeric', month: 'long' });
 const titreSemaine = `${fmt(semaine[0], { day: 'numeric', month: 'short' })} – ${fmt(semaine[6], { day: 'numeric', month: 'short' })}`;
 const heureCommande = (iso: string) =>
   new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).format(new Date(iso));
-const caJour = actives(jour).reduce((s, c) => s + c.total, 0);
+const totalJour = libelleTotal(actives(jour).flatMap((c) => c.lignes));
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 ---
 
@@ -165,7 +166,7 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
               </h1>
               <p>
                 {pluriel(actives(jour).length, 'commande')}
-                {caJour > 0 && <> · {formaterPrix(caJour)} estimés</>}
+                {actives(jour).length > 0 && <> · {totalJour}, estimé</>}
               </p>
             </div>
 
@@ -181,6 +182,11 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                     </li>
                   ))}
                 </ul>
+                {farces.length > 0 && (
+                  <p class="a-farcir">
+                    <strong>Farces :</strong> {farces.map((f) => `${f.quantite} × ${f.nom}`).join(', ')}
+                  </p>
+                )}
               </section>
             )}
 
@@ -207,12 +213,12 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                             <span>
                               <strong>{l.quantite} ×</strong> {l.nom}
                             </span>
-                            <span>{l.aLaPesee && l.total === 0 ? 'à la pesée' : `${formaterPrix(l.total)}${l.aLaPesee ? '*' : ''}`}</span>
+                            <span>{sansEstimation(l) ? 'à la pesée' : `${formaterPrix(l.total)}${l.aLaPesee ? '*' : ''}`}</span>
                           </li>
                         ))}
                       </ul>
                       <p class="total">
-                        <span>Total estimé</span> <strong>{formaterPrix(c.total)}</strong>
+                        <span>Total estimé</span> <strong>{libelleTotal(c.lignes)}</strong>
                       </p>
                       {c.lignes.some((l) => l.aLaPesee) && <p class="pesee">* au poids : montant estimé, à ajuster à la pesée</p>}
                       {c.remarque && <p class="remarque">« {c.remarque} »</p>}
@@ -491,6 +497,11 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
   .a-preparer strong {
     font: italic 600 1.6rem/1 var(--titre);
     color: var(--anthracite);
+  }
+  .a-farcir {
+    margin: 12px 0 0;
+    color: var(--gris);
+    font-size: 0.95rem;
   }
   .unite {
     color: var(--gris);

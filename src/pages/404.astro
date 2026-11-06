@@ -1,0 +1,24 @@
+---
+import Base from '../layouts/Base.astro';
+import EntetePage from '../components/EntetePage.astro';
+---
+
+<Base title="Page introuvable" description="Cette page n’existe pas ou a changé d’adresse.">
+  <EntetePage surtitre="Erreur 404" titre="Ce morceau n’est pas à la carte" chapo="Cette page n’existe pas ou a changé d’adresse." />
+  <section class="section retour">
+    <div class="conteneur">
+      <a class="bouton" href="/">Retour à l’accueil <span class="fleche" aria-hidden="true">→</span></a>
+      <a class="bouton bouton--contour" href="/commander">Click &amp; collect</a>
+      <a class="bouton bouton--contour" href="/infos-pratiques">Infos pratiques</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .retour .conteneur {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+</style>

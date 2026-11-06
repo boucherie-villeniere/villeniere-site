@@ -7,6 +7,7 @@ import Photo from '../components/Photo.astro';
 import CarteMenu from '../components/CarteMenu.astro';
 import CommandeCarte from '../components/CommandeCarte.tsx';
 import { getClickCollect, getReglages, getTempsForts, lienTempsFort, paragraphes, type TempsFort } from '../lib/data';
+import { formaterDate } from '../lib/commande';
 import { produitsCommandables, reglesEvenement } from '../lib/evenement';
 import '../styles/commander.css';
 
@@ -21,6 +22,7 @@ const versPage = lien === `/${t.slug}`;
 const aUneCarte = (t.carte?.rubriques ?? []).length > 0;
 const cc = getClickCollect();
 const commande = aUneCarte && t.carte?.commande?.actif;
+const limite = t.carte?.commande?.dateLimite;
 ---
 
 <Base title={t.nom} description={t.accroche ?? t.titre} image={t.image ?? undefined}>
@@ -67,11 +69,22 @@ const commande = aUneCarte && t.carte?.commande?.actif;
         <div class="conteneur tf-carte-cadre">
           <Decor type={t.decor} motifs={false} />
           <div class="tf-carte-corps">
-            {commande && t.carte!.commande!.message && (
-              <p class="tf-commande-aide" data-commande-aide hidden>
-                <span class="tf-plus" aria-hidden="true">+</span>
-                {t.carte!.commande!.message}
-              </p>
+            {commande && (
+              <>
+                <p class="tf-commande-aide" data-commande-aide hidden>
+                  <span class="tf-plus" aria-hidden="true">+</span>
+                  <span>
+                    {t.carte!.commande!.message}
+                    {limite && <strong class="tf-limite">Commandes en ligne jusqu’au {formaterDate(limite)}.</strong>}
+                  </span>
+                </p>
+                <p class="tf-commande-aide" data-commande-fermee hidden>
+                  <span>
+                    Les commandes en ligne sont closes.
+                    {r.telephone && <> Pour une demande de dernière minute, appelez-nous au <a href={`tel:${r.telephone.replace(/\s/g, '')}`}>{r.telephone}</a>.</>}
+                  </span>
+                </p>
+              </>
             )}
             <CarteMenu carte={t.carte!} />
           </div>
@@ -86,6 +99,8 @@ const commande = aUneCarte && t.carte?.commande?.actif;
         evenement={t.slug}
         nom={t.nom}
         produits={produitsCommandables(t)}
+        farces={t.carte!.farces ?? []}
+        adresse={`${r.adresse}, ${r.codePostal} ${r.ville}`}
         regles={reglesEvenement(t, cc)}
         mentionPaiement={cc.mentionPaiement}
       />
@@ -125,6 +140,17 @@ const commande = aUneCarte && t.carte?.commande?.actif;
     flex-wrap: wrap;
     gap: 12px;
     margin-top: 2em;
+  }
+  .tf-actions .bouton {
+    white-space: normal;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .tf-limite {
+    display: block;
+    margin-top: 0.3em;
+    color: var(--anthracite);
+    font-weight: 500;
   }
   .tf-contacts {
     margin-top: 1.6em;
@@ -206,6 +232,58 @@ const commande = aUneCarte && t.carte?.commande?.actif;
     from {
       transform: scale(1.04);
     }
+  }
+  :global(.cdc-choix-groupe) {
+    border: 0;
+    padding: 0;
+    margin: 0 0 22px;
+  }
+  :global(.cdc-choix-groupe legend) {
+    padding: 0;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--anthracite);
+  }
+  :global(.cdc-options) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  :global(.cdc-options--colonne) {
+    flex-direction: column;
+  }
+  :global(.cdc-poids) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  :global(.cdc-poids input) {
+    width: 6em;
+    min-height: 44px;
+    padding: 8px 12px;
+    font: inherit;
+    text-align: center;
+    border: 1px solid var(--ligne);
+    border-radius: var(--rayon);
+    background: var(--blanc);
+  }
+  :global(.cdc-estimation) {
+    margin: 0 0 18px;
+    color: var(--gris);
+  }
+  :global(.cdc-estimation strong) {
+    color: var(--anthracite);
+  }
+  :global(.cdc-merci ul) {
+    list-style: none;
+    margin: 18px auto;
+    padding: 0;
+    max-width: 30em;
+    text-align: left;
+  }
+  :global(.cdc-merci li) {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--ligne);
   }
   :global(.cdc-fenetre) {
     width: min(640px, calc(100vw - 24px));

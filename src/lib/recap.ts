@@ -1,9 +1,9 @@
 // E-mail récapitulatif envoyé chaque matin à la boucherie (voir src/worker.ts).
 
-import { formaterDate, formaterPrix, jourDeSemaine, UNITES } from './commande';
+import { formaterDate, jourDeSemaine, libelleTotal, UNITES } from './commande';
 import { bouton, echapper, gabarit } from './emails';
 import type { ClickCollect, Reglages } from './data';
-import { totauxParPlat, trierParCreneau, type CommandeEnregistree } from './stockage';
+import { totauxParFarce, totauxParPlat, trierParCreneau, type CommandeEnregistree } from './stockage';
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
@@ -57,6 +57,11 @@ export function recapDuJour({
         .join('')}
     </table>`;
 
+  const farces = totauxParFarce(actives);
+  const blocFarces = farces.length
+    ? `<p style="margin:-16px 0 28px;font:14px/1.5 Arial,sans-serif;color:#4E4B48"><strong>Farces :</strong> ${farces.map((f) => `${f.quantite} × ${echapper(f.nom)}`).join(', ')}</p>`
+    : '';
+
   const parCreneau = new Map<string, CommandeEnregistree[]>();
   for (const c of actives) parCreneau.set(c.creneau, [...(parCreneau.get(c.creneau) ?? []), c]);
 
@@ -70,7 +75,7 @@ export function recapDuJour({
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 16px">
           <tr><td style="padding:4px 0;font:bold 15px/1.4 Arial,sans-serif;color:#15181B">${echapper(c.nom)}
             <span style="font-weight:normal;color:#4E4B48"> · <a href="tel:${echapper(c.telephone.replace(/\s/g, ''))}" style="color:#4E4B48">${echapper(c.telephone)}</a></span></td>
-            <td style="padding:4px 0;font:15px/1.4 Arial,sans-serif;color:#15181B;text-align:right;white-space:nowrap">${formaterPrix(c.total)}</td></tr>
+            <td style="padding:4px 0;font:15px/1.4 Arial,sans-serif;color:#15181B;text-align:right;white-space:nowrap">${echapper(libelleTotal(c.lignes))}</td></tr>
           <tr><td colspan="2" style="padding:0;font:14px/1.5 Arial,sans-serif;color:#4E4B48">${c.lignes.map((l) => `${l.quantite} × ${echapper(l.nom)}`).join('<br>')}
             ${c.remarque ? `<br><em style="color:#8a6a32">« ${echapper(c.remarque)} »</em>` : ''}</td></tr>
         </table>`,
@@ -87,7 +92,7 @@ export function recapDuJour({
       r,
       titre: `${pluriel(n, 'commande')} aujourd’hui`,
       apercu: totaux.map((t) => `${t.quantite} ${t.nom}`).join(', '),
-      contenu: `<p style="margin:0 0 24px">Voici les commandes click &amp; collect à retirer <strong>${echapper(jour)}</strong>.</p>${blocTotaux}${blocCreneaux}${bouton(lienGestion, 'Ouvrir le planning')}`,
+      contenu: `<p style="margin:0 0 24px">Voici les commandes click &amp; collect à retirer <strong>${echapper(jour)}</strong>.</p>${blocTotaux}${blocFarces}${blocCreneaux}${bouton(lienGestion, 'Ouvrir le planning')}`,
     }),
   };
 }

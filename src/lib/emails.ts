@@ -3,7 +3,7 @@
 // le plus fidèlement. Pas de SVG ni de polices web : logo en PNG, Georgia pour
 // les titres (proche de la typo du site), Arial pour le texte.
 
-import { formaterPrix, type LigneValidee } from './commande';
+import { formaterPrix, libelleTotal, sansEstimation, type LigneValidee } from './commande';
 import type { Reglages } from './data';
 
 export const EXPEDITEUR_DEFAUT = 'Boucherie Villenière <commandes@boucherie-villeniere.fr>';
@@ -62,7 +62,7 @@ export function tableauLignes(lignes: LigneValidee[], total?: number, noteTotal 
           <strong>${l.quantite} ×</strong> ${echapper(l.nom)}
         </td>
         <td style="padding:10px 0;border-bottom:1px solid ${C.filet};font:15px/1.4 Arial,sans-serif;color:${C.encre};text-align:right;white-space:nowrap">
-          ${l.aLaPesee && l.total === 0 ? 'à la pesée' : `${formaterPrix(l.total)}${l.unite === 'kg' || l.aLaPesee ? '*' : ''}`}
+          ${sansEstimation(l) ? 'à la pesée' : `${formaterPrix(l.total)}${l.unite === 'kg' || l.aLaPesee ? '*' : ''}`}
         </td>
       </tr>`,
     )
@@ -73,7 +73,7 @@ export function tableauLignes(lignes: LigneValidee[], total?: number, noteTotal 
       : `
       <tr>
         <td style="padding:14px 0 0;font:bold 16px/1.4 Arial,sans-serif;color:${C.encre}">Total estimé</td>
-        <td style="padding:14px 0 0;font:bold 16px/1.4 Arial,sans-serif;color:${C.encre};text-align:right;white-space:nowrap">${formaterPrix(total)}</td>
+        <td style="padding:14px 0 0;font:bold 16px/1.4 Arial,sans-serif;color:${C.encre};text-align:right">${echapper(libelleTotal(lignes))}</td>
       </tr>
       ${noteTotal ? `<tr><td colspan="2" style="padding:4px 0 0;font:13px/1.4 Arial,sans-serif;color:${C.gris}">${noteTotal}</td></tr>` : ''}`;
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:8px 0 24px">${rangees}${ligneTotal}</table>`;

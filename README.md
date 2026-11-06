@@ -39,13 +39,13 @@ E-mails (`src/lib/emails.ts`, gabarit aux couleurs de la boutique) : un à la bo
 
 Page réservée à la boutique (mot de passe = secret `COMMANDES_MOT_DE_PASSE`, connexion gardée 30 jours) : semaine en calendrier, détail du jour par créneau, quantités à préparer, statut de chaque commande (à préparer, prête, retirée, annulée). La page se rafraîchit toute seule toutes les 3 minutes.
 
-Récapitulatif du matin : chaque jour de retrait à 8 h (Paris), un e-mail liste les commandes du jour (`src/worker.ts`, déclencheur `triggers.crons` dans `wrangler.jsonc`).
+Récapitulatif du matin : chaque jour de retrait à 8 h (Paris), un e-mail liste les commandes du jour (`src/worker.ts`, déclencheur `triggers.crons` dans `wrangler.jsonc`). La même tâche supprime chaque jour les commandes retirées depuis plus de 90 jours, comme annoncé dans les mentions légales.
 
 ## Temps forts (Noël, Halloween, Galette…)
 
 Admin → « Temps forts » : dates de début/fin (vérifiées dans le navigateur, rien à republier le jour J), popup à l'ouverture et/ou bloc sur l'accueil, page dédiée (`/noel`…), décor, image, texte. Aperçu avant la date : `/?apercu=noel`.
 
-**Carte** (même fiche) : rubriques, produits, prix, variantes en colonnes (ex. farces), encadrés illustrés. Affichée sur la page du temps fort. **Commande en ligne** depuis la carte (bouton « + » sur chaque ligne, panier en bas de page) : à activer dans « Commande en ligne » de la carte, avec date limite et fenêtre de retrait ; jours et créneaux = ceux du click & collect. Produits au kilo : prix estimé avec le « poids moyen » saisi, sinon « à la pesée ». Les commandes arrivent dans le planning avec l'étiquette du temps fort (`src/lib/evenement.ts`).
+**Carte** (même fiche) : rubriques, produits, prix, variantes en colonnes (ex. farces), encadrés illustrés. Affichée sur la page du temps fort. **Commande en ligne** depuis la carte (bouton « + » sur chaque ligne, panier en bas de page) : à activer dans « Commande en ligne » de la carte, avec date limite et fenêtre de retrait ; jours et créneaux = ceux du click & collect. Produits au kilo : le client indique un poids (viandes) ou un nombre de personnes (volailles), et peut choisir une farce ; sans poids de référence, le produit reste « à la pesée » et aucun montant à 0 € n'est affiché. Les commandes arrivent dans le planning avec l'étiquette du temps fort (`src/lib/evenement.ts`).
 
 Version imprimable A5 réservée à la boutique : bouton « Ouvrir le menu à imprimer » en bas de la fiche du temps fort dans l'admin → `/commandes/menu/<page>` (accès : session de l'admin avec droit d'écriture sur le dépôt, vérifié auprès de GitHub, ou mot de passe du planning ; répartition automatique, mode « Livret » = 2 pages A5 par A4 dans l'ordre de pliage, QR code vers la page de commande). Dessins de la charte : `public/brand/noel` (extraits de `Villeniere_MenuNoel-assets.ai`).
 

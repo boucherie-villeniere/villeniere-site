@@ -167,8 +167,22 @@ export interface ProduitCarte {
   unite?: 'kg' | 'piece' | 'la-piece' | 'pers';
   prixVariantes?: (number | null)[];
   commandable?: boolean;
+  /** Ce qu'on demande au client : compteur simple, nombre de personnes ou poids. */
+  saisie?: 'piece' | 'personnes' | 'poids';
+  personnesMin?: number | null;
+  personnesMax?: number | null;
+  /** Poids servant à estimer le prix : par personne, ou d'une pièce. */
   poids?: number | null;
+  /** Volaille entière : propose le choix de la farce. */
+  farce?: boolean;
+  allergenes?: string[];
   quantiteMax?: number;
+}
+
+export interface FarceCarte {
+  nom: string;
+  /** Supplément en euros ; vide : aucun montant annoncé. */
+  supplement?: number | null;
 }
 
 export interface RubriqueCarte {
@@ -185,14 +199,14 @@ export interface Carte {
   titre?: string;
   rubriques?: RubriqueCarte[];
   piedDeCarte?: string;
+  mentionAllergenes?: string;
   lienQR?: string;
+  /** Farces proposées sur les volailles entières. */
+  farces?: FarceCarte[];
   commande?: { actif?: boolean; dateLimite?: string | null; retraitDu?: string | null; retraitAu?: string | null; message?: string };
 }
 
-export const UNITES_CARTE: Record<string, string> = { kg: '€/kg', piece: '€', 'la-piece': '€ la pièce', pers: '€/pers.' };
-
-/** Prix façon menu : « 95,00 ». */
-export const prixCarte = (n: number) => n.toFixed(2).replace('.', ',');
+export { prixCarte, UNITES_CARTE } from './commande';
 
 /** Temps forts activés (les dates sont vérifiées dans le navigateur, voir TempsForts.astro). */
 export const getTempsForts = () =>

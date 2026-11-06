@@ -1,85 +1,196 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { datesDeRetrait, formaterDate, formaterPrix, type Commande, type ReglesRetrait } from '../lib/commande';
-import type { ProduitCommandable } from '../lib/evenement';
+import { datesDeRetrait, formaterDate, formaterPrix, libelleTotal, telephoneValide, type Commande, type ReglesRetrait } from '../lib/commande';
+import { demandeUnChoix, libelleFarce, ligneDepuisSlug, POIDS_MAX, POIDS_MIN, slugAvecOptions, type OptionsLigne, type ProduitCommandable } from '../lib/evenement';
+import type { FarceCarte } from '../lib/data';
 
 // Commande directe depuis la carte d'un temps fort (ex. menu de Noël).
 // Les boutons « + » sont dans la carte (CarteMenu, attribut data-ajouter) ;
-// ce composant tient le panier, la barre du bas et le formulaire final.
+// ce composant tient le panier, la barre du bas et les fenêtres de choix et de commande.
 
 interface Props {
   evenement: string;
   nom: string;
   produits: ProduitCommandable[];
+  farces: FarceCarte[];
   regles: ReglesRetrait;
   mentionPaiement?: string;
+  adresse: string;
 }
 
-type Etat = { type: 'saisie' } | { type: 'envoi' } | { type: 'erreur'; message: string } | { type: 'ok'; total: number; date: string; creneau: string };
+interface LigneResumee {
+  nom: string;
+  quantite: number;
+}
+
+type Etat =
+  | { type: 'saisie' }
+  | { type: 'envoi' }
+  | { type: 'erreur'; message: string }
+  | { type: 'ok'; total: string; date: string; creneau: string; lignes: LigneResumee[]; pesee: boolean };
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+const prixDeBase = (slug: string) => slug.split('|')[0];
+const SANS_FARCE = -1;
 
-export default function CommandeCarte({ evenement, nom, produits, regles, mentionPaiement }: Props) {
+export default function CommandeCarte({ evenement, nom, produits, farces, regles, mentionPaiement, adresse }: Props) {
   const dates = useMemo(() => datesDeRetrait(regles, produits), [regles, produits]);
   const ouverte = dates.length > 0;
+  const cle = `commande-carte-${evenement}`;
   const [panier, setPanier] = useState<Record<string, number>>({});
-  const [date, setDate] = useState(dates[0] ?? '');
+  const [restaure, setRestaure] = useState(false);
+  const [date, setDate] = useState('');
   const [creneau, setCreneau] = useState('');
   const [etat, setEtat] = useState<Etat>({ type: 'saisie' });
-  const fenetre = useRef<HTMLDialogElement>(null);
+  const [enChoix, setEnChoix] = useState<ProduitCommandable | null>(null);
+  const [personnes, setPersonnes] = useState(0);
+  const [poids, setPoids] = useState('1');
+  const [farce, setFarce] = useState(SANS_FARCE);
   const [pulse, setPulse] = useState(0);
+  const fenetre = useRef<HTMLDialogElement>(null);
+  const fenetreChoix = useRef<HTMLDialogElement>(null);
+  const zoneErreur = useRef<HTMLParagraphElement>(null);
 
   const parId = useMemo(() => new Map(produits.map((p) => [p.slug, p])), [produits]);
   const lignes = Object.entries(panier)
-    .filter(([id, q]) => q > 0 && parId.has(id))
-    .map(([id, q]) => ({ p: parId.get(id)!, q }));
+    .filter(([, q]) => q > 0)
+    .map(([slug, q]) => ({ p: ligneDepuisSlug(produits, farces, slug), q }))
+    .filter((l): l is { p: ProduitCommandable; q: number } => !!l.p);
+  const lignesTotal = lignes.map((l) => ({ ...l.p, quantite: l.q, total: l.p.prix * l.q }));
   const nbArticles = lignes.reduce((s, l) => s + l.q, 0);
-  const total = lignes.reduce((s, l) => s + l.p.prix * l.q, 0);
+  const total = libelleTotal(lignesTotal);
   const aLaPesee = lignes.some((l) => l.p.aLaPesee);
 
-  const changer = (id: string, delta: number) => {
-    const p = parId.get(id);
+  const changer = (slug: string, delta: number) => {
+    const p = ligneDepuisSlug(produits, farces, slug);
     if (!p) return;
-    setPanier((x) => ({ ...x, [id]: Math.min(p.quantiteMax, Math.max(0, (x[id] ?? 0) + delta)) }));
+    setPanier((x) => ({ ...x, [slug]: Math.min(p.quantiteMax, Math.max(0, (x[slug] ?? 0) + delta)) }));
+    setPulse((n) => n + 1);
   };
 
-  // Active les boutons « + » de la carte et écoute leurs clics.
+  // Panier conservé le temps de la visite (rechargement, passage sur une autre page).
   useEffect(() => {
-    if (!ouverte) return;
+    try {
+      const brut = sessionStorage.getItem(cle);
+      if (brut) setPanier(JSON.parse(brut));
+    } catch {
+      /* stockage indisponible : le panier reste simplement en mémoire */
+    }
+    setRestaure(true);
+  }, [cle]);
+  useEffect(() => {
+    if (!restaure) return;
+    try {
+      sessionStorage.setItem(cle, JSON.stringify(panier));
+    } catch {
+      /* idem */
+    }
+  }, [panier, restaure, cle]);
+
+  // Active les boutons de la carte et écoute leurs clics.
+  useEffect(() => {
+    if (!ouverte) {
+      if (regles.actif) document.querySelectorAll<HTMLElement>('[data-commande-fermee]').forEach((el) => (el.hidden = false));
+      return;
+    }
     document.querySelectorAll('.carte-menu').forEach((c) => c.setAttribute('data-commande-ouverte', ''));
     document.querySelectorAll<HTMLElement>('[data-commande-aide]').forEach((el) => (el.hidden = false));
     const clic = (e: MouseEvent) => {
       const cible = e.target as HTMLElement;
-      const plus = cible.closest<HTMLButtonElement>('[data-ajouter]');
-      const moins = cible.closest<HTMLButtonElement>('[data-retirer]');
-      if (plus) changer(plus.dataset.ajouter!, 1);
-      else if (moins) changer(moins.dataset.retirer!, -1);
-      else return;
-      setPulse((n) => n + 1);
+      const plus = cible.closest<HTMLElement>('[data-ajouter]');
+      const moins = cible.closest<HTMLElement>('[data-retirer]');
+      if (plus) ajouter(plus.dataset.ajouter!);
+      else if (moins) retirer(moins.dataset.retirer!);
     };
     document.addEventListener('click', clic);
     return () => document.removeEventListener('click', clic);
   }, [ouverte]);
 
-  // Affiche la quantité choisie sur chaque bouton de la carte.
+  function ajouter(id: string) {
+    const p = parId.get(id);
+    if (!p) return;
+    if (!demandeUnChoix(p)) return changer(id, 1);
+    setEnChoix(p);
+    setPersonnes(p.personnesMin ?? 0);
+    setPoids('1');
+    setFarce(SANS_FARCE);
+    fenetreChoix.current?.showModal();
+  }
+
+  // Le − de la carte retire de la dernière ligne ajoutée pour ce produit.
+  function retirer(id: string) {
+    setPanier((x) => {
+      const cles = Object.keys(x).filter((k) => prixDeBase(k) === id && x[k] > 0);
+      const derniere = cles[cles.length - 1];
+      return derniere ? { ...x, [derniere]: x[derniere] - 1 } : x;
+    });
+    setPulse((n) => n + 1);
+  }
+
+  // Quantité par produit, affichée sur les boutons de la carte.
   useEffect(() => {
-    document.querySelectorAll<HTMLButtonElement>('[data-ajouter], [data-retirer]').forEach((b) => {
-      const q = panier[(b.dataset.ajouter ?? b.dataset.retirer)!] ?? 0;
+    const parBase: Record<string, number> = {};
+    for (const [k, q] of Object.entries(panier)) parBase[prixDeBase(k)] = (parBase[prixDeBase(k)] ?? 0) + q;
+    document.querySelectorAll<HTMLElement>('[data-ajouter], [data-retirer]').forEach((b) => {
+      const q = parBase[(b.dataset.ajouter ?? b.dataset.retirer)!] ?? 0;
       if (q > 0) b.dataset.quantite = String(q);
       else delete b.dataset.quantite;
     });
   }, [panier]);
 
+  const optionsChoix = (): OptionsLigne | null => {
+    if (!enChoix) return null;
+    const o: OptionsLigne = {};
+    if (enChoix.saisie === 'personnes') o.personnes = personnes;
+    if (enChoix.saisie === 'poids') {
+      const k = Number(poids.replace(',', '.'));
+      if (!Number.isFinite(k) || k < POIDS_MIN || k > POIDS_MAX) return null;
+      o.poids = Math.round(k * 100) / 100;
+    }
+    if (farce !== SANS_FARCE) o.farce = farce;
+    return o;
+  };
+  const optionsActuelles = optionsChoix();
+  const apercuChoix = enChoix && optionsActuelles ? ligneDepuisSlug(produits, farces, slugAvecOptions(enChoix.slug, optionsActuelles)) : null;
+
+  function validerChoix(e: FormEvent) {
+    e.preventDefault();
+    if (!enChoix || !optionsActuelles) return;
+    changer(slugAvecOptions(enChoix.slug, optionsActuelles), 1);
+    fenetreChoix.current?.close();
+  }
+
+  // Une erreur apparaît toujours à l'écran et reçoit le focus.
+  useEffect(() => {
+    if (etat.type !== 'erreur') return;
+    zoneErreur.current?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    zoneErreur.current?.focus({ preventScroll: true });
+  }, [etat]);
+
   async function envoyer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     if (f.get('site')) return; // champ piège anti-robots
+    const telephone = String(f.get('telephone') ?? '');
+    const manque = lignes.length === 0
+      ? 'Ajoutez au moins un produit depuis la carte.'
+      : !date
+        ? 'Choisissez le jour de retrait.'
+        : !creneau
+          ? 'Choisissez un créneau de retrait.'
+          : !telephoneValide(telephone)
+            ? 'Le numéro de téléphone semble incorrect : indiquez 10 chiffres, par exemple 06 12 34 56 78.'
+            : '';
+    if (manque) {
+      setEtat({ type: 'erreur', message: manque });
+      return;
+    }
     const commande: Commande = {
       evenement,
       date,
       creneau,
       lignes: lignes.map((l) => ({ slug: l.p.slug, quantite: l.q })),
       nom: String(f.get('nom') ?? ''),
-      telephone: String(f.get('telephone') ?? ''),
+      telephone,
       email: String(f.get('email') ?? '') || undefined,
       remarque: String(f.get('remarque') ?? '') || undefined,
     };
@@ -88,7 +199,14 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
       const res = await fetch('/api/commande', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(commande) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.erreur ?? 'La commande n’a pas pu être envoyée.');
-      setEtat({ type: 'ok', total: data.total, date, creneau });
+      setEtat({
+        type: 'ok',
+        total: data.totalAffiche ?? total,
+        date,
+        creneau,
+        pesee: aLaPesee,
+        lignes: lignes.map((l) => ({ nom: l.p.nom, quantite: l.q })),
+      });
       setPanier({});
       fenetre.current?.scrollTo({ top: 0 });
     } catch (err) {
@@ -104,8 +222,8 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
         <div className="cdc-barre-texte" key={pulse}>
           <strong>Ma commande {nom}</strong>
           <span>
-            {pluriel(nbArticles, 'article')} · {aLaPesee ? '≈ ' : ''}
-            {formaterPrix(total)}
+            {pluriel(nbArticles, 'article')} · {aLaPesee && /€/.test(total) ? '≈ ' : ''}
+            {total}
           </span>
         </div>
         <button
@@ -113,13 +231,89 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
           className="bouton bouton--or"
           tabIndex={nbArticles === 0 ? -1 : 0}
           onClick={() => {
-            setEtat((x) => (x.type === 'ok' ? { type: 'saisie' } : x));
+            setEtat((x) => (x.type === 'ok' || x.type === 'erreur' ? { type: 'saisie' } : x));
             fenetre.current?.showModal();
           }}
         >
           Finaliser <span className="fleche" aria-hidden="true">→</span>
         </button>
       </div>
+
+      <dialog className="cdc-fenetre" ref={fenetreChoix} aria-label={enChoix ? `Ajouter : ${enChoix.nom}` : 'Ajouter un produit'} onClick={(e) => e.target === fenetreChoix.current && fenetreChoix.current?.close()}>
+        <div className="cdc-contenu">
+          <form method="dialog">
+            <button className="cdc-fermer" aria-label="Fermer">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </form>
+          {enChoix && (
+            <form onSubmit={validerChoix}>
+              <p className="surtitre">{nom}</p>
+              <h2>{enChoix.nom}</h2>
+              <p className="cdc-info">{enChoix.info}</p>
+
+              {enChoix.saisie === 'personnes' && (
+                <fieldset className="cdc-choix-groupe">
+                  <legend>Pour combien de personnes ?</legend>
+                  <div className="cdc-options">
+                    {Array.from({ length: enChoix.personnesMax! - enChoix.personnesMin! + 1 }, (_, i) => enChoix.personnesMin! + i).map((n) => (
+                      <label key={n} className={`cc-creneau${personnes === n ? ' actif' : ''}`}>
+                        <input type="radio" name="personnes" checked={personnes === n} onChange={() => setPersonnes(n)} />
+                        {n}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+
+              {enChoix.saisie === 'poids' && (
+                <fieldset className="cdc-choix-groupe">
+                  <legend>Quel poids souhaitez-vous ?</legend>
+                  <label className="cdc-poids">
+                    <input type="number" inputMode="decimal" min={POIDS_MIN} max={POIDS_MAX} step="0.1" value={poids} onChange={(e) => setPoids(e.target.value)} required aria-label="Poids en kilos" />
+                    kg
+                  </label>
+                </fieldset>
+              )}
+
+              {enChoix.avecFarce && farces.length > 0 && (
+                <fieldset className="cdc-choix-groupe">
+                  <legend>Avec une farce maison ?</legend>
+                  <div className="cdc-options cdc-options--colonne">
+                    <label className={`cc-creneau${farce === SANS_FARCE ? ' actif' : ''}`}>
+                      <input type="radio" name="farce" checked={farce === SANS_FARCE} onChange={() => setFarce(SANS_FARCE)} />
+                      Sans farce
+                    </label>
+                    {farces.map((f, i) => (
+                      <label key={f.nom} className={`cc-creneau${farce === i ? ' actif' : ''}`}>
+                        <input type="radio" name="farce" checked={farce === i} onChange={() => setFarce(i)} />
+                        {libelleFarce(f)}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              )}
+
+              {apercuChoix && (
+                <p className="cdc-estimation">
+                  {apercuChoix.sansEstimation ? (
+                    'Le prix sera calculé à la pesée, au retrait.'
+                  ) : (
+                    <>
+                      Estimation : <strong>≈ {formaterPrix(apercuChoix.prix)}</strong>, ajustée à la pesée.
+                    </>
+                  )}
+                </p>
+              )}
+              <button className="bouton" type="submit" disabled={!optionsActuelles}>
+                Ajouter à ma commande
+              </button>
+            </form>
+          )}
+        </div>
+      </dialog>
 
       <dialog className="cdc-fenetre" ref={fenetre} aria-label={`Ma commande ${nom}`} onClick={(e) => e.target === fenetre.current && fenetre.current?.close()}>
         <div className="cdc-contenu">
@@ -136,15 +330,25 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
               <p className="surtitre">{nom}</p>
               <h2>Merci, c’est noté !</h2>
               <p>
-                Votre commande sera prête le <strong>{formaterDate(etat.date)}</strong>, créneau <strong>{etat.creneau}</strong>.
+                À retirer le <strong>{formaterDate(etat.date)}</strong>, créneau <strong>{etat.creneau}</strong>
+                <br />
+                {adresse}
               </p>
+              <ul>
+                {etat.lignes.map((l) => (
+                  <li key={l.nom}>
+                    <strong>{l.quantite} ×</strong> {l.nom}
+                  </li>
+                ))}
+              </ul>
               <p>
-                Montant estimé : <strong>{formaterPrix(etat.total)}</strong>. {mentionPaiement}
+                Montant estimé : <strong>{etat.total}</strong>
+                {etat.pesee && !etat.total.includes('à la pesée') && ', ajusté à la pesée'}. {mentionPaiement}
               </p>
               <p>Un empêchement ? Appelez-nous, tout simplement.</p>
             </div>
           ) : (
-            <form className="cc" onSubmit={envoyer}>
+            <form className="cc" onSubmit={envoyer} noValidate>
               <p className="surtitre">{nom}</p>
               <h2>Ma commande</h2>
 
@@ -167,7 +371,7 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
                           +
                         </button>
                       </div>
-                      <p className="cdc-prix">{p.aLaPesee && p.prix === 0 ? 'à la pesée' : `${p.aLaPesee ? '≈ ' : ''}${formaterPrix(p.prix * q)}`}</p>
+                      <p className="cdc-prix">{p.sansEstimation ? 'à la pesée' : `${p.aLaPesee ? '≈ ' : ''}${formaterPrix(p.prix * q)}`}</p>
                     </li>
                   ))}
                 </ul>
@@ -176,8 +380,9 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
               <fieldset className="cc-etape">
                 <legend>Retrait en boutique</legend>
                 <label className="cc-champ">
-                  <span>Jour</span>
-                  <select value={date} onChange={(e) => setDate(e.target.value)} required>
+                  <span>Jour *</span>
+                  <select value={date} onChange={(e) => setDate(e.target.value)}>
+                    <option value="">Choisissez un jour</option>
                     {dates.map((d) => (
                       <option key={d} value={d}>
                         {formaterDate(d)}
@@ -188,7 +393,7 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
                 <div className="cc-creneaux" role="radiogroup" aria-label="Créneau de retrait">
                   {regles.creneaux.map((c) => (
                     <label key={c} className={`cc-creneau${creneau === c ? ' actif' : ''}`}>
-                      <input type="radio" name="creneau" value={c} checked={creneau === c} onChange={() => setCreneau(c)} required />
+                      <input type="radio" name="creneau" value={c} checked={creneau === c} onChange={() => setCreneau(c)} />
                       {c}
                     </label>
                   ))}
@@ -212,7 +417,7 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
                   </label>
                   <label className="cc-champ cc-large">
                     <span>Une précision ?</span>
-                    <textarea name="remarque" rows={3} maxLength={1000} placeholder="Farce choisie pour la volaille, poids souhaité, découpe…" />
+                    <textarea name="remarque" rows={3} maxLength={1000} placeholder="Découpe, ficelage…" />
                   </label>
                   <label className="cc-piege" aria-hidden="true">
                     Site <input name="site" tabIndex={-1} autoComplete="off" />
@@ -222,23 +427,26 @@ export default function CommandeCarte({ evenement, nom, produits, regles, mentio
 
               <div className="cdc-total">
                 <p>
-                  Total estimé : <strong>{formaterPrix(total)}</strong>
+                  Total estimé : <strong>{total}</strong>
                 </p>
                 <p className="cc-mention">
                   {mentionPaiement}
-                  {aLaPesee && ' Les produits au kilo sont estimés puis ajustés à la pesée.'}
+                  {aLaPesee && ' Les produits au kilo sont ajustés à la pesée.'}
                 </p>
-                <button className="bouton" type="submit" disabled={lignes.length === 0 || !creneau || etat.type === 'envoi'}>
+                {etat.type === 'erreur' && (
+                  <p className="cc-erreur" role="alert" ref={zoneErreur} tabIndex={-1}>
+                    {etat.message}
+                  </p>
+                )}
+                <button className="bouton" type="submit" disabled={etat.type === 'envoi'}>
                   {etat.type === 'envoi' ? 'Envoi…' : 'Valider ma commande'}
                 </button>
               </div>
-              {etat.type === 'erreur' && (
-                <p className="cc-erreur" role="alert">
-                  {etat.message}
-                </p>
-              )}
               <p className="cc-rgpd">
-                Vos coordonnées servent uniquement à préparer votre commande. <a href="/mentions-legales">En savoir plus</a>
+                Vos coordonnées servent uniquement à préparer votre commande.{' '}
+                <a href="/mentions-legales" target="_blank" rel="noopener">
+                  En savoir plus
+                </a>
               </p>
             </form>
           )}

@@ -2,6 +2,7 @@
 // Carte d'un temps fort (ex. menu de Noël), saisie dans l'admin.
 // Rendu « à plat » : chaque titre, produit ou note est un bloc frère, ce qui
 // permet à la version imprimable de répartir les blocs sur les pages A5.
+import { ALLERGENES_LABELS } from '../lib/commande';
 import { prixCarte, UNITES_CARTE, type Carte, type ProduitCarte } from '../lib/data';
 import { idProduit } from '../lib/evenement';
 
@@ -15,6 +16,7 @@ const boutons = mode === 'web' && !!carte.commande?.actif;
 const commandable = (p: ProduitCarte) => boutons && p.commandable !== false;
 
 const estIntertitre = (p: ProduitCarte) => p.prix == null && !p.detail && !(p.prixVariantes ?? []).some((x) => x != null);
+const allergenes = (p: ProduitCarte) => (p.allergenes ?? []).map((a) => ALLERGENES_LABELS[a] ?? a).join(', ');
 const detailLong = (d?: string) => (d?.length ?? 0) > 34;
 const unite = (p: ProduitCarte) => UNITES_CARTE[p.unite ?? 'kg'];
 const ILLUSTRATIONS: Record<string, string> = {
@@ -63,6 +65,7 @@ const ILLUSTRATIONS: Record<string, string> = {
                 <span class="cm-nom">
                   {p.nom}
                   {p.detail && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
+                  {allergenes(p) && <span class="cm-detail cm-detail--dessous">Allergènes : {allergenes(p)}</span>}
                 </span>
                 {colonnes.map((c, i) =>
                   p.prixVariantes?.[i] == null ? (
@@ -115,6 +118,7 @@ const ILLUSTRATIONS: Record<string, string> = {
                   </span>
                 )}
                 {p.detail && detailLong(p.detail) && <span class="cm-detail cm-detail--dessous">{p.detail}</span>}
+                {allergenes(p) && <span class="cm-detail cm-detail--dessous">Allergènes : {allergenes(p)}</span>}
               </div>
             ),
           )}
@@ -128,6 +132,7 @@ const ILLUSTRATIONS: Record<string, string> = {
       );
     })
   }
+  {carte.mentionAllergenes && <p class="cm-bloc cm-note">{carte.mentionAllergenes}</p>}
   {carte.piedDeCarte && <p class="cm-bloc cm-pied">{carte.piedDeCarte}</p>}
 </div>
 
@@ -399,10 +404,24 @@ const ILLUSTRATIONS: Record<string, string> = {
     border-color: var(--anthracite);
     color: var(--or);
   }
-  /* L'emplacement du − reste réservé : le prix ne bouge pas quand il apparaît. */
-  [data-commande-ouverte] .cm-retirer--prix:not([data-quantite]) {
+  /* L'emplacement du − reste réservé : rien ne bouge quand il apparaît. */
+  [data-commande-ouverte] .cm-retirer:not([data-quantite]) {
     display: inline-grid;
     visibility: hidden;
+  }
+  /* Zone de toucher de 44 px autour des petits boutons, sans changer leur dessin. */
+  .cm-ajouter,
+  .cm-retirer {
+    position: relative;
+  }
+  .cm-ajouter::before,
+  .cm-retirer::before {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
   }
   [data-commande-ouverte] .cm-ajouter--rond[data-quantite]::after {
     content: attr(data-quantite);
@@ -435,6 +454,17 @@ const ILLUSTRATIONS: Record<string, string> = {
     }
     .carte-menu--web .cm-entete {
       font-size: 0.7em;
+    }
+    /* Commande ouverte : le nom sur toute la largeur, prix et boutons en dessous */
+    [data-commande-ouverte] .cm-produit--commandable {
+      grid-template-columns: 1fr auto auto;
+      row-gap: 0.25em;
+    }
+    [data-commande-ouverte] .cm-produit--commandable > .cm-nom {
+      grid-column: 1 / -1;
+    }
+    [data-commande-ouverte] .cm-produit--commandable {
+      padding-block: 0.6em;
     }
     /* Commande ouverte : chaque variante sur sa ligne, nom au-dessus du prix */
     [data-commande-ouverte].carte-menu--web .cm-entetes {

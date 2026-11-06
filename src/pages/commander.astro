@@ -31,7 +31,7 @@ const regles = {
               <br />
               {cc.mentionPaiement}
             </p>
-            <Commander client:load plats={plats} regles={regles} mentionPaiement={cc.mentionPaiement} />
+            <Commander client:load plats={plats} regles={regles} mentionPaiement={cc.mentionPaiement} adresse={`${r.adresse}, ${r.codePostal} ${r.ville}`} />
           </>
         ) : (
           <div class="cc-vide">

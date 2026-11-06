@@ -2,8 +2,8 @@ import type { APIRoute } from 'astro';
 import { getSecret } from 'astro:env/server';
 import { env } from 'cloudflare:workers';
 import { getClickCollect, getPlats, getReglages, getTempsForts } from '../../lib/data';
-import { produitsCommandables, reglesEvenement } from '../../lib/evenement';
-import { formaterDate, formaterPrix, validerCommande, type Commande } from '../../lib/commande';
+import { platsDeLaCommande, reglesEvenement } from '../../lib/evenement';
+import { formaterDate, libelleTotal, validerCommande, type Commande } from '../../lib/commande';
 import { bouton, encadreRetrait, envoyerEmail, echapper, gabarit, paragraphesHtml, tableauLignes } from '../../lib/emails';
 import { enregistrerCommande } from '../../lib/stockage';
 
@@ -25,7 +25,8 @@ export const POST: APIRoute = async ({ request }) => {
   // Commande de la carte d'un temps fort (ex. Noël) ou click & collect habituel.
   const evenement = commande.evenement ? getTempsForts().find((t) => t.slug === commande.evenement) : undefined;
   if (commande.evenement && !evenement) return reponse(422, { erreur: 'Cette carte n’est plus disponible.' });
-  const plats = evenement ? produitsCommandables(evenement) : getPlats();
+  const plats = evenement ? platsDeLaCommande(evenement, Array.isArray(commande.lignes) ? commande.lignes : []) : getPlats();
+  if (evenement && plats.length === 0) return reponse(422, { erreur: 'Un des produits choisis n’est plus disponible : merci de recharger la page.' });
   const regles = evenement ? reglesEvenement(evenement, cc) : cc;
   const resultat = validerCommande(commande, regles, plats);
   if (!resultat.ok) return reponse(422, { erreur: resultat.erreur });
@@ -64,7 +65,7 @@ export const POST: APIRoute = async ({ request }) => {
     origine,
     r,
     titre: evenement ? `Nouvelle commande ${evenement.nom}` : 'Nouvelle commande',
-    apercu: `${c.nom} — ${quand} — ${formaterPrix(total)}`,
+    apercu: `${c.nom} — ${quand} — ${libelleTotal(lignes)}`,
     contenu: `
       ${encadreRetrait(quand, r)}
       <p style="margin:0 0 4px"><strong style="color:#15181B">${echapper(c.nom)}</strong></p>
@@ -108,6 +109,6 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   // Pas de données personnelles dans les journaux.
-  console.info(`[commande] ${quand} — ${lignes.map((l) => `${l.quantite}× ${l.nom}`).join(', ')} — ${formaterPrix(total)}`);
-  return reponse(200, { ok: true, total });
+  console.info(`[commande] ${quand} — ${lignes.map((l) => `${l.quantite}× ${l.nom}`).join(', ')} — ${libelleTotal(lignes)}`);
+  return reponse(200, { ok: true, total, totalAffiche: libelleTotal(lignes) });
 };

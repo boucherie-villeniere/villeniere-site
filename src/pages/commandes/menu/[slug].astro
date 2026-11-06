@@ -25,7 +25,8 @@ Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
 const r = getReglages();
 const carte = t.carte!;
-const lienQR = carte.lienQR?.trim() ? new URL(carte.lienQR.trim(), Astro.site).href : new URL('/commander', Astro.site).href;
+const lienParDefaut = carte.commande?.actif ? `/${t.slug}#carte` : '/commander';
+const lienQR = new URL(carte.lienQR?.trim() || lienParDefaut, Astro.site).href;
 const qr = await QRCode.toString(lienQR, { type: 'svg', margin: 0, errorCorrectionLevel: 'M', color: { dark: '#8a6a32', light: '#0000' } });
 const lienAffiche = lienQR.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 const flocons = t.decor === 'flocons';

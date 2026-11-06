@@ -379,11 +379,24 @@ export default config({
                       itemLabel: (p) => String(p.value ?? ''),
                     }),
                     commandable: fields.checkbox({ label: 'Commandable en ligne', defaultValue: true }),
+                    saisie: fields.select({
+                      label: 'Produit au kilo : que demander au client ?',
+                      options: [
+                        { label: 'Le poids souhaité (viandes)', value: 'poids' },
+                        { label: 'Le nombre de personnes (volailles)', value: 'personnes' },
+                        { label: 'Un simple nombre de pièces', value: 'piece' },
+                      ],
+                      defaultValue: 'poids',
+                    }),
+                    personnesMin: fields.integer({ label: 'Nombre de personnes : minimum', validation: { min: 1, max: 40 } }),
+                    personnesMax: fields.integer({ label: 'Nombre de personnes : maximum', validation: { min: 1, max: 40 } }),
                     poids: fields.number({
-                      label: 'Poids moyen d’une pièce (kg)',
-                      description: 'Produits au kilo : sert à estimer le prix pour le client (ex. 2,2 pour une poularde). Le prix reste ajusté à la pesée.',
+                      label: 'Poids pour estimer le prix (kg)',
+                      description: 'Par personne si l’on demande le nombre de personnes (ex. 0,45), ou d’une pièce si l’on compte en pièces (ex. 0,5). Vide : le client voit « prix à la pesée », sans montant.',
                       step: 0.05,
                     }),
+                    farce: fields.checkbox({ label: 'Proposer le choix de la farce', description: 'Volailles entières. Les farces se règlent plus bas : « Farces proposées ».', defaultValue: false }),
+                    allergenes: fields.multiselect({ label: 'Allergènes', options: ALLERGENES }),
                     quantiteMax: fields.integer({ label: 'Quantité maximum par commande', defaultValue: 10, validation: { min: 1, max: 99 } }),
                   }),
                   {
@@ -396,6 +409,17 @@ export default config({
               }),
               { label: 'Rubriques', itemLabel: (p) => p.fields.titre.value || 'Rubrique' },
             ),
+            farces: fields.array(
+              fields.object({
+                nom: fields.text({ label: 'Nom de la farce' }),
+                supplement: fields.number({ label: 'Supplément (€)', description: 'Vide : aucun montant n’est annoncé au client.', step: 0.01 }),
+              }),
+              { label: 'Farces proposées sur les volailles entières', itemLabel: (p) => p.fields.nom.value },
+            ),
+            mentionAllergenes: fields.text({
+              label: 'Mention sur les allergènes',
+              defaultValue: 'Allergènes : liste complète disponible sur demande en boutique.',
+            }),
             piedDeCarte: fields.text({ label: 'Mot de la fin', multiline: true, description: 'Ex. la sélection de vins.' }),
             commande: fields.object(
               {
@@ -404,7 +428,7 @@ export default config({
                 retraitDu: fields.date({ label: 'Retrait possible à partir du' }),
                 retraitAu: fields.date({ label: 'Retrait possible jusqu’au (inclus)' }),
                 message: fields.text({
-                  label: 'Message au-dessus du bouton de commande',
+                  label: 'Message au-dessus de la carte',
                   multiline: true,
                   defaultValue: 'Commandez en ligne, retirez en boutique : le règlement se fait au retrait.',
                 }),
@@ -416,7 +440,7 @@ export default config({
             ),
             lienQR: fields.text({
               label: 'Lien du QR code (menu imprimé)',
-              description: 'Laissez vide pour la page de commande du site.',
+              description: 'Laissez vide : la carte commandable de ce temps fort, sinon la page de commande du site.',
             }),
           },
           {

@@ -112,6 +112,13 @@ export async function changerStatut(db: D1Database, id: string, statut: Statut) 
   await db.prepare('UPDATE commandes SET statut = ? WHERE id = ?').bind(statut, id).run();
 }
 
+/** Supprime les commandes retirées avant `avant` (engagement des mentions légales). */
+export async function purgerCommandes(db: D1Database, avant: string) {
+  await preparer(db);
+  const { meta } = await db.prepare('DELETE FROM commandes WHERE date < ?').bind(avant).run();
+  return meta.changes ?? 0;
+}
+
 /** Trie par créneau dans l'ordre défini dans l'admin, puis par heure de commande. */
 export function trierParCreneau(commandes: CommandeEnregistree[], creneaux: string[]) {
   const rang = (c: string) => {
@@ -133,4 +140,14 @@ export function totauxParPlat(commandes: CommandeEnregistree[]) {
     }
   }
   return [...totaux].map(([nom, t]) => ({ nom, ...t })).sort((a, b) => b.quantite - a.quantite);
+}
+
+/** Nombre de volailles à farcir, par farce (hors commandes annulées). */
+export function totauxParFarce(commandes: CommandeEnregistree[]) {
+  const totaux = new Map<string, number>();
+  for (const c of commandes) {
+    if (c.statut === 'annulee') continue;
+    for (const l of c.lignes) if (l.farce) totaux.set(l.farce, (totaux.get(l.farce) ?? 0) + l.quantite);
+  }
+  return [...totaux].map(([nom, quantite]) => ({ nom, quantite }));
 }

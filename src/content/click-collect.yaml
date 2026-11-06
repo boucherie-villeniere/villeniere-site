@@ -16,7 +16,9 @@ creneaux:
   - 18h – 19h
 heureLimite: 18
 joursAvance: 7
-fermetures: []
+fermetures:
+  - 2026-12-25
+  - 2027-01-01
 mentionPaiement: Le règlement se fait en boutique, au moment du retrait.
 emailClientObjet: Votre commande à la boucherie Villenière
 emailClientTitre: Merci pour votre commande !
