@@ -11,6 +11,7 @@ import {
   type Commande,
   type ReglesRetrait,
 } from '../lib/commande';
+import ChoixRetrait from './ChoixRetrait';
 import type { Plat } from '../lib/data';
 
 interface Props {
@@ -32,7 +33,7 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
   // Les dates sont calculées dans le navigateur : la page est statique et
   // l'heure limite doit être évaluée au moment de la visite.
   const dates = useMemo(() => datesDeRetrait(regles, plats), [regles, plats]);
-  const [date, setDate] = useState(dates[0] ?? '');
+  const [date, setDate] = useState('');
   const [creneau, setCreneau] = useState('');
   const [quantites, setQuantites] = useState<Record<string, number>>({});
   const [etat, setEtat] = useState<Etat>({ type: 'saisie' });
@@ -80,8 +81,10 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
     const f = new FormData(e.currentTarget);
     if (f.get('site')) return; // champ piège anti-robots
     const telephone = String(f.get('telephone') ?? '');
-    const manque = !creneau
-      ? 'Choisissez un créneau de retrait, tout en haut du formulaire.'
+    const manque = !date
+      ? 'Choisissez le jour de retrait, tout en haut du formulaire.'
+      : !creneau
+      ? 'Choisissez un horaire de retrait, tout en haut du formulaire.'
       : lignes.length === 0
         ? 'Ajoutez au moins un plat à votre commande.'
         : !String(f.get('nom') ?? '').trim()
@@ -160,24 +163,7 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
         <legend>
           <span className="cc-num">1</span> Quand passez-vous ?
         </legend>
-        <label className="cc-champ">
-          <span>Jour de retrait</span>
-          <select value={date} onChange={(e) => setDate(e.target.value)} required>
-            {dates.map((d) => (
-              <option key={d} value={d}>
-                {formaterDate(d)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="cc-creneaux" role="radiogroup" aria-label="Créneau de retrait">
-          {regles.creneaux.map((c) => (
-            <label key={c} className={`cc-creneau${creneau === c ? ' actif' : ''}`}>
-              <input type="radio" name="creneau" value={c} checked={creneau === c} onChange={() => setCreneau(c)} required />
-              {c}
-            </label>
-          ))}
-        </div>
+        <ChoixRetrait dates={dates} date={date} surDate={setDate} creneaux={regles.creneaux} creneau={creneau} surCreneau={setCreneau} />
       </fieldset>
 
       <fieldset className="cc-etape">

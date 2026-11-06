@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { datesDeRetrait, formaterDate, formaterPrix, libelleTotal, prixLigne, telephoneValide, type Commande, type ReglesRetrait } from '../lib/commande';
 import { demandeUnChoix, libelleFarce, ligneDepuisSlug, POIDS_MAX, POIDS_MIN, slugAvecOptions, type OptionsLigne, type ProduitCommandable } from '../lib/evenement';
+import ChoixRetrait from './ChoixRetrait';
 import type { FarceCarte } from '../lib/data';
 
 // Commande directe depuis la carte d'un temps fort (ex. menu de Noël).
@@ -182,7 +183,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
       : !date
         ? 'Choisissez le jour de retrait.'
         : !creneau
-          ? 'Choisissez un créneau de retrait.'
+          ? 'Choisissez un horaire de retrait.'
           : !telephoneValide(telephone)
             ? 'Le numéro de téléphone semble incorrect : indiquez 10 chiffres, par exemple 06 12 34 56 78.'
             : '';
@@ -403,25 +404,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
 
               <fieldset className="cc-etape">
                 <legend>Retrait en boutique</legend>
-                <label className="cc-champ">
-                  <span>Jour *</span>
-                  <select value={date} onChange={(e) => setDate(e.target.value)}>
-                    <option value="">Choisissez un jour</option>
-                    {dates.map((d) => (
-                      <option key={d} value={d}>
-                        {formaterDate(d)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div className="cc-creneaux" role="radiogroup" aria-label="Créneau de retrait">
-                  {regles.creneaux.map((c) => (
-                    <label key={c} className={`cc-creneau${creneau === c ? ' actif' : ''}`}>
-                      <input type="radio" name="creneau" value={c} checked={creneau === c} onChange={() => setCreneau(c)} />
-                      {c}
-                    </label>
-                  ))}
-                </div>
+                <ChoixRetrait dates={dates} date={date} surDate={setDate} creneaux={regles.creneaux} creneau={creneau} surCreneau={setCreneau} />
               </fieldset>
 
               <fieldset className="cc-etape">
