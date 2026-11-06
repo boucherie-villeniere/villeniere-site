@@ -222,7 +222,8 @@ carte:
     dateLimite: 2026-12-20
     retraitDu: 2026-12-19
     retraitAu: 2026-12-31
-    message: Commandez directement sur la carte avec le bouton +, puis retirez votre commande en boutique. Le règlement se fait au retrait.
+    mentionArrhes: Des arrhes sont à régler avant le 20 décembre pour valider votre commande. La boutique vous précisera les modalités. Le solde se règle au retrait.
+    message: Commandez directement sur la carte avec le bouton +, puis retirez votre commande en boutique.
   farces:
     - nom: Pommes caramélisées et châtaignes
       prix100g: 3.5

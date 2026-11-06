@@ -140,6 +140,7 @@ const flocons = t.decor === 'flocons';
             <p class="dos-qr-texte">Scannez pour commander<br /><strong>{lienAffiche}</strong></p>
           </div>
         </div>
+        {carte.commande?.actif && carte.commande.mentionArrhes && <p class="dos-arrhes">{carte.commande.mentionArrhes}</p>}
         {flocons && <img class="dos-illu" src="/brand/noel/volaille.svg" alt="" />}
       </div>
     </template>
@@ -487,6 +488,13 @@ const flocons = t.decor === 'flocons';
   }
   .dos-qr-texte strong {
     color: var(--or-fonce);
+  }
+  .dos-arrhes {
+    margin: 0;
+    max-width: 100mm;
+    font-size: 8.5pt;
+    font-style: italic;
+    color: var(--gris);
   }
   .dos-illu {
     width: 40mm;

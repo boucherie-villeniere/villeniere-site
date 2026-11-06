@@ -23,6 +23,7 @@ const aUneCarte = (t.carte?.rubriques ?? []).length > 0;
 const cc = getClickCollect();
 const commande = aUneCarte && t.carte?.commande?.actif;
 const limite = t.carte?.commande?.dateLimite;
+const arrhes = t.carte?.commande?.mentionArrhes?.trim();
 ---
 
 <Base title={t.nom} description={t.accroche ?? t.titre} image={t.image ?? undefined}>
@@ -76,6 +77,7 @@ const limite = t.carte?.commande?.dateLimite;
                   <span>
                     {t.carte!.commande!.message}
                     {limite && <strong class="tf-limite">Commandes en ligne jusqu’au {formaterDate(limite)}.</strong>}
+                    {arrhes && <strong class="tf-limite">{arrhes}</strong>}
                   </span>
                 </p>
                 <p class="tf-commande-aide" data-commande-fermee hidden>
@@ -102,7 +104,8 @@ const limite = t.carte?.commande?.dateLimite;
         farces={farcesAvecPrix(t.carte)}
         adresse={`${r.adresse}, ${r.codePostal} ${r.ville}`}
         regles={reglesEvenement(t, cc)}
-        mentionPaiement={cc.mentionPaiement}
+        mentionPaiement={arrhes || cc.mentionPaiement}
+        arrhes={!!arrhes}
       />
     )
   }

@@ -35,6 +35,8 @@ export const POST: APIRoute = async ({ request }) => {
   const c = commande as Commande;
   const quand = `${formaterDate(c.date)}, ${c.creneau}`;
   const auPoids = lignes.some((l) => l.unite === 'kg' || l.aLaPesee);
+  const arrhes = evenement?.carte?.commande?.mentionArrhes?.trim();
+  const paiement = arrhes || cc.mentionPaiement;
   const etiquette = evenement ? `${evenement.nom} — ` : '';
   const origine = new URL(request.url).origin;
   const cle = getSecret('RESEND_API_KEY');
@@ -74,6 +76,7 @@ export const POST: APIRoute = async ({ request }) => {
       }</p>
       ${tableauLignes(lignes, total, auPoids ? '* au poids : montant estimé, ajusté à la pesée' : '')}
       ${c.remarque ? `<p style="margin:0 0 24px;padding:12px 16px;background:#faf7f1"><strong>Remarque :</strong><br>${echapper(c.remarque).replace(/\n/g, '<br>')}</p>` : ''}
+      ${arrhes ? `<p style="margin:0 0 24px"><strong style="color:#15181B">Arrhes à demander au client.</strong> Mention affichée : ${echapper(arrhes)}</p>` : ''}
       ${enregistree ? bouton(`${origine}/commandes?jour=${c.date}`, 'Voir le planning') : ''}`,
   });
   try {
@@ -90,13 +93,13 @@ export const POST: APIRoute = async ({ request }) => {
       origine,
       r,
       titre: cc.emailClientTitre || 'Merci pour votre commande !',
-      apercu: `Votre commande sera prête ${quand}.`,
+      apercu: arrhes ? `Commande reçue pour ${quand} : ${arrhes}` : `Votre commande sera prête ${quand}.`,
       contenu: `
         <p style="margin:0 0 14px">Bonjour ${echapper(c.nom)},</p>
         ${paragraphesHtml(cc.emailClientIntro || 'Nous avons bien reçu votre commande, nous vous la préparons avec soin.')}
         ${encadreRetrait(quand, r)}
         ${tableauLignes(lignes, total, auPoids ? '* au poids : le montant exact est ajusté à la pesée' : '')}
-        ${cc.mentionPaiement ? `<p style="margin:0 0 14px"><strong style="color:#15181B">${echapper(cc.mentionPaiement)}</strong></p>` : ''}
+        ${paiement ? `<p style="margin:0 0 14px"><strong style="color:#15181B">${echapper(paiement)}</strong></p>` : ''}
         ${paragraphesHtml(cc.emailClientFin || 'Un empêchement ? Appelez-nous, tout simplement. À très vite à la boutique !')}`,
     });
     await envoyerEmail(cle, {

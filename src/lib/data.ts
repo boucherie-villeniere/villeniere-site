@@ -217,7 +217,7 @@ export interface Carte {
   farces?: FarceCarte[];
   /** Quantité de farce par volaille, en grammes. */
   farceGrammes?: number | null;
-  commande?: { actif?: boolean; dateLimite?: string | null; retraitDu?: string | null; retraitAu?: string | null; message?: string };
+  commande?: { actif?: boolean; dateLimite?: string | null; retraitDu?: string | null; retraitAu?: string | null; message?: string; mentionArrhes?: string };
 }
 
 export { prixCarte, UNITES_CARTE } from './commande';

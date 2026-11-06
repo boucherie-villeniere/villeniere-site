@@ -15,6 +15,8 @@ interface Props {
   farces: FarceCarte[];
   regles: ReglesRetrait;
   mentionPaiement?: string;
+  /** Des arrhes valident la commande : la confirmation ne la présente pas comme définitive. */
+  arrhes?: boolean;
   adresse: string;
 }
 
@@ -33,7 +35,7 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 const prixDeBase = (slug: string) => slug.split('|')[0];
 const SANS_FARCE = -1;
 
-export default function CommandeCarte({ evenement, nom, produits, farces, regles, mentionPaiement, adresse }: Props) {
+export default function CommandeCarte({ evenement, nom, produits, farces, regles, mentionPaiement, arrhes, adresse }: Props) {
   const dates = useMemo(() => datesDeRetrait(regles, produits), [regles, produits]);
   const ouverte = dates.length > 0;
   const cle = `commande-carte-${evenement}`;
@@ -347,7 +349,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
           {etat.type === 'ok' ? (
             <div className="cdc-merci">
               <p className="surtitre">{nom}</p>
-              <h2>Merci, c’est noté !</h2>
+              <h2>{arrhes ? 'Commande enregistrée' : 'Merci, c’est noté !'}</h2>
               <p>
                 À retirer le <strong>{formaterDate(etat.date)}</strong>, créneau <strong>{etat.creneau}</strong>
                 <br />
