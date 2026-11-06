@@ -4,7 +4,7 @@
 // Ce fichier est aussi chargé dans le navigateur : pas d'import de valeurs depuis data.ts.
 
 import { formaterPrix, prixCarte, UNITES_CARTE, type PlatCommandable, type ReglesRetrait } from './commande';
-import type { ClickCollect, FarceCarte, ProduitCarte, TempsFort } from './data';
+import type { Carte, ClickCollect, FarceCarte, ProduitCarte, TempsFort } from './data';
 
 export interface ProduitCommandable extends PlatCommandable {
   /** Texte d'aide : prix au kilo, précision… */
@@ -15,6 +15,8 @@ export interface ProduitCommandable extends PlatCommandable {
   personnesMin?: number;
   personnesMax?: number;
   avecFarce?: boolean;
+  accompagnement?: boolean;
+  avecSauce?: boolean;
 }
 
 export const slugifier = (s: string) =>
@@ -41,7 +43,11 @@ export function produitsCommandables(t: TempsFort): ProduitCommandable[] {
     const colonnes = (r.colonnes ?? []).filter(Boolean);
     for (const p of r.produits ?? []) {
       if (estIntertitre(p) || p.commandable === false) continue;
-      const commun = { jours: [], quantiteMax: p.quantiteMax ?? 10, unite: 'piece' };
+      const commun = { jours: [], quantiteMax: p.quantiteMax ?? 10, unite: 'piece', avecSauce: !!p.avecSauce };
+      if (p.accompagnement) {
+        liste.push({ ...commun, slug: idProduit(p), nom: p.nom, prix: 0, quantiteMax: 1, saisie: 'piece', info: p.detail ?? '', accompagnement: true, avecSauce: false });
+        continue;
+      }
       if (colonnes.length > 0) {
         colonnes.forEach((c, i) => {
           const prix = p.prixVariantes?.[i];
@@ -81,14 +87,22 @@ export interface OptionsLigne {
   personnes?: number;
   poids?: number;
   farce?: number;
+  sauce?: 0 | 1;
 }
 
 /** Une ligne du panier s'écrit « produit|p5|f1 » : le serveur recalcule tout à partir de cet identifiant. */
 export function slugAvecOptions(slug: string, o: OptionsLigne) {
-  return [slug, o.personnes != null && `p${o.personnes}`, o.poids != null && `k${o.poids}`, o.farce != null && `f${o.farce}`].filter(Boolean).join('|');
+  return [slug, o.personnes != null && `p${o.personnes}`, o.poids != null && `k${o.poids}`, o.farce != null && `f${o.farce}`, o.sauce != null && `s${o.sauce}`].filter(Boolean).join('|');
 }
 
-export const libelleFarce = (f: FarceCarte) => (f.supplement ? `${f.nom} (+ ${formaterPrix(f.supplement)})` : f.nom);
+/** Farces de la carte avec leur montant par volaille (prix aux 100 g × quantité de farce). */
+export function farcesAvecPrix(carte?: Carte): FarceCarte[] {
+  const grammes = carte?.farceGrammes ?? 500;
+  return (carte?.farces ?? []).map((f) => ({ ...f, supplement: f.prix100g ? arrondi((f.prix100g * grammes) / 100) : null }));
+}
+
+export const libelleFarce = (f: FarceCarte) =>
+  f.supplement && f.prix100g ? `${f.nom} · ${prixCarte(f.prix100g)} €/100 g, soit ≈ ${formaterPrix(f.supplement)}` : f.nom;
 
 /** Reconstruit une ligne (nom, prix) depuis son identifiant ; null si les choix ne sont pas valables. */
 export function ligneDepuisSlug(produits: ProduitCommandable[], farces: FarceCarte[], slug: string): ProduitCommandable | null {
@@ -102,6 +116,7 @@ export function ligneDepuisSlug(produits: ProduitCommandable[], farces: FarceCar
     if (m[0] === 'p') o.personnes = n;
     else if (m[0] === 'k') o.poids = n;
     else if (m[0] === 'f') o.farce = n;
+    else if (m[0] === 's' && (n === 0 || n === 1)) o.sauce = n;
     else return null;
   }
 
@@ -131,7 +146,15 @@ export function ligneDepuisSlug(produits: ProduitCommandable[], farces: FarceCar
     prix = arrondi(prix + (f.supplement ?? 0));
   }
 
-  return { ...p, slug, nom: [p.nom, ...precisions].join(' — '), prix, sansEstimation: sansPrix, ...(farce ? { farce } : {}) };
+  let sauce: string | undefined;
+  if (o.sauce != null) {
+    const accompagnement = produits.find((x) => x.accompagnement);
+    if (!p.avecSauce || !accompagnement) return null;
+    precisions.push(`${o.sauce ? 'avec' : 'sans'} ${accompagnement.nom.toLowerCase()}`);
+    if (o.sauce) sauce = accompagnement.nom;
+  }
+
+  return { ...p, slug, nom: [p.nom, ...precisions].join(' — '), prix, sansEstimation: sansPrix, ...(farce ? { farce } : {}), ...(sauce ? { sauce } : {}) };
 }
 
 /** Une ligne doit-elle passer par la fenêtre de choix avant d'entrer dans le panier ? */
@@ -141,8 +164,9 @@ export const demandeUnChoix = (p: ProduitCommandable) => p.saisie !== 'piece' ||
 export function platsDeLaCommande(t: TempsFort, lignes: { slug: string }[]) {
   const produits = produitsCommandables(t);
   return lignes
-    .map((l) => ligneDepuisSlug(produits, t.carte?.farces ?? [], String(l?.slug ?? '')))
-    .filter((x): x is ProduitCommandable => !!x);
+    .map((l) => ligneDepuisSlug(produits, farcesAvecPrix(t.carte), String(l?.slug ?? '')))
+    // La sauce accompagne un plat : elle ne se commande pas seule.
+    .filter((x): x is ProduitCommandable => !!x && !x.accompagnement);
 }
 
 /** Règles de retrait : celles du click & collect, limitées à la fenêtre du temps fort. */

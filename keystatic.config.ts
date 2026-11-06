@@ -396,6 +396,12 @@ export default config({
                       step: 0.05,
                     }),
                     farce: fields.checkbox({ label: 'Proposer le choix de la farce', description: 'Volailles entières. Les farces se règlent plus bas : « Farces proposées ».', defaultValue: false }),
+                    accompagnement: fields.checkbox({
+                      label: 'Accompagnement compris avec le plat (ex. sauce)',
+                      description: 'Sans prix. Le client l’ajoute avec le + puis précise, plat par plat, avec ou sans.',
+                      defaultValue: false,
+                    }),
+                    avecSauce: fields.checkbox({ label: 'Ce plat peut être servi avec l’accompagnement', defaultValue: false }),
                     allergenes: fields.multiselect({ label: 'Allergènes', options: ALLERGENES }),
                     quantiteMax: fields.integer({ label: 'Quantité maximum par commande', defaultValue: 10, validation: { min: 1, max: 99 } }),
                   }),
@@ -412,10 +418,16 @@ export default config({
             farces: fields.array(
               fields.object({
                 nom: fields.text({ label: 'Nom de la farce' }),
-                supplement: fields.number({ label: 'Supplément (€)', description: 'Vide : aucun montant n’est annoncé au client.', step: 0.01 }),
+                prix100g: fields.number({ label: 'Prix aux 100 g (€)', description: 'Vide : aucun montant n’est annoncé au client.', step: 0.01 }),
               }),
               { label: 'Farces proposées sur les volailles entières', itemLabel: (p) => p.fields.nom.value },
             ),
+            farceGrammes: fields.integer({
+              label: 'Quantité de farce par volaille (g)',
+              description: 'Sert à calculer le prix de la farce : prix aux 100 g × cette quantité.',
+              defaultValue: 500,
+              validation: { min: 50, max: 3000 },
+            }),
             mentionAllergenes: fields.text({
               label: 'Mention sur les allergènes',
               defaultValue: 'Allergènes : liste complète disponible sur demande en boutique.',

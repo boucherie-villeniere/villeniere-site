@@ -3,7 +3,7 @@
 import { formaterDate, jourDeSemaine, libelleTotal, UNITES } from './commande';
 import { bouton, echapper, gabarit } from './emails';
 import type { ClickCollect, Reglages } from './data';
-import { totauxParFarce, totauxParPlat, trierParCreneau, type CommandeEnregistree } from './stockage';
+import { totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type CommandeEnregistree } from './stockage';
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
@@ -58,9 +58,16 @@ export function recapDuJour({
     </table>`;
 
   const farces = totauxParFarce(actives);
-  const blocFarces = farces.length
-    ? `<p style="margin:-16px 0 28px;font:14px/1.5 Arial,sans-serif;color:#4E4B48"><strong>Farces :</strong> ${farces.map((f) => `${f.quantite} × ${echapper(f.nom)}`).join(', ')}</p>`
-    : '';
+  const sauces = totauxParSauce(actives);
+  const blocFarces =
+    farces.length || sauces.length
+      ? `<p style="margin:-16px 0 28px;font:14px/1.5 Arial,sans-serif;color:#4E4B48">${[
+          farces.length ? `<strong>Farces :</strong> ${farces.map((f) => `${f.quantite} × ${echapper(f.nom)}`).join(', ')}` : '',
+          ...sauces.map((f) => `<strong>${echapper(f.nom)} :</strong> ${f.quantite} plat${f.quantite > 1 ? 's' : ''}`),
+        ]
+          .filter(Boolean)
+          .join('<br>')}</p>`
+      : '';
 
   const parCreneau = new Map<string, CommandeEnregistree[]>();
   for (const c of actives) parCreneau.set(c.creneau, [...(parCreneau.get(c.creneau) ?? []), c]);

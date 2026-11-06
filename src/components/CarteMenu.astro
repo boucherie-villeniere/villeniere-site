@@ -14,6 +14,9 @@ const { carte, mode = 'web' } = Astro.props;
 // Boutons « + » (masqués tant que la commande en ligne n'est pas ouverte, voir CommandeCarte.tsx).
 const boutons = mode === 'web' && !!carte.commande?.actif;
 const commandable = (p: ProduitCarte) => boutons && p.commandable !== false;
+const avecBouton = (p: ProduitCarte) => commandable(p) && (p.prix != null || !!p.accompagnement);
+const grammesFarce = carte.farceGrammes ?? 500;
+const farcesChiffrees = (carte.farces ?? []).filter((f) => f.prix100g);
 
 const estIntertitre = (p: ProduitCarte) => p.prix == null && !p.detail && !(p.prixVariantes ?? []).some((x) => x != null);
 const allergenes = (p: ProduitCarte) => (p.allergenes ?? []).map((a) => ALLERGENES_LABELS[a] ?? a).join(', ');
@@ -93,7 +96,7 @@ const ILLUSTRATIONS: Record<string, string> = {
                 )}
               </div>
             ) : (
-              <div class:list={['cm-bloc', 'cm-ligne', 'cm-produit', { 'cm-produit--commandable': commandable(p) && p.prix != null }]}>
+              <div class:list={['cm-bloc', 'cm-ligne', 'cm-produit', { 'cm-produit--commandable': avecBouton(p) }]}>
                 <span class="cm-nom">
                   {p.nom}
                   {p.detail && !detailLong(p.detail) && <span class="cm-detail"> | {p.detail}</span>}
@@ -107,7 +110,7 @@ const ILLUSTRATIONS: Record<string, string> = {
                     </>
                   ) : null}
                 </span>
-                {commandable(p) && p.prix != null && (
+                {avecBouton(p) && (
                   <span class="cm-boutons">
                     <button type="button" class="cm-retirer cm-retirer--rond" data-retirer={idProduit(p)} aria-label={`Retirer : ${p.nom}`}>
                       −
@@ -128,6 +131,11 @@ const ILLUSTRATIONS: Record<string, string> = {
             </p>
           )}
           {r.note && <p class="cm-bloc cm-note">{r.note}</p>}
+          {farcesChiffrees.length > 0 && (r.produits ?? []).some((p) => p.farce) && (
+            <p class="cm-bloc cm-note">
+              Nos farces (environ {grammesFarce} g par volaille) : {farcesChiffrees.map((f) => `${f.nom}, ${prixCarte(f.prix100g!)} €/100 g`).join(' · ')}
+            </p>
+          )}
         </>
       );
     })

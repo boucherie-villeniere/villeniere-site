@@ -151,3 +151,13 @@ export function totauxParFarce(commandes: CommandeEnregistree[]) {
   }
   return [...totaux].map(([nom, quantite]) => ({ nom, quantite }));
 }
+
+/** Nombre de plats à servir avec une sauce, par sauce. */
+export function totauxParSauce(commandes: CommandeEnregistree[]) {
+  const totaux = new Map<string, number>();
+  for (const c of commandes) {
+    if (c.statut !== 'a-preparer') continue;
+    for (const l of c.lignes) if (l.sauce) totaux.set(l.sauce, (totaux.get(l.sauce) ?? 0) + l.quantite);
+  }
+  return [...totaux].map(([nom, quantite]) => ({ nom, quantite }));
+}

@@ -175,13 +175,19 @@ export interface ProduitCarte {
   poids?: number | null;
   /** Volaille entière : propose le choix de la farce. */
   farce?: boolean;
+  /** Accompagnement sans prix propre (ex. sauce), compris avec le plat choisi. */
+  accompagnement?: boolean;
+  /** Ce plat peut être servi avec l'accompagnement. */
+  avecSauce?: boolean;
   allergenes?: string[];
   quantiteMax?: number;
 }
 
 export interface FarceCarte {
   nom: string;
-  /** Supplément en euros ; vide : aucun montant annoncé. */
+  /** Prix aux 100 g, modifiable dans l'admin. */
+  prix100g?: number | null;
+  /** Montant par volaille, calculé (prix aux 100 g × quantité de farce). */
   supplement?: number | null;
 }
 
@@ -203,6 +209,8 @@ export interface Carte {
   lienQR?: string;
   /** Farces proposées sur les volailles entières. */
   farces?: FarceCarte[];
+  /** Quantité de farce par volaille, en grammes. */
+  farceGrammes?: number | null;
   commande?: { actif?: boolean; dateLimite?: string | null; retraitDu?: string | null; retraitAu?: string | null; message?: string };
 }
 

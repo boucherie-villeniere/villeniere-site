@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { datesDeRetrait, formaterDate, formaterPrix, libelleTotal, telephoneValide, type Commande, type ReglesRetrait } from '../lib/commande';
+import { datesDeRetrait, formaterDate, formaterPrix, libelleTotal, prixLigne, telephoneValide, type Commande, type ReglesRetrait } from '../lib/commande';
 import { demandeUnChoix, libelleFarce, ligneDepuisSlug, POIDS_MAX, POIDS_MIN, slugAvecOptions, type OptionsLigne, type ProduitCommandable } from '../lib/evenement';
 import type { FarceCarte } from '../lib/data';
 
@@ -46,6 +46,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
   const [poids, setPoids] = useState('1');
   const [farce, setFarce] = useState(SANS_FARCE);
   const [pulse, setPulse] = useState(0);
+  const [sansSauce, setSansSauce] = useState<Record<string, boolean>>({});
   const fenetre = useRef<HTMLDialogElement>(null);
   const fenetreChoix = useRef<HTMLDialogElement>(null);
   const zoneErreur = useRef<HTMLParagraphElement>(null);
@@ -55,9 +56,12 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
     .filter(([, q]) => q > 0)
     .map(([slug, q]) => ({ p: ligneDepuisSlug(produits, farces, slug), q }))
     .filter((l): l is { p: ProduitCommandable; q: number } => !!l.p);
-  const lignesTotal = lignes.map((l) => ({ ...l.p, quantite: l.q, total: l.p.prix * l.q }));
+  const sauce = produits.find((p) => p.accompagnement);
+  const sauceChoisie = !!sauce && (panier[sauce.slug] ?? 0) > 0;
+  const plats = lignes.filter((l) => !l.p.accompagnement);
+  const lignesTotal = plats.map((l) => ({ ...l.p, quantite: l.q, total: l.p.prix * l.q }));
   const nbArticles = lignes.reduce((s, l) => s + l.q, 0);
-  const total = libelleTotal(lignesTotal);
+  const total = plats.length > 0 ? libelleTotal(lignesTotal) : 'ajoutez un plat';
   const aLaPesee = lignes.some((l) => l.p.aLaPesee);
 
   const changer = (slug: string, delta: number) => {
@@ -171,8 +175,10 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
     const f = new FormData(e.currentTarget);
     if (f.get('site')) return; // champ piège anti-robots
     const telephone = String(f.get('telephone') ?? '');
-    const manque = lignes.length === 0
-      ? 'Ajoutez au moins un produit depuis la carte.'
+    const manque = plats.length === 0
+      ? sauceChoisie
+        ? `Ajoutez un plat : la ${sauce!.nom.toLowerCase()} l’accompagne et ne se commande pas seule.`
+        : 'Ajoutez au moins un produit depuis la carte.'
       : !date
         ? 'Choisissez le jour de retrait.'
         : !creneau
@@ -184,11 +190,16 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
       setEtat({ type: 'erreur', message: manque });
       return;
     }
+    // La sauce ne part pas seule : elle est précisée sur chaque plat concerné.
+    const envoyees = plats.map((l) => ({
+      slug: sauceChoisie && l.p.avecSauce ? `${l.p.slug}|s${sansSauce[l.p.slug] ? 0 : 1}` : l.p.slug,
+      q: l.q,
+    }));
     const commande: Commande = {
       evenement,
       date,
       creneau,
-      lignes: lignes.map((l) => ({ slug: l.p.slug, quantite: l.q })),
+      lignes: envoyees.map((l) => ({ slug: l.slug, quantite: l.q })),
       nom: String(f.get('nom') ?? ''),
       telephone,
       email: String(f.get('email') ?? '') || undefined,
@@ -205,9 +216,10 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
         date,
         creneau,
         pesee: aLaPesee,
-        lignes: lignes.map((l) => ({ nom: l.p.nom, quantite: l.q })),
+        lignes: envoyees.map((l) => ({ nom: ligneDepuisSlug(produits, farces, l.slug)?.nom ?? '', quantite: l.q })),
       });
       setPanier({});
+      setSansSauce({});
       fenetre.current?.scrollTo({ top: 0 });
     } catch (err) {
       setEtat({ type: 'erreur', message: err instanceof Error ? err.message : 'Erreur inattendue.' });
@@ -222,7 +234,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
         <div className="cdc-barre-texte" key={pulse}>
           <strong>Ma commande {nom}</strong>
           <span>
-            {pluriel(nbArticles, 'article')} · {aLaPesee && /€/.test(total) ? '≈ ' : ''}
+            {pluriel(nbArticles, 'article')} · {aLaPesee && total.includes('€') ? '≈ ' : ''}
             {total}
           </span>
         </div>
@@ -299,7 +311,13 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
               {apercuChoix && (
                 <p className="cdc-estimation">
                   {apercuChoix.sansEstimation ? (
-                    'Le prix sera calculé à la pesée, au retrait.'
+                    apercuChoix.prix > 0 ? (
+                      <>
+                        Farce : <strong>≈ {formaterPrix(apercuChoix.prix)}</strong>. La volaille sera calculée à la pesée, au retrait.
+                      </>
+                    ) : (
+                      'Le prix sera calculé à la pesée, au retrait.'
+                    )
                   ) : (
                     <>
                       Estimation : <strong>≈ {formaterPrix(apercuChoix.prix)}</strong>, ajustée à la pesée.
@@ -361,6 +379,12 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
                       <div>
                         <p className="cdc-nom">{p.nom}</p>
                         {p.info && <p className="cdc-info">{p.info}</p>}
+                        {sauceChoisie && p.avecSauce && (
+                          <label className="cdc-sauce">
+                            <input type="checkbox" checked={!sansSauce[p.slug]} onChange={(e) => setSansSauce((x) => ({ ...x, [p.slug]: !e.target.checked }))} />
+                            Avec {sauce!.nom.toLowerCase()}
+                          </label>
+                        )}
                       </div>
                       <div className="cc-quantite">
                         <button type="button" onClick={() => changer(p.slug, -1)} aria-label={`Retirer un ${p.nom}`}>
@@ -371,7 +395,7 @@ export default function CommandeCarte({ evenement, nom, produits, farces, regles
                           +
                         </button>
                       </div>
-                      <p className="cdc-prix">{p.sansEstimation ? 'à la pesée' : `${p.aLaPesee ? '≈ ' : ''}${formaterPrix(p.prix * q)}`}</p>
+                      <p className="cdc-prix">{p.accompagnement ? 'comprise' : prixLigne({ ...p, total: p.prix * q })}</p>
                     </li>
                   ))}
                 </ul>

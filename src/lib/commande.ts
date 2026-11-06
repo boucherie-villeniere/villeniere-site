@@ -62,6 +62,7 @@ export interface PlatCommandable {
   aLaPesee?: boolean;
   sansEstimation?: boolean;
   farce?: string;
+  sauce?: string;
 }
 
 /** Date (AAAA-MM-JJ) et heure actuelles à Paris, quel que soit le fuseau du serveur. */
@@ -121,6 +122,12 @@ export function libelleTotal(lignes: { aLaPesee?: boolean; sansEstimation?: bool
   return total > 0 ? `${formaterPrix(total)} + ${pesee}` : pesee;
 }
 
+/** Montant d'une ligne : une farce chiffrée reste annoncée si la volaille est à la pesée. */
+export function prixLigne(l: { aLaPesee?: boolean; sansEstimation?: boolean; total: number }) {
+  if (sansEstimation(l)) return l.total > 0 ? `${formaterPrix(l.total)} + pesée` : 'à la pesée';
+  return `${l.aLaPesee ? '≈ ' : ''}${formaterPrix(l.total)}`;
+}
+
 export const platDisponible = (plat: PlatCommandable, iso: string) =>
   plat.jours.length === 0 || plat.jours.includes(jourDeSemaine(iso));
 
@@ -171,6 +178,8 @@ export interface LigneValidee {
   sansEstimation?: boolean;
   /** Farce choisie (volaille entière). */
   farce?: string;
+  /** Sauce demandée avec ce plat. */
+  sauce?: string;
 }
 
 /** Vérifie une commande reçue ; renvoie les lignes chiffrées ou un message d'erreur. */
@@ -205,6 +214,7 @@ export function validerCommande(
       ...(plat.aLaPesee ? { aLaPesee: true } : {}),
       ...(plat.sansEstimation ? { sansEstimation: true } : {}),
       ...(plat.farce ? { farce: plat.farce } : {}),
+      ...(plat.sauce ? { sauce: plat.sauce } : {}),
     });
   }
   if (lignes.length === 0) return { ok: false, erreur: 'Votre commande est vide.' };

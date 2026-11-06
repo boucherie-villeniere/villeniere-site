@@ -8,7 +8,7 @@ import CarteMenu from '../components/CarteMenu.astro';
 import CommandeCarte from '../components/CommandeCarte.tsx';
 import { getClickCollect, getReglages, getTempsForts, lienTempsFort, paragraphes, type TempsFort } from '../lib/data';
 import { formaterDate } from '../lib/commande';
-import { produitsCommandables, reglesEvenement } from '../lib/evenement';
+import { farcesAvecPrix, produitsCommandables, reglesEvenement } from '../lib/evenement';
 import '../styles/commander.css';
 
 export function getStaticPaths() {
@@ -99,7 +99,7 @@ const limite = t.carte?.commande?.dateLimite;
         evenement={t.slug}
         nom={t.nom}
         produits={produitsCommandables(t)}
-        farces={t.carte!.farces ?? []}
+        farces={farcesAvecPrix(t.carte)}
         adresse={`${r.adresse}, ${r.codePostal} ${r.ville}`}
         regles={reglesEvenement(t, cc)}
         mentionPaiement={cc.mentionPaiement}
@@ -266,6 +266,21 @@ const limite = t.carte?.commande?.dateLimite;
     border: 1px solid var(--ligne);
     border-radius: var(--rayon);
     background: var(--blanc);
+  }
+  :global(.cdc-sauce) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    min-height: 32px;
+    font-size: 0.88rem;
+    color: var(--anthracite);
+    cursor: pointer;
+  }
+  :global(.cdc-sauce input) {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--anthracite);
   }
   :global(.cdc-estimation) {
     margin: 0 0 18px;

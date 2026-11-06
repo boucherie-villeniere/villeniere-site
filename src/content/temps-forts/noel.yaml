@@ -40,6 +40,7 @@ carte:
     - titre: Volailles festives
       produits:
         - nom: Poularde des Landes Label Rouge
+          avecSauce: true
           detail: 4 à 6 pers.
           prix: 20.9
           unite: kg
@@ -48,6 +49,7 @@ carte:
           personnesMax: 6
           farce: true
         - nom: Chapon des Landes Label Rouge
+          avecSauce: true
           detail: 6 à 8 pers.
           prix: 24.9
           unite: kg
@@ -56,6 +58,7 @@ carte:
           personnesMax: 8
           farce: true
         - nom: Poularde de la ferme Tauzin
+          avecSauce: true
           detail: 4 à 6 pers.
           prix: 25.9
           unite: kg
@@ -64,6 +67,7 @@ carte:
           personnesMax: 6
           farce: true
         - nom: Chapon de la ferme Tauzin
+          avecSauce: true
           detail: 6 à 8 pers.
           prix: 31.5
           unite: kg
@@ -72,6 +76,7 @@ carte:
           personnesMax: 8
           farce: true
         - nom: Poularde de Bresse
+          avecSauce: true
           prix: 49.9
           unite: kg
           saisie: personnes
@@ -79,6 +84,7 @@ carte:
           personnesMax: 6
           farce: true
         - nom: Chapon de Bresse
+          avecSauce: true
           prix: 59.9
           unite: kg
           saisie: personnes
@@ -86,6 +92,7 @@ carte:
           personnesMax: 8
           farce: true
         - nom: Pintade chaponnée ferme Tauzin
+          avecSauce: true
           detail: 4 à 6 pers.
           prix: 32.5
           unite: kg
@@ -94,6 +101,7 @@ carte:
           personnesMax: 6
           farce: true
         - nom: Oie fermière d’Anjou Label Rouge
+          avecSauce: true
           detail: 8 à 12 pers.
           prix: 38
           unite: kg
@@ -102,6 +110,7 @@ carte:
           personnesMax: 12
           farce: true
         - nom: Magret de canard IGP Sud-Ouest
+          avecSauce: true
           detail: 1 pour 2 pers.
           prix: 38.9
           unite: kg
@@ -124,18 +133,22 @@ carte:
         - Figue et foie gras
       produits:
         - nom: Rôti de poularde en melon
+          avecSauce: true
           detail: Pour 3 pers., 600 g environ
           unite: la-piece
           prixVariantes: [24, 26, 29]
         - nom: Rôti de poularde allongé
+          avecSauce: true
           detail: Pour 5-6 pers., 1,2 kg environ
           unite: la-piece
           prixVariantes: [45, 49, 53]
         - nom: Rôti de chapon en melon
+          avecSauce: true
           detail: Pour 4 pers., 900 g environ
           unite: la-piece
           prixVariantes: [36, 42, 45]
         - nom: Rôti de chapon allongé
+          avecSauce: true
           detail: Pour 9-10 pers., 1,8 kg environ
           unite: la-piece
           prixVariantes: [69, 78, 82]
@@ -144,30 +157,37 @@ carte:
       nouvellePage: true
       produits:
         - nom: Côte de bœuf maturée
+          avecSauce: true
           prix: 40.9
           unite: kg
         - nom: Filet de bœuf en rôti ou en tournedos
+          avecSauce: true
           prix: 59.9
           unite: kg
         - nom: Filet de bœuf brut
+          avecSauce: true
           detail: pour bœuf Wellington
           prix: 68.5
           unite: kg
     - titre: Agneau
       produits:
         - nom: Carré de côtes premières
+          avecSauce: true
           detail: 6/7 côtes
           prix: 35
           unite: la-piece
         - nom: Carré de côtes découvertes
+          avecSauce: true
           detail: 5 côtes
           prix: 27.5
           unite: la-piece
         - nom: Noisette d’agneau
+          avecSauce: true
           detail: petit rôti dans le filet
           prix: 42.9
           unite: kg
         - nom: Gigot d’agneau avec os
+          avecSauce: true
           detail: pour vos gigots de 7 heures
           prix: 37.5
           unite: kg
@@ -196,6 +216,7 @@ carte:
             - lait
         - nom: Sauce morille maison
           detail: comprise avec le plat choisi
+          accompagnement: true
   commande:
     actif: true
     dateLimite: 2026-12-20
@@ -204,8 +225,12 @@ carte:
     message: Commandez directement sur la carte avec le bouton +, puis retirez votre commande en boutique. Le règlement se fait au retrait.
   farces:
     - nom: Pommes caramélisées et châtaignes
+      prix100g: 3.5
     - nom: Morilles et crème
+      prix100g: 3.5
     - nom: Figue et foie gras
+      prix100g: 3.5
+  farceGrammes: 500
   mentionAllergenes: 'Allergènes : liste complète disponible sur demande en boutique.'
   piedDeCarte: Et pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins ! À retrouver en boutique.
   lienQR: ''

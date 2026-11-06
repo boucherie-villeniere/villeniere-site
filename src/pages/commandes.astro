@@ -5,10 +5,10 @@
 import { env } from 'cloudflare:workers';
 import '../styles/global.css';
 import { COOKIE, DUREE_JOURS, creerJeton, jetonValide, motDePasseCorrect } from '../lib/acces';
-import { ajouterJours, formaterPrix, jourDeSemaine, libelleTotal, maintenantParis, ORDRE_JOURS, sansEstimation } from '../lib/commande';
+import { ajouterJours, formaterPrix, jourDeSemaine, libelleTotal, maintenantParis, ORDRE_JOURS, prixLigne, sansEstimation } from '../lib/commande';
 import { getClickCollect } from '../lib/data';
 import { uniteAffichee } from '../lib/recap';
-import { changerStatut, commandesEntre, STATUTS, totauxParFarce, totauxParPlat, trierParCreneau, type Statut } from '../lib/stockage';
+import { changerStatut, commandesEntre, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
 
 export const prerender = false;
 
@@ -72,6 +72,7 @@ const actives = (d: string) => commandes.filter((c) => c.date === d && c.statut 
 const duJour = commandes.filter((c) => c.date === jour);
 const totaux = totauxParPlat(duJour);
 const farces = totauxParFarce(duJour);
+const sauces = totauxParSauce(duJour);
 const parCreneau = new Map<string, typeof duJour>();
 for (const c of duJour) parCreneau.set(c.creneau, [...(parCreneau.get(c.creneau) ?? []), c]);
 
@@ -187,6 +188,11 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                     <strong>Farces :</strong> {farces.map((f) => `${f.quantite} × ${f.nom}`).join(', ')}
                   </p>
                 )}
+                {sauces.map((f) => (
+                  <p class="a-farcir">
+                    <strong>{f.nom} :</strong> {f.quantite} plat{f.quantite > 1 ? 's' : ''}
+                  </p>
+                ))}
               </section>
             )}
 
@@ -215,7 +221,7 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                             <span>
                               <strong>{l.quantite} ×</strong> {l.nom}
                             </span>
-                            <span>{sansEstimation(l) ? 'à la pesée' : `${formaterPrix(l.total)}${l.aLaPesee ? '*' : ''}`}</span>
+                            <span>{sansEstimation(l) ? prixLigne(l) : `${formaterPrix(l.total)}${l.aLaPesee ? '*' : ''}`}</span>
                           </li>
                         ))}
                       </ul>
