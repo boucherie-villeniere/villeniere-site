@@ -195,7 +195,7 @@ carte:
           allergenes:
             - lait
         - nom: Sauce morille maison
-          detail: comprise dans le prix
+          detail: comprise avec le plat choisi
   commande:
     actif: true
     dateLimite: 2026-12-20
