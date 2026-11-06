@@ -73,10 +73,12 @@ const ILLUSTRATIONS: Record<string, string> = {
                       <button type="button" class="cm-retirer cm-retirer--prix" data-retirer={idProduit(p, i)} aria-label={`Retirer : ${p.nom}, ${c}`}>
                         −
                       </button>
-                      <button type="button" class="cm-prix cm-ajouter cm-ajouter--prix" data-ajouter={idProduit(p, i)} aria-label={`Ajouter : ${p.nom}, ${c}`}>
+                      <span class="cm-prix cm-prix-choix" data-ajouter={idProduit(p, i)}>
                         {prixCarte(p.prixVariantes[i]!)}
                         <small> €</small>
-                        <span class="cm-plus" aria-hidden="true">+</span>
+                      </span>
+                      <button type="button" class="cm-ajouter cm-ajouter--petit" data-ajouter={idProduit(p, i)} aria-label={`Ajouter : ${p.nom}, ${c}`}>
+                        +
                       </button>
                     </span>
                   ) : (
@@ -320,7 +322,7 @@ const ILLUSTRATIONS: Record<string, string> = {
   }
   [data-commande-ouverte] .cm-variantes,
   [data-commande-ouverte] .cm-entetes {
-    grid-template-columns: 1fr repeat(var(--n), 7em);
+    grid-template-columns: 1fr repeat(var(--n), 8.2em);
   }
   [data-commande-ouverte] .cm-ajouter--rond {
     position: relative;
@@ -346,34 +348,63 @@ const ILLUSTRATIONS: Record<string, string> = {
     border-color: var(--anthracite);
     color: var(--or);
   }
-  [data-commande-ouverte] .cm-ajouter--prix {
+  /* Variantes (farces) : − prix + ; le prix sélectionné passe en cartouche sombre. */
+  [data-commande-ouverte] .cm-prix-choix {
     position: relative;
-    display: inline-flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 0.15em;
-    padding: 0.45em 0.3em;
-    border: 1px solid transparent;
+    padding: 0.4em 0.55em;
     border-radius: 999px;
-    background: none;
-    color: inherit;
     cursor: pointer;
     transition:
-      border-color 0.3s var(--ease-doux),
-      background-color 0.3s var(--ease-doux);
+      background-color 0.3s var(--ease-doux),
+      color 0.3s var(--ease-doux);
   }
-  [data-commande-ouverte] .cm-ajouter--prix:hover {
-    border-color: var(--or);
-  }
-  [data-commande-ouverte] .cm-ajouter--prix[data-quantite] {
+  [data-commande-ouverte] .cm-prix-choix[data-quantite] {
     background: var(--anthracite);
     color: var(--blanc);
   }
-  [data-commande-ouverte] .cm-ajouter--prix .cm-plus {
-    font: 400 0.75em/1 var(--corps);
-    color: var(--cm-or);
+  [data-commande-ouverte] .cm-prix-choix[data-quantite] small {
+    color: #d9d4cb;
   }
-  [data-commande-ouverte] .cm-ajouter[data-quantite]::after {
+  [data-commande-ouverte] .cm-prix-choix[data-quantite]::after {
+    content: attr(data-quantite);
+    position: absolute;
+    top: -7px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--or);
+    color: var(--anthracite);
+    font: 600 0.68rem/18px var(--corps);
+    text-align: center;
+  }
+  [data-commande-ouverte] .cm-ajouter--petit {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    flex-shrink: 0;
+    border: 1px solid var(--or);
+    border-radius: 999px;
+    background: var(--blanc);
+    color: var(--cm-or);
+    font: 400 0.95rem/1 var(--corps);
+    cursor: pointer;
+    transition: background-color 0.3s var(--ease-doux), color 0.3s var(--ease-doux);
+  }
+  [data-commande-ouverte] .cm-ajouter--petit:hover {
+    background: var(--anthracite);
+    border-color: var(--anthracite);
+    color: var(--or);
+  }
+  /* L'emplacement du − reste réservé : le prix ne bouge pas quand il apparaît. */
+  [data-commande-ouverte] .cm-retirer--prix:not([data-quantite]) {
+    display: inline-grid;
+    visibility: hidden;
+  }
+  [data-commande-ouverte] .cm-ajouter--rond[data-quantite]::after {
     content: attr(data-quantite);
     position: absolute;
     top: -7px;
@@ -412,41 +443,30 @@ const ILLUSTRATIONS: Record<string, string> = {
     [data-commande-ouverte].carte-menu--web .cm-variantes {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 0;
       padding: 0.8em 0;
     }
     [data-commande-ouverte].carte-menu--web .cm-variantes > .cm-nom {
       flex-basis: 100%;
     }
     [data-commande-ouverte] .cm-cellule {
-      flex: 1 1 0;
+      flex: 1 1 100%;
       min-width: 0;
-      display: grid;
-      grid-template-columns: auto 1fr;
-      grid-template-areas: 'nom nom' 'moins prix';
-      align-items: center;
-      gap: 4px;
-      padding: 6px;
-      border: 1px solid var(--ligne);
-      border-radius: 6px;
+      justify-content: flex-end;
+      gap: 6px;
+      padding: 6px 0;
+      border-top: 1px solid var(--ligne);
     }
     [data-commande-ouverte] .cm-variante-nom {
-      grid-area: nom;
       display: block;
-      font: italic 500 0.78rem/1.2 var(--titre);
+      flex: 1;
+      min-width: 0;
+      font: italic 500 0.86rem/1.25 var(--titre);
       color: var(--cm-or);
-      text-align: center;
     }
-    [data-commande-ouverte] .cm-cellule .cm-retirer {
-      grid-area: moins;
-    }
-    [data-commande-ouverte] .cm-cellule .cm-ajouter--prix {
-      grid-area: prix;
-      grid-column: 1 / -1;
+    [data-commande-ouverte] .cm-cellule .cm-prix-choix {
       font-size: 1rem;
-    }
-    [data-commande-ouverte] .cm-cellule .cm-retirer[data-quantite] + .cm-ajouter--prix {
-      grid-column: 2;
+      white-space: nowrap;
     }
   }
 </style>
