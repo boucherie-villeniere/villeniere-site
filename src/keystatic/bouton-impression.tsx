@@ -15,7 +15,7 @@ export function boutonImpression(): BasicFormField<null> {
     Input() {
       const slug = slugDeLAdresse();
       return (
-        <div style={{ border: '1px solid #c2a063', borderRadius: 8, padding: '18px 20px', background: '#faf7f1' }}>
+        <div style={{ border: '1px solid #c2a063', borderRadius: 8, padding: '18px 20px', background: '#faf7f1', fontFamily: 'system-ui, sans-serif' }}>
           <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#15181b' }}>Menu à imprimer (PDF)</p>
           <p style={{ margin: '0 0 14px', color: '#4e4b48', fontSize: 14, lineHeight: 1.5 }}>
             Mise en page A5 automatique de la carte ci-dessus, avec le cadre, les dessins et un QR code vers la page de commande.

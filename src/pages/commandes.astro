@@ -190,6 +190,8 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
               </section>
             )}
 
+            {totaux.length === 0 && actives(jour).length > 0 && <p class="tout-pret">Tout est prêt pour ce jour.</p>}
+
             {duJour.length === 0 && !erreurBase && <p class="vide">Aucune commande pour ce jour.</p>}
 
             {[...parCreneau].map(([creneau, liste]) => (
@@ -229,7 +231,13 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                         {(Object.keys(STATUTS) as Statut[])
                           .filter((s) => s !== c.statut)
                           .map((s) => (
-                            <button type="submit" name="statut" value={s} class:list={['action', `action--${s}`]}>
+                            <button
+                              type="submit"
+                              name="statut"
+                              value={s}
+                              class:list={['action', `action--${s}`]}
+                              onclick={s === 'annulee' ? "return confirm('Annuler cette commande ?')" : undefined}
+                            >
                               {s === 'a-preparer' ? 'Remettre à préparer' : s === 'prete' ? 'Prête' : s === 'retiree' ? 'Retirée' : 'Annuler'}
                             </button>
                           ))}
@@ -497,6 +505,12 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
   .a-preparer strong {
     font: italic 600 1.6rem/1 var(--titre);
     color: var(--anthracite);
+  }
+  .tout-pret {
+    padding: 14px 20px;
+    margin-bottom: 32px;
+    background: #dcebd9;
+    color: #2f6b34;
   }
   .a-farcir {
     margin: 12px 0 0;

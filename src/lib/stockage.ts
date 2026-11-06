@@ -128,11 +128,11 @@ export function trierParCreneau(commandes: CommandeEnregistree[], creneaux: stri
   return [...commandes].sort((a, b) => a.date.localeCompare(b.date) || rang(a.creneau) - rang(b.creneau) || a.creeLe.localeCompare(b.creeLe));
 }
 
-/** Quantités totales à préparer par plat (hors commandes annulées). */
+/** Quantités restant à préparer par plat : une commande prête, retirée ou annulée n'y figure plus. */
 export function totauxParPlat(commandes: CommandeEnregistree[]) {
   const totaux = new Map<string, { quantite: number; unite: string }>();
   for (const c of commandes) {
-    if (c.statut === 'annulee') continue;
+    if (c.statut !== 'a-preparer') continue;
     for (const l of c.lignes) {
       const t = totaux.get(l.nom) ?? { quantite: 0, unite: l.unite };
       t.quantite += l.quantite;
@@ -142,11 +142,11 @@ export function totauxParPlat(commandes: CommandeEnregistree[]) {
   return [...totaux].map(([nom, t]) => ({ nom, ...t })).sort((a, b) => b.quantite - a.quantite);
 }
 
-/** Nombre de volailles à farcir, par farce (hors commandes annulées). */
+/** Nombre de volailles restant à farcir, par farce. */
 export function totauxParFarce(commandes: CommandeEnregistree[]) {
   const totaux = new Map<string, number>();
   for (const c of commandes) {
-    if (c.statut === 'annulee') continue;
+    if (c.statut !== 'a-preparer') continue;
     for (const l of c.lignes) if (l.farce) totaux.set(l.farce, (totaux.get(l.farce) ?? 0) + l.quantite);
   }
   return [...totaux].map(([nom, quantite]) => ({ nom, quantite }));
