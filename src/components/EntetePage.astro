@@ -3,29 +3,53 @@ interface Props {
   surtitre?: string;
   titre: string;
   chapo?: string;
+  /** Pages utiles (commande, produits) : en-tête resserré, sans animation ni frise. */
+  compact?: boolean;
 }
-const { surtitre, titre, chapo } = Astro.props;
+const { surtitre, titre, chapo, compact = false } = Astro.props;
+const rev = compact ? {} : { 'data-reveal': '' };
 ---
 
-<header class="entete-page">
+<header class:list={['entete-page', { 'entete-page--compact': compact }]}>
   <div class="conteneur">
-    {surtitre && <p class="surtitre" data-reveal>{surtitre}</p>}
-    <h1 data-reveal style="--i:1">{titre}</h1>
-    {chapo && <p class="chapo" data-reveal style="--i:3">{chapo}</p>}
-    <img class="frise" src="/brand/frise-or.svg" alt="" width="560" height="44" data-reveal style="--i:4" />
+    {surtitre && <p class="surtitre" {...rev}>{surtitre}</p>}
+    <h1 {...rev} style="--i:1">{titre}</h1>
+    {chapo && <p class="chapo" {...rev} style="--i:3">{chapo}</p>}
+    {!compact && <img class="frise" src="/brand/frise-or.svg" alt="" width="560" height="44" data-reveal style="--i:4" />}
   </div>
 </header>
 
 <style>
   .entete-page {
-    padding-block: clamp(48px, 8vw, 96px) clamp(24px, 4vw, 48px);
+    padding-block: clamp(20px, 3.5vw, 44px) clamp(12px, 2vw, 24px);
     text-align: center;
   }
+  .entete-page h1 {
+    margin-bottom: 0.3em;
+  }
   .chapo {
-    margin-inline: auto;
+    margin: 0 auto;
     color: var(--gris);
   }
+  .entete-page--compact {
+    padding-block: clamp(14px, 2.4vw, 28px) 8px;
+  }
+  .entete-page--compact .surtitre {
+    margin-bottom: 6px;
+  }
+  .entete-page--compact h1 {
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+  }
+  .entete-page--compact .chapo {
+    font-size: 1rem;
+  }
+  @media (max-width: 700px) {
+    .entete-page--compact .chapo {
+      display: none;
+    }
+  }
   .frise {
-    margin-top: 32px;
+    width: min(320px, 70%);
+    margin-top: 16px;
   }
 </style>

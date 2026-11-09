@@ -64,10 +64,16 @@ export default config({
         codePostal: fields.text({ label: 'Code postal', validation: { isRequired: true } }),
         ville: fields.text({ label: 'Ville', validation: { isRequired: true } }),
         telephone: fields.text({ label: 'Téléphone' }),
-        sms: fields.text({ label: 'Portable (SMS)' }),
         email: fields.text({ label: 'E-mail de contact' }),
         instagram: fields.url({ label: 'Lien Instagram' }),
         facebook: fields.url({ label: 'Lien Facebook' }),
+        pages: fields.object(
+          {
+            laBoucherie: fields.checkbox({ label: 'Page « La boucherie »', defaultValue: true }),
+            nosProduits: fields.checkbox({ label: 'Page « Nos produits »', defaultValue: true }),
+          },
+          { label: 'Pages affichées', description: 'Décochez une page pour la retirer du menu et du site, le temps de la préparer.' },
+        ),
         horaires: fields.array(
           fields.object({
             jour: fields.select({ label: 'Jour', options: JOURS, defaultValue: 'lun' }),

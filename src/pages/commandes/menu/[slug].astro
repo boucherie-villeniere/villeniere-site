@@ -124,14 +124,6 @@ const flocons = t.decor === 'flocons';
               </div>
             )
           }
-          {
-            r.sms && (
-              <div>
-                <p class="dos-label">Par SMS</p>
-                <p class="dos-numero">{r.sms}</p>
-              </div>
-            )
-          }
         </div>
         <div class="dos-qr">
           <div class="dos-qr-code" set:html={qr} />
@@ -188,6 +180,9 @@ const flocons = t.decor === 'flocons';
         const dos = nouvellePage();
         dos.closest('.page')!.classList.add('page--dos');
         dos.append(tpl('tpl-dos'));
+        // Une fois découpé, le contenu de chaque page est centré dans la hauteur :
+        // une page peu remplie n'a plus tout son blanc en bas.
+        for (const p of pagesA5) p.querySelector('.page-contenu')?.classList.add('page-contenu--centre');
       }
 
       function livret() {
@@ -367,6 +362,11 @@ const flocons = t.decor === 'flocons';
     overflow: hidden;
     font-size: 8.6pt;
     line-height: 1.35;
+  }
+  .page-contenu--centre {
+    display: flex;
+    flex-direction: column;
+    justify-content: safe center;
   }
   .page--vide {
     background: #fff;

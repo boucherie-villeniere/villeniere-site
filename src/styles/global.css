@@ -70,16 +70,16 @@ h3 {
 }
 
 h1 {
-  font-size: clamp(2.6rem, 6.4vw, 5.4rem);
+  font-size: clamp(2rem, 4.4vw, 3.6rem);
   line-height: 1.02;
   letter-spacing: -0.01em;
 }
 h2 {
-  font-size: clamp(2rem, 4.2vw, 3.3rem);
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
   line-height: 1.05;
 }
 h3 {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
 }
 
 p {
@@ -99,7 +99,7 @@ p {
 }
 
 .section {
-  padding-block: clamp(56px, 9vw, 112px);
+  padding-block: clamp(40px, 6vw, 88px);
 }
 
 .surtitre {
@@ -110,7 +110,7 @@ p {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--or-fonce);
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .surtitre::before,
 .surtitre::after {
@@ -121,7 +121,7 @@ p {
 }
 
 .chapo {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 300;
   max-width: 62ch;
 }
@@ -354,8 +354,8 @@ body::after {
 }
 
 /* Mouvement réduit (réglage du système) : on garde les fondus et les
-   transitions de couleur, on supprime les déplacements ; la frise et le
-   macaron continuent, mais deux fois plus lentement. */
+   transitions de couleur, on supprime les déplacements ; la frise
+   continue, mais deux fois plus lentement. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

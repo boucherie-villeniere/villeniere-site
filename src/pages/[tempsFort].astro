@@ -54,9 +54,8 @@ const arrhes = t.carte?.commande?.mentionArrhes?.trim();
             </a>
           )}
         </div>
-        {(r.sms || r.adresse) && (
+        {r.adresse && (
           <p class="tf-contacts" data-reveal>
-            {r.sms && <>Par SMS : <a href={`sms:${r.sms.replace(/\s/g, '')}`}>{r.sms}</a><br /></>}
             En boutique : {r.adresse}, {r.codePostal} {r.ville}
           </p>
         )}

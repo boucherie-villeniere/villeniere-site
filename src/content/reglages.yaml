@@ -2,8 +2,10 @@ adresse: 89 avenue du Président Wilson
 codePostal: '93230'
 ville: Romainville
 telephone: 01 41 71 88 02
-sms: 06 40 49 28 04
 instagram: https://www.instagram.com/villeniere/
+pages:
+  laBoucherie: true
+  nosProduits: true
 horaires:
   - jour: lun
     plages: À compléter

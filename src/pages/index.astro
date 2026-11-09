@@ -4,7 +4,7 @@ import Photo from '../components/Photo.astro';
 import BlocTextePhoto from '../components/BlocTextePhoto.astro';
 import StatutJour from '../components/StatutJour.astro';
 import TempsFortsAccueil from '../components/TempsFortsAccueil.astro';
-import { getAccueil, getPlats, getReglages, getClickCollect } from '../lib/data';
+import { getAccueil, getPlats, getReglages, getClickCollect, pagesVisibles } from '../lib/data';
 import { formaterPrix, UNITES } from '../lib/commande';
 
 const a = getAccueil();
@@ -12,6 +12,7 @@ const r = getReglages();
 const cc = getClickCollect();
 const plats = getPlats().slice(0, 4);
 const tel = r.telephone?.replace(/\s/g, '');
+const pages = pagesVisibles(r);
 ---
 
 <Base title="Accueil" description={a.sousTitre}>
@@ -29,7 +30,7 @@ const tel = r.telephone?.replace(/\s/g, '');
               </a>
             )
           }
-          <a class="bouton bouton--contour" href="/la-boucherie">Découvrir</a>
+          {pages.laBoucherie && <a class="bouton bouton--contour" href="/la-boucherie">Découvrir</a>}
         </div>
         <div data-reveal style="--i:5" class="hero-statut"><StatutJour /></div>
       </div>
@@ -38,12 +39,6 @@ const tel = r.telephone?.replace(/\s/g, '');
         <div class="cadre-decale">
           <Photo src={a.image} alt="La devanture de la boucherie Villenière" ratio="4 / 5" position="58% center" eager />
         </div>
-        <svg class="sceau" viewBox="0 0 120 120" aria-hidden="true">
-          <defs><path id="cercle" d="M60 60m-46 0a46 46 0 1 1 92 0a46 46 0 1 1-92 0"></path></defs>
-          <circle cx="60" cy="60" r="59" fill="#15181b"></circle>
-          <text><textPath href="#cercle" textLength="286" lengthAdjust="spacing">Boucherie · Romainville · Fait maison · </textPath></text>
-          <path d="M44 44h9l7 21 7-21h9L64 78h-8z" fill="#c2a063"></path>
-        </svg>
       </div>
     </div>
   </section>
@@ -174,29 +169,6 @@ const tel = r.telephone?.replace(/\s/g, '');
     position: relative;
     margin-right: clamp(10px, 1.6vw, 20px);
   }
-  .sceau {
-    position: absolute;
-    left: clamp(-56px, -4vw, -28px);
-    bottom: clamp(-56px, -4vw, -28px);
-    width: clamp(96px, 11vw, 132px);
-    animation: tourner 28s linear infinite;
-  }
-  .sceau text {
-    fill: var(--or);
-    font: 500 10.4px var(--corps);
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-  }
-  .sceau path:last-child {
-    transform-origin: 60px 60px;
-    animation: tourner 28s linear infinite reverse;
-  }
-  @keyframes tourner {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   /* Engagements */
   .engagements-liste {
     list-style: none;
@@ -365,12 +337,6 @@ const tel = r.telephone?.replace(/\s/g, '');
     }
     .plat-prix {
       font-size: 0.9rem;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .sceau,
-    .sceau path:last-child {
-      animation-duration: 56s;
     }
   }
 </style>

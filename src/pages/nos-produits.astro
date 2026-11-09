@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import EntetePage from '../components/EntetePage.astro';
 import Experience from '../components/Experience.tsx';
 import Pictogramme from '../components/Pictogramme.tsx';
-import { getCuissons, getMorceaux, getProduits, getReglages, getViandes } from '../lib/data';
+import { getCuissons, getMorceaux, getProduits, getReglages, getViandes , pagesVisibles } from '../lib/data';
 import '../styles/produits.css';
 
 const p = getProduits();
@@ -11,10 +11,11 @@ const viandes = getViandes();
 const cuissons = getCuissons();
 const morceaux = getMorceaux();
 const r = getReglages();
+if (!pagesVisibles()['nosProduits']) return Astro.redirect('/');
 ---
 
 <Base title="Nos produits" description={p.chapo}>
-  <EntetePage surtitre="Nos produits" titre={p.titre} chapo={p.chapo} />
+  <EntetePage compact surtitre="Nos produits" titre={p.titre} chapo={p.chapo} />
 
   <section class="section xp-section" aria-label="Trouver le bon morceau">
     <div class="conteneur">

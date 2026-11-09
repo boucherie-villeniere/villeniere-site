@@ -17,7 +17,6 @@ const tel = (n?: string) => n?.replace(/\s/g, '');
           {r.codePostal} {r.ville}
         </p>
         {r.telephone && <p><a href={`tel:${tel(r.telephone)}`}>{r.telephone}</a></p>}
-        {r.sms && <p><a href={`sms:${tel(r.sms)}`}>{r.sms}</a> <small>(SMS uniquement)</small></p>}
       </div>
       <div>
         <h2 class="pied-titre">Horaires</h2>

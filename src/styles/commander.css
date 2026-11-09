@@ -6,7 +6,15 @@
 }
 .commander-limite {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 16px;
+  font-size: 0.92rem;
+  color: var(--gris);
+}
+@media (max-width: 700px) {
+  .commander-limite {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
 }
 
 /* Fil d'étapes */

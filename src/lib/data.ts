@@ -20,11 +20,12 @@ export interface Reglages {
   codePostal: string;
   ville: string;
   telephone?: string;
-  sms?: string;
   email?: string;
   instagram?: string;
   facebook?: string;
   horaires: { jour: Jour; plages: string }[];
+  /** Pages affichées dans le menu (on peut lancer le site sans certaines). */
+  pages?: { laBoucherie?: boolean; nosProduits?: boolean };
   legal: { raisonSociale?: string; siret?: string; responsable?: string; hebergeur?: string };
 }
 
@@ -124,6 +125,11 @@ export interface Plat {
 }
 
 export const getReglages = () => lire<Reglages>('reglages');
+/** Pages facultatives : affichées sauf si la case est décochée dans l'admin. */
+export const pagesVisibles = (r: Reglages = getReglages()) => ({
+  laBoucherie: r.pages?.laBoucherie !== false,
+  nosProduits: r.pages?.nosProduits !== false,
+});
 export const getAccueil = () => lire<Accueil>('accueil');
 export const getBoucherie = () => lire<Boucherie>('boucherie');
 export const getProduits = () => lire<Produits>('produits');

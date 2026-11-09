@@ -9,9 +9,11 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  /** false : pas de pied de page (page déjà consacrée aux infos pratiques). */
+  piedDePage?: boolean;
 }
 
-const { title, description = 'Boucherie Villenière à Romainville : viandes d’éleveurs choisis, préparations maison, poulets rôtis et click & collect.', image = '/images/accueil/facade.webp' } = Astro.props;
+const { piedDePage = true, title, description = 'Boucherie Villenière à Romainville : viandes d’éleveurs choisis, préparations maison, poulets rôtis et click & collect.', image = '/images/accueil/facade.webp' } = Astro.props;
 const r = getReglages();
 const titreComplet = title === 'Accueil' ? 'Boucherie Villenière — Romainville' : `${title} — Boucherie Villenière`;
 const canonique = new URL(Astro.url.pathname, Astro.site);
@@ -66,6 +68,7 @@ const schema = {
   </head>
   <body>
     <a class="visuellement-cache" href="#contenu">Aller au contenu</a>
+    <div class="haut-de-page">
     {
       annonce && (
         <div class="annonce" style={`--duree:${dureeAnnonce}s`}>
@@ -86,10 +89,11 @@ const schema = {
       )
     }
     <Header />
+    </div>
     <main id="contenu">
       <slot />
     </main>
-    <Footer />
+    {piedDePage && <Footer />}
     <TempsFortsPopup />
   </body>
 </html>
@@ -112,11 +116,17 @@ const schema = {
 </script>
 
 <style>
+  /* Bandeau et en-tête restent ancrés en haut pendant le défilement. */
+  .haut-de-page {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
   .annonce {
     background: var(--or);
     color: var(--anthracite);
     font: 500 0.9rem/1.4 var(--corps);
-    padding: 10px 0;
+    padding: 7px 0;
     overflow: hidden;
     white-space: nowrap;
   }

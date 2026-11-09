@@ -3,9 +3,10 @@ import Base from '../layouts/Base.astro';
 import EntetePage from '../components/EntetePage.astro';
 import BlocTextePhoto from '../components/BlocTextePhoto.astro';
 import Photo from '../components/Photo.astro';
-import { getBoucherie } from '../lib/data';
+import { getBoucherie , pagesVisibles } from '../lib/data';
 
 const b = getBoucherie();
+if (!pagesVisibles()['laBoucherie']) return Astro.redirect('/');
 ---
 
 <Base title="La boucherie" description={b.chapo}>

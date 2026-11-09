@@ -1,10 +1,14 @@
 ---
+import { pagesVisibles } from '../lib/data';
+
+const pages = pagesVisibles();
 const liens = [
   { href: '/', label: 'Accueil' },
-  { href: '/la-boucherie', label: 'La boucherie' },
-  { href: '/nos-produits', label: 'Nos produits' },
+  pages.laBoucherie && { href: '/la-boucherie', label: 'La boucherie' },
+  { href: '/commander', label: 'Click & collect', fort: true },
+  pages.nosProduits && { href: '/nos-produits', label: 'Nos produits' },
   { href: '/infos-pratiques', label: 'Infos pratiques' },
-];
+].filter((l): l is { href: string; label: string; fort?: boolean } => !!l);
 const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
 ---
 
@@ -24,16 +28,13 @@ const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
         {
           liens.map((l) => (
             <li>
-              <a class="lien" href={l.href} aria-current={chemin === l.href ? 'page' : undefined}>
+              <a class:list={[l.fort ? 'bouton bouton--or' : 'lien']} href={l.href} aria-current={chemin === l.href ? 'page' : undefined}>
                 {l.label}
               </a>
             </li>
           ))
         }
       </ul>
-      <a href="/commander" class="bouton bouton--or" aria-current={chemin === '/commander' ? 'page' : undefined}>
-        Click &amp; collect
-      </a>
     </nav>
   </div>
 </header>
@@ -54,9 +55,7 @@ const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
 
 <style>
   .entete {
-    position: sticky;
-    top: 0;
-    z-index: 20;
+    position: relative;
     background: rgb(250 247 241 / 0);
     border-bottom: 1px solid transparent;
     transition:
@@ -76,11 +75,11 @@ const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    min-height: 92px;
+    min-height: 80px;
     transition: min-height 0.4s var(--ease);
   }
   .defile .entete-barre {
-    min-height: 68px;
+    min-height: 64px;
   }
   .logo img {
     width: clamp(150px, 17vw, 210px);
@@ -97,20 +96,21 @@ const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
   }
   .menu ul {
     display: flex;
+    align-items: center;
     gap: 26px;
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  .menu ul a {
+  .menu ul .lien {
     font: 500 0.82rem/1 var(--corps);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
   }
-  .menu ul a:hover,
-  .menu ul a[aria-current='page'] {
+  .menu ul .lien:hover,
+  .menu ul .lien[aria-current='page'] {
     text-decoration-color: var(--or);
   }
   .burger {
@@ -118,6 +118,8 @@ const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
   }
 
   .menu .bouton {
+    min-height: 44px;
+    padding: 12px 22px;
     white-space: nowrap;
   }
 
@@ -174,13 +176,17 @@ const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';
       flex-direction: column;
       gap: 0;
     }
-    .menu ul a {
+    .menu ul {
+      align-items: stretch;
+    }
+    .menu ul .lien {
       display: block;
       padding: 16px 0;
       border-bottom: 1px solid var(--ligne);
     }
     .menu .bouton {
-      margin-top: 20px;
+      display: flex;
+      margin: 14px 0;
     }
   }
 </style>

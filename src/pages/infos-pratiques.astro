@@ -11,7 +11,7 @@ const itineraire = `https://www.google.com/maps/dir/?api=1&destination=${encodeU
 const tel = (n?: string) => n?.replace(/\s/g, '');
 ---
 
-<Base title="Infos pratiques" description={`Horaires, adresse et contact de la boucherie Villenière, ${r.adresse} à ${r.ville}.`}>
+<Base piedDePage={false} title="Infos pratiques" description={`Horaires, adresse et contact de la boucherie Villenière, ${r.adresse} à ${r.ville}.`}>
   <EntetePage surtitre="Infos pratiques" titre="Horaires & accès" />
 
   <section class="section infos">
@@ -30,7 +30,6 @@ const tel = (n?: string) => n?.replace(/\s/g, '');
         <h2>Contact</h2>
         <ul class="contacts">
           {r.telephone && <li>Téléphone : <a href={`tel:${tel(r.telephone)}`}>{r.telephone}</a></li>}
-          {r.sms && <li>SMS : <a href={`sms:${tel(r.sms)}`}>{r.sms}</a></li>}
           {r.email && <li>E-mail : <a href={`mailto:${r.email}`}>{r.email}</a></li>}
           {r.instagram && <li>Instagram : <a href={r.instagram} target="_blank" rel="noopener">@villeniere</a></li>}
         </ul>
