@@ -1,11 +1,11 @@
 /* Charte Villenière : or #C2A063, anthracite #15181B, gris chaud #4E4B48.
    Titres : Ivy Presto Display (italique) dans la charte, remplacée ici par
-   Playfair Display ; texte en Roboto, comme sur les menus. */
+   DM Serif Display italique (Q et & plus sages que Playfair) ; texte en Roboto. */
 @import '@fontsource/roboto/300.css';
 @import '@fontsource/roboto/400.css';
 @import '@fontsource/roboto/500.css';
 @import '@fontsource/roboto/700.css';
-@import '@fontsource-variable/playfair-display/wght-italic.css';
+@import '@fontsource/dm-serif-display/latin-400-italic.css';
 
 :root {
   --or: #c2a063;
@@ -18,7 +18,7 @@
   --blanc: #ffffff;
   --ligne: #e4dccb;
 
-  --titre: 'Playfair Display Variable', 'Ivy Presto Display', Georgia, serif;
+  --titre: 'DM Serif Display', 'Ivy Presto Display', Georgia, serif;
   --corps: 'Roboto', system-ui, sans-serif;
 
   --ease: cubic-bezier(0.2, 0.75, 0.15, 1);
@@ -42,6 +42,8 @@ html {
 
 body {
   margin: 0;
+  /* DM Serif n'existe qu'en une graisse : jamais de faux gras. */
+  font-synthesis-weight: none;
   background: var(--papier);
   color: var(--texte);
   font: 400 1.0625rem/1.65 var(--corps);
@@ -62,7 +64,7 @@ h2,
 h3 {
   font-family: var(--titre);
   font-style: italic;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.12;
   color: var(--anthracite);
   margin: 0 0 0.5em;

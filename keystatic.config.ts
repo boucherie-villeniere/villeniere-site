@@ -76,7 +76,7 @@ export default config({
     navigation: {
       'Click & collect': ['plats', 'clickCollect'],
       'Temps forts': ['tempsForts'],
-      'Nos produits': ['produits', 'viandes', 'cuissons', 'morceaux'],
+      'Nos viandes': ['produits', 'viandes', 'cuissons', 'morceaux'],
       'Pages du site': ['accueil', 'boucherie'],
       'Infos pratiques': ['reglages'],
     },
@@ -100,10 +100,14 @@ export default config({
         pages: fields.object(
           {
             laBoucherie: fields.checkbox({ label: 'Page « La boucherie »', defaultValue: true }),
-            nosProduits: fields.checkbox({ label: 'Page « Nos produits »', defaultValue: true }),
+            nosProduits: fields.checkbox({ label: 'Page « Nos viandes »', defaultValue: true }),
           },
           { label: 'Pages affichées', description: 'Décochez une page pour la retirer du menu et du site, le temps de la préparer.' },
         ),
+        googlePlaceId: fields.text({
+          label: 'Fiche Google (identifiant)',
+          description: 'Une fois rempli (et la clé Google configurée), le site affiche les horaires de votre fiche Google, fermetures exceptionnelles comprises : vous ne les modifiez plus qu’à un seul endroit. Les horaires ci-dessous servent alors de secours.',
+        }),
         horaires: fields.array(
           fields.object({
             jour: fields.select({ label: 'Jour', options: JOURS, defaultValue: 'lun' }),
@@ -168,7 +172,7 @@ export default config({
     }),
 
     produits: singleton({
-      label: 'Page « Nos produits »',
+      label: 'Page « Nos viandes »',
       path: 'src/content/produits',
       schema: {
         titre: fields.text({ label: 'Titre', validation: { isRequired: true } }),

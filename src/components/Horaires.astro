@@ -17,11 +17,20 @@ const horaires = [...getReglages().horaires].sort((a, b) => ORDRE_JOURS.indexOf(
 </dl>
 
 <script>
+  import { chargerHoraires, jourParis } from '../lib/horaires-client';
   // Met en avant le jour courant (heure de Paris).
-  const jours = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
-  const nom = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'Europe/Paris' }).format(new Date());
-  const idx = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(nom);
-  document.querySelectorAll(`.horaires [data-jour="${jours[idx]}"]`).forEach((el) => el.classList.add('aujourdhui'));
+  document.querySelectorAll(`.horaires [data-jour="${jourParis()}"]`).forEach((el) => el.classList.add('aujourdhui'));
+  // Si la fiche Google est reliée, ses horaires (fermetures exceptionnelles comprises) remplacent ceux de l'admin.
+  chargerHoraires().then((g) => {
+    if (!g) return;
+    document.querySelectorAll<HTMLElement>('.horaires [data-jour]').forEach((el) => {
+      const jour = el.dataset.jour as keyof typeof g.jours;
+      const texte = g.jours[jour];
+      if (!texte) return;
+      el.querySelector('dd')!.textContent = texte;
+      el.classList.toggle('exceptionnel', g.exceptions.includes(jour));
+    });
+  });
 </script>
 
 <style>
@@ -45,6 +54,10 @@ const horaires = [...getReglages().horaires].sort((a, b) => ORDRE_JOURS.indexOf(
     text-align: right;
   }
   .aujourdhui {
+    color: var(--or);
+  }
+  .exceptionnel dd::after {
+    content: ' *';
     color: var(--or);
   }
 </style>

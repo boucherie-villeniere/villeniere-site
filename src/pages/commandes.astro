@@ -9,7 +9,8 @@ import { ajouterJours, formaterPrix, jourDeSemaine, libelleTotal, maintenantPari
 import SuiviArrhes from '../components/SuiviArrhes.astro';
 import { getClickCollect, getTempsForts } from '../lib/data';
 import { uniteAffichee } from '../lib/recap';
-import { changerStatut, changerSuivi, commandesEntre, commandesSansArrhes, derniereCommande, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
+import { envoyerSms, messagePrete, smsAutomatique } from '../lib/sms';
+import { changerStatut, changerSuivi, commandeParId, commandesEntre, commandesSansArrhes, derniereCommande, marquerSmsEnvoye, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
 
 export const prerender = false;
 
@@ -50,8 +51,15 @@ if (Astro.request.method === 'POST') {
     const retour = String(form.get('retour') ?? '');
     return Astro.redirect(retour.startsWith('?') ? `/commandes${retour}` : '/commandes', 303);
   } else if (action === 'statut' && connecte) {
-    await changerStatut(env.DB, String(form.get('id')), String(form.get('statut')) as Statut);
-    return Astro.redirect(`/commandes?jour=${jour}#${form.get('id')}`, 303);
+    const id = String(form.get('id'));
+    const statut = String(form.get('statut')) as Statut;
+    await changerStatut(env.DB, id, statut);
+    // Commande prête : SMS automatique si le client l'a demandé (une seule fois).
+    if (statut === 'prete' && smsAutomatique()) {
+      const c = await commandeParId(env.DB, id);
+      if (c?.sms && !c.smsEnvoyeLe && (await envoyerSms(c.telephone, messagePrete(c.nom, c.creneau)))) await marquerSmsEnvoye(env.DB, id);
+    }
+    return Astro.redirect(`/commandes?jour=${jour}#${id}`, 303);
   }
 }
 
@@ -114,6 +122,8 @@ const heureCommande = (iso: string) =>
 const totalJour = libelleTotal(actives(jour).flatMap((c) => c.lignes));
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 // SMS « commande prête », préparé sur l'appareil (tant que l'envoi automatique n'est pas branché).
+const smsAuto = smsAutomatique();
+const heure = (iso: string) => new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).format(new Date(iso));
 const smsPrete = (c: { nom: string; telephone: string; creneau: string }) =>
   `sms:${c.telephone.replace(/\s/g, '')}?&body=${encodeURIComponent(`Bonjour ${c.nom}, votre commande est prête à la boucherie Villenière (retrait ${c.creneau}). À tout de suite !`)}`;
 ---
@@ -285,9 +295,15 @@ const smsPrete = (c: { nom: string; telephone: string; creneau: string }) =>
                           <a class="tel" href={`tel:${c.telephone.replace(/\s/g, '')}`}>{c.telephone}</a>
                           {c.email && <a class="mail" href={`mailto:${c.email}`}>{c.email}</a>}
                           {c.sms && c.statut !== 'annulee' && (
-                            <a class="sms" href={smsPrete(c)}>
-                              Souhaite un SMS · <span>préparer « commande prête »</span>
-                            </a>
+                            c.smsEnvoyeLe ? (
+                              <span class="sms sms--envoye">✓ SMS « prête » envoyé à {heure(c.smsEnvoyeLe)}</span>
+                            ) : smsAuto && c.statut === 'a-preparer' ? (
+                              <span class="sms">Souhaite un SMS · envoyé automatiquement en cliquant « Prête »</span>
+                            ) : (
+                              <a class="sms" href={smsPrete(c)}>
+                                Souhaite un SMS · <span>{smsAuto ? 'non parti, le préparer à la main' : 'préparer « commande prête »'}</span>
+                              </a>
+                            )
                           )}
                         </div>
                         <span class:list={['statut', `statut--${c.statut}`]}>{STATUTS[c.statut]}</span>
@@ -524,6 +540,10 @@ const smsPrete = (c: { nom: string; telephone: string; creneau: string }) =>
   }
   .sms span {
     text-decoration: underline;
+  }
+  .sms--envoye {
+    background: #dcebd9;
+    color: #2f6b34;
   }
 
   /* Connexion */

@@ -23,6 +23,8 @@ export interface Reglages {
   email?: string;
   instagram?: string;
   facebook?: string;
+  /** Identifiant de la fiche Google (horaires lus sur Google si la clé d'API est configurée). */
+  googlePlaceId?: string;
   horaires: { jour: Jour; plages: string }[];
   /** Pages affichées dans le menu (on peut lancer le site sans certaines). */
   pages?: { laBoucherie?: boolean; nosProduits?: boolean };

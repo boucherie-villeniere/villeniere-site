@@ -6,7 +6,7 @@ const liens = [
   { href: '/', label: 'Accueil' },
   pages.laBoucherie && { href: '/la-boucherie', label: 'La boucherie' },
   { href: '/commander', label: 'Click & collect', fort: true },
-  pages.nosProduits && { href: '/nos-produits', label: 'Nos produits' },
+  pages.nosProduits && { href: '/nos-viandes', label: 'Nos viandes' },
   { href: '/infos-pratiques', label: 'Infos pratiques' },
 ].filter((l): l is { href: string; label: string; fort?: boolean } => !!l);
 const chemin = Astro.url.pathname.replace(/\/$/, '') || '/';

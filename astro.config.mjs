@@ -11,6 +11,8 @@ export default defineConfig({
   adapter: cloudflare(),
   integrations: [react(), keystatic()],
   trailingSlash: 'never',
+  // Ancienne adresse de la page conseils.
+  redirects: { '/nos-produits': '/nos-viandes' },
   // commander.html plutôt que commander/index.html : Cloudflare sert alors
   // /commander directement, sans redirection vers /commander/.
   build: { format: 'file' },

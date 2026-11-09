@@ -12,7 +12,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.4",
     "@astrojs/react": "^7.0.1",
-    "@fontsource-variable/playfair-display": "^5.3.0",
+    "@fontsource/dm-serif-display": "^5.3.0",
     "@fontsource/roboto": "^5.3.0",
     "@keystatic/astro": "^6.0.0",
     "@keystatic/core": "^0.6.9",

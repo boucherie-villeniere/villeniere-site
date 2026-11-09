@@ -12,12 +12,10 @@ const horaires = Object.fromEntries(getReglages().horaires.map((h) => [h.jour, h
 </p>
 
 <script>
-  const JOURS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
-  const court = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'Europe/Paris' }).format(new Date());
-  const jour = JOURS[['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(court)];
+  import { chargerHoraires, jourParis } from '../lib/horaires-client';
+  const jour = jourParis();
 
-  document.querySelectorAll<HTMLElement>('.statut').forEach((el) => {
-    const plages: string | undefined = JSON.parse(el.dataset.horaires ?? '{}')[jour];
+  const afficher = (el: HTMLElement, plages?: string) => {
     if (!plages) return;
     const ferme = /ferm/i.test(plages);
     // Tant que les horaires ne sont pas saisis (pas de chiffres), on n'affiche rien.
@@ -25,6 +23,13 @@ const horaires = Object.fromEntries(getReglages().horaires.map((h) => [h.jour, h
     el.querySelector('.statut-texte')!.textContent = ferme ? 'Fermé aujourd’hui' : `Aujourd’hui · ${plages}`;
     el.classList.toggle('ferme', ferme);
     el.hidden = false;
+  };
+  const statuts = document.querySelectorAll<HTMLElement>('.statut');
+  statuts.forEach((el) => afficher(el, JSON.parse(el.dataset.horaires ?? '{}')[jour]));
+  // Horaires de la fiche Google s'ils sont reliés (jour férié, fermeture exceptionnelle…).
+  chargerHoraires().then((g) => {
+    const texte = g?.jours[jour as keyof typeof g.jours];
+    if (texte) statuts.forEach((el) => afficher(el, texte));
   });
 </script>
 
