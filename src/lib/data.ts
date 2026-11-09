@@ -2,7 +2,7 @@
 // Passer par import.meta.glob embarque les données dans le build, y compris
 // dans la fonction serveur de commande, qui n'a pas accès au disque en ligne.
 import { parse } from 'yaml';
-import type { Jour } from './commande';
+import { enMinutes, type Jour, type MemeJour, type ProduitVente } from './commande';
 
 const fichiers = import.meta.glob('/src/content/**/*.yaml', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 
@@ -89,6 +89,19 @@ export interface Morceau {
   surCommande: boolean;
   actif: boolean;
   ordre: number;
+  /** Aussi vendu en click & collect, avec la même fiche. */
+  vente?: Vente & { actif?: boolean };
+}
+
+/** Réglages de vente communs aux plats et aux morceaux. */
+export interface Vente {
+  prix?: number | null;
+  unite?: 'piece' | 'part' | 'barquette' | 'kg';
+  precision?: string;
+  variantes?: { nom?: string; prix?: number | null }[];
+  jours?: Jour[];
+  quantiteMax?: number | null;
+  memeJour?: { actif?: boolean; ouverture?: string; fin?: string; delai?: number | null };
 }
 
 export interface ClickCollect {
@@ -122,6 +135,9 @@ export interface Plat {
   quantiteMax: number;
   allergenes: string[];
   ordre: number;
+  rubrique?: string;
+  variantes?: Vente['variantes'];
+  memeJour?: Vente['memeJour'];
 }
 
 export const getReglages = () => lire<Reglages>('reglages');
@@ -260,6 +276,61 @@ export function getPlats({ tous = false } = {}): Plat[] {
     })
     .filter((p) => tous || p.actif)
     .sort((a, b) => a.ordre - b.ordre || a.nom.localeCompare(b.nom, 'fr'));
+}
+
+function memeJourDe(m?: Vente['memeJour']): MemeJour | undefined {
+  if (!m?.actif) return undefined;
+  const ouverture = enMinutes(m.ouverture);
+  const fin = enMinutes(m.fin);
+  if (ouverture === null || fin === null || fin <= ouverture) return undefined;
+  return { ouverture, fin, delai: Math.max(0, m.delai ?? 60) };
+}
+const variantesDe = (v?: Vente['variantes']) =>
+  (v ?? []).filter((x) => x?.nom?.trim() && typeof x.prix === 'number').map((x) => ({ nom: x.nom!.trim(), prix: x.prix as number }));
+
+/**
+ * Tout ce qui se commande en click & collect : les plats, puis les morceaux
+ * de la boucherie marqués « commandable », regroupés par viande.
+ */
+export function getProduitsVente(): ProduitVente[] {
+  const plats: ProduitVente[] = getPlats().map((p) => ({
+    slug: p.slug,
+    nom: p.nom,
+    description: p.description,
+    prix: p.prix,
+    unite: p.unite,
+    precision: p.precision,
+    image: p.image || null,
+    jours: p.jours,
+    quantiteMax: p.quantiteMax,
+    allergenes: p.allergenes,
+    rubrique: p.rubrique?.trim() || 'Rôtisserie & plats',
+    variantes: variantesDe(p.variantes),
+    memeJour: memeJourDe(p.memeJour),
+  }));
+  const viandes = getViandes();
+  const morceaux: ProduitVente[] = getMorceaux()
+    .filter((m) => m.vente?.actif && (typeof m.vente.prix === 'number' || variantesDe(m.vente.variantes).length > 0))
+    .sort((a, b) => viandes.findIndex((v) => v.slug === a.viande) - viandes.findIndex((v) => v.slug === b.viande))
+    .map((m) => {
+      const v = m.vente!;
+      return {
+        slug: `morceau-${m.slug}`,
+        nom: m.nom,
+        description: m.description,
+        prix: v.prix ?? 0,
+        unite: v.unite ?? 'piece',
+        precision: v.precision || m.personnes,
+        image: m.image || null,
+        jours: v.jours ?? [],
+        quantiteMax: v.quantiteMax ?? 6,
+        allergenes: [],
+        rubrique: viandes.find((x) => x.slug === m.viande)?.nom ?? 'Boucherie',
+        variantes: variantesDe(v.variantes),
+        memeJour: memeJourDe(v.memeJour),
+      };
+    });
+  return [...plats, ...morceaux];
 }
 
 /** Découpe un texte multi-lignes en paragraphes. */

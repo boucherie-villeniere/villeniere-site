@@ -11,6 +11,8 @@ interface Props {
   regles: Pick<ReglesRetrait, 'creneaux' | 'creneauxParJour'>;
   creneau: string;
   surCreneau: (c: string) => void;
+  /** Horaires proposés pour une date (le jour même, seulement ceux qui laissent le temps de préparer). */
+  creneauxDe?: (iso: string) => string[];
 }
 
 const format = (iso: string, o: Intl.DateTimeFormatOptions) =>
@@ -28,7 +30,7 @@ function semaines(dates: string[]) {
   return liste;
 }
 
-export default function ChoixRetrait({ dates, date, surDate, regles, creneau, surCreneau }: Props) {
+export default function ChoixRetrait({ dates, date, surDate, regles, creneau, surCreneau, creneauxDe = (iso) => creneauxDuJour(regles, iso) }: Props) {
   const grille = useMemo(() => semaines(dates), [dates]);
   const possibles = useMemo(() => new Set(dates), [dates]);
   const mois = [...new Set(grille.flat().filter((d) => possibles.has(d)).map((d) => format(d, { month: 'long', year: 'numeric' })))].join(' – ');
@@ -36,7 +38,7 @@ export default function ChoixRetrait({ dates, date, surDate, regles, creneau, su
   function choisirJour(d: string) {
     surDate(d);
     // L'horaire déjà choisi n'existe pas forcément ce jour-là.
-    if (!creneauxDuJour(regles, d).includes(creneau)) surCreneau('');
+    if (!creneauxDe(d).includes(creneau)) surCreneau('');
   }
 
   return (
@@ -59,7 +61,7 @@ export default function ChoixRetrait({ dates, date, surDate, regles, creneau, su
         <div className="cr-horaires">
           <p className="cr-horaires-titre">Horaires disponibles le {formaterDate(date)}</p>
           <div className="cc-creneaux" role="radiogroup" aria-label="Créneau de retrait">
-            {creneauxDuJour(regles, date).map((c) => (
+            {creneauxDe(date).map((c) => (
               <label key={c} className={`cc-creneau${creneau === c ? ' actif' : ''}`}>
                 <input type="radio" name="creneau" value={c} checked={creneau === c} onChange={() => surCreneau(c)} />
                 {c}

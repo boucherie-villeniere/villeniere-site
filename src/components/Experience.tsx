@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import Pictogramme from './Pictogramme';
 import type { Cuisson, Morceau, Viande } from '../lib/data';
+import { CLE_PANIER, UNITES, formaterPrix, versCommandables, type ProduitVente } from '../lib/commande';
 
 // « Que voulez-vous cuisiner aujourd'hui ? » : un filtre viande → cuisson
 // présenté comme une conversation au comptoir. L'état vit dans l'URL
@@ -14,6 +15,16 @@ interface Props {
   questionCuisson: string;
   messageFin?: string;
   telephone?: string;
+  /** Morceaux commandables en click & collect, par slug de morceau. */
+  ventes?: Record<string, ProduitVente>;
+}
+
+function lirePanier(): Record<string, number> {
+  try {
+    return JSON.parse(sessionStorage.getItem(CLE_PANIER) ?? '{}') ?? {};
+  } catch {
+    return {};
+  }
 }
 
 const TOUT = 'tout';
@@ -27,8 +38,22 @@ function lireHash(viandes: Viande[], cuissons: Cuisson[]) {
 
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? (mot.endsWith('eau') ? 'x' : 's') : ''}`;
 
-export default function Experience({ viandes, cuissons, morceaux, questionViande, questionCuisson, messageFin, telephone }: Props) {
+export default function Experience({ viandes, cuissons, morceaux, questionViande, questionCuisson, messageFin, telephone, ventes = {} }: Props) {
   const [choix, setChoix] = useState<{ viande?: string; cuisson?: string }>({});
+  // Panier du click & collect (le même que sur la page Commander).
+  const [panier, setPanier] = useState<Record<string, number>>({});
+  useEffect(() => setPanier(lirePanier()), []);
+  const ajouter = (slug: string, max: number) => {
+    const p = lirePanier();
+    p[slug] = Math.min(max, (p[slug] ?? 0) + 1);
+    try {
+      sessionStorage.setItem(CLE_PANIER, JSON.stringify(p));
+    } catch {
+      /* stockage indisponible : on garde au moins l'affichage */
+    }
+    setPanier(p);
+  };
+  const nbPanier = Object.values(panier).reduce((n, q) => n + (q > 0 ? q : 0), 0);
   const racine = useRef<HTMLDivElement>(null);
   const titre = useRef<HTMLHeadingElement>(null);
   const premierRendu = useRef(true);
@@ -173,6 +198,33 @@ export default function Experience({ viandes, cuissons, morceaux, questionViande
                         </div>
                       )}
                     </dl>
+                    {ventes[m.slug] &&
+                      (() => {
+                        const v = ventes[m.slug];
+                        return (
+                          <div className="xp-vente">
+                            <p className="xp-vente-titre">Commander en click &amp; collect</p>
+                            <ul>
+                              {versCommandables([v]).map((c, k) => {
+                                const variante = v.variantes[k];
+                                const q = panier[c.slug] ?? 0;
+                                return (
+                                  <li key={c.slug}>
+                                    <span>
+                                      {variante ? `${variante.nom} · ` : ''}
+                                      <strong>{formaterPrix(c.prix)}</strong>
+                                      {v.unite !== 'piece' && ` / ${UNITES[v.unite]}`}
+                                    </span>
+                                    <button type="button" className="xp-ajouter" onClick={() => ajouter(c.slug, c.quantiteMax)} disabled={q >= c.quantiteMax}>
+                                      {q > 0 ? `Ajouté (${q}) +` : 'Ajouter +'}
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        );
+                      })()}
                     {m.cuissons.length > 1 && (
                       <p className="xp-aussi">
                         Aussi {m.cuissons.filter((c) => c !== choix.cuisson).map(nomCuisson).filter(Boolean).join(', ').toLowerCase()}
@@ -201,6 +253,11 @@ export default function Experience({ viandes, cuissons, morceaux, questionViande
           </>
         )}
       </div>
+      {nbPanier > 0 && (
+        <a className="xp-panier bouton bouton--or" href="/commander">
+          Ma commande ({nbPanier}) <span className="fleche" aria-hidden="true">→</span>
+        </a>
+      )}
     </div>
   );
 }

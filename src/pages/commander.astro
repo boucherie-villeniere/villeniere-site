@@ -2,11 +2,11 @@
 import Base from '../layouts/Base.astro';
 import EntetePage from '../components/EntetePage.astro';
 import Commander from '../components/Commander.tsx';
-import { getClickCollect, getPlats, getReglages } from '../lib/data';
+import { getClickCollect, getProduitsVente, getReglages } from '../lib/data';
 import '../styles/commander.css';
 
 const cc = getClickCollect();
-const plats = getPlats();
+const produits = getProduitsVente();
 const r = getReglages();
 const regles = {
   actif: cc.actif,
@@ -25,14 +25,14 @@ const regles = {
   <section class="section commander">
     <div class="conteneur">
       {
-        cc.actif && plats.length > 0 ? (
+        cc.actif && produits.length > 0 ? (
           <>
             <p class="commander-limite">
               Commande jusqu’à <strong>{cc.heureLimite} h la veille</strong> du retrait, à la boutique : {r.adresse}, {r.ville}.
               <br />
               {cc.mentionPaiement}
             </p>
-            <Commander client:load plats={plats} regles={regles} mentionPaiement={cc.mentionPaiement} adresse={`${r.adresse}, ${r.codePostal} ${r.ville}`} />
+            <Commander client:load produits={produits} regles={regles} mentionPaiement={cc.mentionPaiement} adresse={`${r.adresse}, ${r.codePostal} ${r.ville}`} />
           </>
         ) : (
           <div class="cc-vide">

@@ -13,6 +13,9 @@ export const JOURS_LABELS: Record<Jour, string> = {
   dim: 'Dimanche',
 };
 
+/** Panier du click & collect, partagé entre le formulaire et la page des produits. */
+export const CLE_PANIER = 'commande-click-collect';
+
 export const ORDRE_JOURS: Jour[] = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'];
 
 export const UNITES: Record<string, string> = {
@@ -65,7 +68,53 @@ export interface PlatCommandable {
   sansEstimation?: boolean;
   farce?: string;
   sauce?: string;
+  /** Commandable le jour même, entre deux heures (minutes depuis minuit), avec un délai de préparation. */
+  memeJour?: MemeJour;
 }
+
+export interface MemeJour {
+  ouverture: number;
+  fin: number;
+  delai: number;
+}
+
+/** Produit du click & collect (plat ou morceau de la boucherie), avant découpage en variantes. */
+export interface ProduitVente {
+  slug: string;
+  nom: string;
+  description?: string;
+  prix: number;
+  unite: string;
+  precision?: string;
+  image?: string | null;
+  jours: Jour[];
+  quantiteMax: number;
+  allergenes: string[];
+  /** Regroupement dans le formulaire (Rôtisserie, Bœuf…). */
+  rubrique: string;
+  /** Tailles ou grammages, chacun avec son prix (demi petit / demi gros, steak 150 g / 200 g…). */
+  variantes: { nom: string; prix: number }[];
+  memeJour?: MemeJour;
+}
+
+/** Une ligne commandable par variante : « poulet~1 » = deuxième variante du poulet. */
+export function versCommandables(produits: ProduitVente[]): PlatCommandable[] {
+  return produits.flatMap((p) => {
+    const base = { unite: p.unite, jours: p.jours, quantiteMax: p.quantiteMax, ...(p.memeJour ? { memeJour: p.memeJour } : {}) };
+    return p.variantes.length > 0
+      ? p.variantes.map((v, i) => ({ ...base, slug: `${p.slug}~${i}`, nom: `${p.nom} (${v.nom})`, prix: v.prix }))
+      : [{ ...base, slug: p.slug, nom: p.nom, prix: p.prix }];
+  });
+}
+
+/** « 11h », « 11h30 », « 9:00 », « 11h – 12h » → minutes depuis minuit (début). */
+export function enMinutes(t?: string | null): number | null {
+  const m = /^\s*(\d{1,2})\s*[h:]\s*(\d{2})?/i.exec(t ?? '');
+  return m ? Number(m[1]) * 60 + Number(m[2] ?? 0) : null;
+}
+
+/** 690 → « 11 h 30 », 540 → « 9 h ». */
+export const formaterHeure = (min: number) => `${Math.floor(min / 60)} h${min % 60 ? ` ${String(min % 60).padStart(2, '0')}` : ''}`;
 
 /** Date (AAAA-MM-JJ) et heure actuelles à Paris, quel que soit le fuseau du serveur. */
 export function maintenantParis(now = new Date()) {
@@ -76,12 +125,14 @@ export function maintenantParis(now = new Date()) {
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
+      minute: '2-digit',
       hourCycle: 'h23',
     })
       .formatToParts(now)
       .map((p) => [p.type, p.value]),
   );
-  return { date: `${parts.year}-${parts.month}-${parts.day}`, heure: Number(parts.hour) };
+  const heure = Number(parts.hour);
+  return { date: `${parts.year}-${parts.month}-${parts.day}`, heure, minutes: heure * 60 + Number(parts.minute) };
 }
 
 export function ajouterJours(iso: string, n: number) {
@@ -130,8 +181,21 @@ export function prixLigne(l: { aLaPesee?: boolean; sansEstimation?: boolean; tot
   return `${l.aLaPesee ? '≈ ' : ''}${formaterPrix(l.total)}`;
 }
 
-export const platDisponible = (plat: PlatCommandable, iso: string) =>
-  plat.jours.length === 0 || plat.jours.includes(jourDeSemaine(iso));
+/**
+ * Le plat peut-il être retiré ce jour-là (et à cet horaire) ? Le jour même,
+ * seulement s'il est commandable le jour même, dans la plage d'heures prévue,
+ * et si l'horaire laisse le temps de le préparer.
+ */
+export function platDisponible(plat: PlatCommandable, iso: string, now = new Date(), creneau?: string) {
+  if (plat.jours.length > 0 && !plat.jours.includes(jourDeSemaine(iso))) return false;
+  const m = maintenantParis(now);
+  if (iso !== m.date) return true;
+  const mj = plat.memeJour;
+  if (!mj || m.minutes < mj.ouverture || m.minutes >= mj.fin) return false;
+  if (creneau === undefined) return true;
+  const debut = enMinutes(creneau);
+  return debut !== null && debut >= m.minutes + mj.delai;
+}
 
 /** Créneaux d'une date : ceux de l'exception du jour s'il y en a une, sinon la liste habituelle. */
 export function creneauxDuJour(regles: Pick<ReglesRetrait, 'creneaux' | 'creneauxParJour'>, iso: string) {
@@ -139,8 +203,16 @@ export function creneauxDuJour(regles: Pick<ReglesRetrait, 'creneaux' | 'creneau
   return (exception ? exception.creneaux : regles.creneaux).filter(Boolean);
 }
 
+/** Horaires proposés pour une date : le jour même, seulement ceux qui laissent le temps de préparer. */
+export function creneauxPossibles(regles: Pick<ReglesRetrait, 'creneaux' | 'creneauxParJour'>, plats: PlatCommandable[], iso: string, now = new Date()) {
+  const liste = creneauxDuJour(regles, iso);
+  if (iso !== maintenantParis(now).date) return liste;
+  return liste.filter((c) => plats.some((p) => platDisponible(p, iso, now, c)));
+}
+
 /**
- * Dates de retrait possibles : à partir du lendemain si l'on commande avant
+ * Dates de retrait possibles : le jour même pour les produits qui le permettent,
+ * puis à partir du lendemain si l'on commande avant
  * l'heure limite, sinon du surlendemain ; hors jours fermés et fermetures.
  */
 export function datesDeRetrait(regles: ReglesRetrait, plats: PlatCommandable[], now = new Date()): string[] {
@@ -152,12 +224,14 @@ export function datesDeRetrait(regles: ReglesRetrait, plats: PlatCommandable[], 
   const debut = regles.du ? Math.max(premier, ecart(regles.du)) : premier;
   const fin = regles.au ? ecart(regles.au) : regles.joursAvance;
   const dates: string[] = [];
-  for (let i = debut; i <= fin; i++) {
+  // Le jour même n'existe que pour le click & collect habituel (pas pour les temps forts).
+  const ecarts = [...(regles.du || regles.limite ? [] : [0]), ...Array.from({ length: Math.max(0, fin - debut + 1) }, (_, k) => debut + k)];
+  for (const i of ecarts) {
     const iso = ajouterJours(date, i);
     if (!regles.joursRetrait.includes(jourDeSemaine(iso))) continue;
     if (regles.fermetures.includes(iso)) continue;
-    if (creneauxDuJour(regles, iso).length === 0) continue;
-    if (!plats.some((p) => platDisponible(p, iso))) continue;
+    if (!plats.some((p) => platDisponible(p, iso, now))) continue;
+    if (creneauxPossibles(regles, plats, iso, now).length === 0) continue;
     dates.push(iso);
   }
   return dates;
@@ -173,6 +247,8 @@ export interface Commande {
   remarque?: string;
   /** Slug du temps fort quand on commande sa carte (ex. « noel »). */
   evenement?: string;
+  /** Le client veut être prévenu par SMS. */
+  sms?: boolean;
 }
 
 export interface LigneValidee {
@@ -204,14 +280,15 @@ export function validerCommande(
   if (c.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email)) return { ok: false, erreur: 'L’adresse e-mail semble incorrecte.' };
   if (!c.date || !datesDeRetrait(regles, plats, now).includes(c.date))
     return { ok: false, erreur: 'Cette date de retrait n’est plus disponible, merci d’en choisir une autre.' };
-  if (!c.creneau || !creneauxDuJour(regles, c.date).includes(c.creneau)) return { ok: false, erreur: 'Merci de choisir un créneau de retrait.' };
+  if (!c.creneau || !creneauxPossibles(regles, plats, c.date, now).includes(c.creneau))
+    return { ok: false, erreur: 'Cet horaire de retrait n’est plus disponible, merci d’en choisir un autre.' };
 
   const lignes: LigneValidee[] = [];
   for (const l of c.lignes ?? []) {
     if (!l || !Number.isInteger(l.quantite) || l.quantite <= 0) continue;
     const plat = plats.find((p) => p.slug === l.slug);
-    if (!plat || !platDisponible(plat, c.date))
-      return { ok: false, erreur: 'Un des plats choisis n’est pas disponible ce jour-là.' };
+    if (!plat || !platDisponible(plat, c.date, now, c.creneau))
+      return { ok: false, erreur: 'Un des produits choisis n’est pas disponible à cet horaire.' };
     if (l.quantite > plat.quantiteMax)
       return { ok: false, erreur: `${plat.nom} : ${plat.quantiteMax} maximum par commande.` };
     lignes.push({

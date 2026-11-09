@@ -39,6 +39,36 @@ const paragraphe = (label: string, description?: string) =>
 const image = (label: string, dossier: string) =>
   fields.image({ label, directory: `public/images/${dossier}`, publicPath: `/images/${dossier}/` });
 
+// Réglages de vente partagés par les plats et les morceaux de la boucherie.
+const champsVariantes = () =>
+  fields.array(
+    fields.object({
+      nom: fields.text({ label: 'Nom', description: 'Ex. « Demi petit », « Demi gros », « Steak 150 g »' }),
+      prix: fields.number({ label: 'Prix (€)', step: 0.01, validation: { min: 0 } }),
+    }),
+    {
+      label: 'Variantes (tailles, grammages)',
+      description: 'Laissez vide s’il n’y a qu’une version. Sinon, le client choisit une variante, chacune avec son prix (le prix ci-dessus est alors ignoré).',
+      itemLabel: (p) => `${p.fields.nom.value || 'Variante'}${p.fields.prix.value != null ? ` — ${p.fields.prix.value} €` : ''}`,
+    },
+  );
+const champsMemeJour = () =>
+  fields.object(
+    {
+      actif: fields.checkbox({ label: 'Commandable le jour même', defaultValue: false }),
+      ouverture: fields.text({ label: 'Premières commandes à partir de', description: 'Ex. « 9:00 »' }),
+      fin: fields.text({ label: 'Dernières commandes à', description: 'Ex. « 11:30 »' }),
+      delai: fields.integer({ label: 'Délai de préparation (minutes)', description: 'Temps minimum entre la commande et le retrait.', defaultValue: 60, validation: { min: 0 } }),
+    },
+    { label: 'Commande le jour même', description: 'Pour les poulets rôtis par exemple. Sinon, la règle habituelle s’applique (la veille avant l’heure limite).' },
+  );
+const UNITES_VENTE = [
+  { label: 'Pièce', value: 'piece' },
+  { label: 'Part', value: 'part' },
+  { label: 'Barquette', value: 'barquette' },
+  { label: 'Kilo (prix indicatif)', value: 'kg' },
+] as const;
+
 export default config({
   storage: githubRepo ? { kind: 'github', repo: githubRepo } : { kind: 'local' },
   ui: {
@@ -290,6 +320,19 @@ export default config({
         surCommande: fields.checkbox({ label: 'Sur commande uniquement', defaultValue: false }),
         actif: fields.checkbox({ label: 'Afficher sur le site', defaultValue: true }),
         ordre: fields.integer({ label: 'Ordre d’affichage', defaultValue: 10 }),
+        vente: fields.object(
+          {
+            actif: fields.checkbox({ label: 'Commandable en click & collect', defaultValue: false }),
+            prix: fields.number({ label: 'Prix (€)', step: 0.01, validation: { min: 0 } }),
+            unite: fields.select({ label: 'Prix par', options: UNITES_VENTE, defaultValue: 'piece' }),
+            precision: fields.text({ label: 'Précision', description: 'Ex. « env. 250 g ». Vide : on reprend « Pour combien ? ».' }),
+            variantes: champsVariantes(),
+            jours: fields.multiselect({ label: 'Jours où il est disponible', description: 'Ne rien cocher = tous les jours de retrait.', options: JOURS }),
+            quantiteMax: fields.integer({ label: 'Quantité max par commande', defaultValue: 6, validation: { min: 1 } }),
+            memeJour: champsMemeJour(),
+          },
+          { label: 'Vente en click & collect', description: 'La même fiche apparaît alors dans le formulaire de commande, rangée avec sa viande.' },
+        ),
       },
     }),
 
@@ -497,26 +540,19 @@ export default config({
     }),
 
     plats: collection({
-      label: 'Plats à commander',
+      label: 'Rôtisserie & plats à commander',
       path: 'src/content/plats/*',
       slugField: 'nom',
       columns: ['nom', 'prix'],
       schema: {
         nom: fields.slug({ name: { label: 'Nom du plat', validation: { isRequired: true } } }),
         actif: fields.checkbox({ label: 'Disponible à la commande', defaultValue: true }),
+        rubrique: fields.text({ label: 'Rubrique', description: 'Les produits sont rangés par rubrique dans le formulaire. Ex. « Rôtisserie », « Traiteur ». Vide : « Rôtisserie & plats ».' }),
         description: fields.text({ label: 'Description courte', multiline: true }),
         prix: fields.number({ label: 'Prix (€)', step: 0.01, validation: { isRequired: true, min: 0 } }),
-        unite: fields.select({
-          label: 'Prix par',
-          options: [
-            { label: 'Pièce', value: 'piece' },
-            { label: 'Part', value: 'part' },
-            { label: 'Barquette', value: 'barquette' },
-            { label: 'Kilo (prix indicatif)', value: 'kg' },
-          ],
-          defaultValue: 'piece',
-        }),
+        unite: fields.select({ label: 'Prix par', options: UNITES_VENTE, defaultValue: 'piece' }),
         precision: fields.text({ label: 'Précision', description: 'Ex. « pour 4 personnes », « env. 1,4 kg »' }),
+        variantes: champsVariantes(),
         image: image('Photo', 'plats'),
         jours: fields.multiselect({
           label: 'Jours où ce plat est disponible',
@@ -524,6 +560,7 @@ export default config({
           options: JOURS,
         }),
         quantiteMax: fields.integer({ label: 'Quantité max par commande', defaultValue: 6, validation: { min: 1 } }),
+        memeJour: champsMemeJour(),
         allergenes: fields.multiselect({ label: 'Allergènes', options: ALLERGENES }),
         ordre: fields.integer({ label: 'Ordre d’affichage', defaultValue: 10 }),
       },

@@ -12,3 +12,4 @@ assets/
 .wrangler/
 .dev.vars*
 worker-configuration.d.ts
+docs/

@@ -29,6 +29,8 @@ export interface CommandeEnregistree {
   arrhesRecues: boolean;
   /** Commande déjà saisie dans le logiciel de caisse. */
   apitic: boolean;
+  /** Le client veut être prévenu par SMS. */
+  sms: boolean;
 }
 
 interface Ligne {
@@ -46,6 +48,7 @@ interface Ligne {
   evenement: string | null;
   arrhes_recues: number | null;
   apitic: number | null;
+  sms: number | null;
 }
 
 let tablePrete: Promise<unknown> | undefined;
@@ -72,6 +75,7 @@ function preparer(db: D1Database) {
     .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN evenement TEXT').run().catch(() => {}))
     .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN arrhes_recues INTEGER DEFAULT 0').run().catch(() => {}))
     .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN apitic INTEGER DEFAULT 0').run().catch(() => {}))
+    .then(() => db.prepare('ALTER TABLE commandes ADD COLUMN sms INTEGER DEFAULT 0').run().catch(() => {}))
     .catch((e) => {
       tablePrete = undefined;
       throw e;
@@ -94,16 +98,20 @@ const versObjet = (l: Ligne): CommandeEnregistree => ({
   evenement: l.evenement ?? null,
   arrhesRecues: !!l.arrhes_recues,
   apitic: !!l.apitic,
+  sms: !!l.sms,
 });
 
-export async function enregistrerCommande(db: D1Database, c: Omit<CommandeEnregistree, 'id' | 'creeLe' | 'statut'>) {
+export async function enregistrerCommande(
+  db: D1Database,
+  c: Omit<CommandeEnregistree, 'id' | 'creeLe' | 'statut' | 'arrhesRecues' | 'apitic' | 'sms'> & { sms?: boolean },
+) {
   await preparer(db);
   const id = crypto.randomUUID();
   await db
     .prepare(
-      'INSERT INTO commandes (id, cree_le, date, creneau, nom, telephone, email, remarque, lignes, total, evenement) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO commandes (id, cree_le, date, creneau, nom, telephone, email, remarque, lignes, total, evenement, sms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     )
-    .bind(id, new Date().toISOString(), c.date, c.creneau, c.nom, c.telephone, c.email ?? null, c.remarque ?? null, JSON.stringify(c.lignes), c.total, c.evenement ?? null)
+    .bind(id, new Date().toISOString(), c.date, c.creneau, c.nom, c.telephone, c.email ?? null, c.remarque ?? null, JSON.stringify(c.lignes), c.total, c.evenement ?? null, c.sms ? 1 : 0)
     .run();
   return id;
 }
@@ -113,6 +121,13 @@ export async function commandesEntre(db: D1Database, du: string, au: string) {
   await preparer(db);
   const { results } = await db.prepare('SELECT * FROM commandes WHERE date BETWEEN ? AND ? ORDER BY date, cree_le').bind(du, au).all<Ligne>();
   return results.map(versObjet);
+}
+
+/** Dernière commande reçue : la tablette de la boutique compare pour sonner à chaque nouvelle. */
+export async function derniereCommande(db: D1Database) {
+  await preparer(db);
+  const l = await db.prepare('SELECT * FROM commandes ORDER BY cree_le DESC LIMIT 1').first<Ligne>();
+  return l ? versObjet(l) : null;
 }
 
 export async function changerStatut(db: D1Database, id: string, statut: Statut) {

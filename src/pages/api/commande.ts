@@ -1,9 +1,9 @@
 import type { APIRoute } from 'astro';
 import { getSecret } from 'astro:env/server';
 import { env } from 'cloudflare:workers';
-import { getClickCollect, getPlats, getReglages, getTempsForts } from '../../lib/data';
+import { getClickCollect, getProduitsVente, getReglages, getTempsForts } from '../../lib/data';
 import { platsDeLaCommande, reglesEvenement } from '../../lib/evenement';
-import { formaterDate, libelleTotal, validerCommande, type Commande } from '../../lib/commande';
+import { formaterDate, libelleTotal, validerCommande, versCommandables, type Commande } from '../../lib/commande';
 import { bouton, encadreRetrait, envoyerEmail, echapper, gabarit, paragraphesHtml, tableauLignes } from '../../lib/emails';
 import { enregistrerCommande } from '../../lib/stockage';
 
@@ -25,7 +25,7 @@ export const POST: APIRoute = async ({ request }) => {
   // Commande de la carte d'un temps fort (ex. Noël) ou click & collect habituel.
   const evenement = commande.evenement ? getTempsForts().find((t) => t.slug === commande.evenement) : undefined;
   if (commande.evenement && !evenement) return reponse(422, { erreur: 'Cette carte n’est plus disponible.' });
-  const plats = evenement ? platsDeLaCommande(evenement, Array.isArray(commande.lignes) ? commande.lignes : []) : getPlats();
+  const plats = evenement ? platsDeLaCommande(evenement, Array.isArray(commande.lignes) ? commande.lignes : []) : versCommandables(getProduitsVente());
   if (evenement && plats.length === 0) return reponse(422, { erreur: 'Un des produits choisis n’est plus disponible : merci de recharger la page.' });
   const regles = evenement ? reglesEvenement(evenement, cc) : cc;
   const resultat = validerCommande(commande, regles, plats);
@@ -56,6 +56,7 @@ export const POST: APIRoute = async ({ request }) => {
       lignes,
       total,
       evenement: evenement?.nom ?? null,
+      sms: c.sms === true,
     });
     enregistree = true;
   } catch (e) {

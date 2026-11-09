@@ -9,7 +9,7 @@ import { ajouterJours, formaterPrix, jourDeSemaine, libelleTotal, maintenantPari
 import SuiviArrhes from '../components/SuiviArrhes.astro';
 import { getClickCollect, getTempsForts } from '../lib/data';
 import { uniteAffichee } from '../lib/recap';
-import { changerStatut, changerSuivi, commandesEntre, commandesSansArrhes, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
+import { changerStatut, changerSuivi, commandesEntre, commandesSansArrhes, derniereCommande, STATUTS, totauxParFarce, totauxParPlat, totauxParSauce, trierParCreneau, type Statut } from '../lib/stockage';
 
 export const prerender = false;
 
@@ -55,6 +55,18 @@ if (Astro.request.method === 'POST') {
   }
 }
 
+// État léger interrogé toutes les 20 s par la tablette : sonne à chaque nouvelle commande.
+if (url.searchParams.get('etat') === '1') {
+  const entetes = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' };
+  if (!connecte) return new Response('{}', { status: 401, headers: entetes });
+  try {
+    const d = await derniereCommande(env.DB);
+    return new Response(JSON.stringify(d ? { id: d.id, nom: d.nom, date: d.date, creneau: d.creneau, evenement: d.evenement } : {}), { headers: entetes });
+  } catch {
+    return new Response('{}', { status: 503, headers: entetes });
+  }
+}
+
 Astro.response.headers.set('Cache-Control', 'no-store');
 Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
 
@@ -74,8 +86,10 @@ const aArrhes = new Map(
 let aRelancer: Awaited<ReturnType<typeof commandesSansArrhes>> = [];
 let commandes: Awaited<ReturnType<typeof commandesEntre>> = [];
 let erreurBase = false;
+let derniere = '';
 if (connecte) {
   try {
+    derniere = (await derniereCommande(env.DB))?.id ?? '';
     commandes = trierParCreneau(await commandesEntre(env.DB, semaine[0], semaine[6]), cc.creneaux);
     aRelancer = (await commandesSansArrhes(env.DB, aujourdhui)).filter((c) => aArrhes.has(c.evenement!));
   } catch (e) {
@@ -99,6 +113,9 @@ const heureCommande = (iso: string) =>
   new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).format(new Date(iso));
 const totalJour = libelleTotal(actives(jour).flatMap((c) => c.lignes));
 const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+// SMS « commande prête », préparé sur l'appareil (tant que l'envoi automatique n'est pas branché).
+const smsPrete = (c: { nom: string; telephone: string; creneau: string }) =>
+  `sms:${c.telephone.replace(/\s/g, '')}?&body=${encodeURIComponent(`Bonjour ${c.nom}, votre commande est prête à la boucherie Villenière (retrait ${c.creneau}). À tout de suite !`)}`;
 ---
 
 <!doctype html>
@@ -107,8 +124,15 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    {connecte && <meta http-equiv="refresh" content="180" />}
+    {connecte && <noscript><meta http-equiv="refresh" content="180" /></noscript>}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Installable sur la tablette de la boutique (« Ajouter à l'écran d'accueil »). -->
+    <link rel="manifest" href="/commandes.webmanifest" />
+    <meta name="theme-color" content="#15181b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Commandes" />
+    <link rel="apple-touch-icon" href="/brand/icone-commandes-192.png" />
     <title>Commandes — Villenière</title>
   </head>
   <body>
@@ -133,13 +157,14 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
           )}
         </main>
       ) : (
-        <div class="gestion">
+        <div class="gestion" data-derniere={derniere}>
           <header class="barre">
             <a href="/commandes" class="marque">
               <img src="/brand/logo.svg" alt="Villenière" width="130" />
               <span>Commandes</span>
             </a>
             <div class="barre-droite">
+              <button type="button" id="alertes" class="alertes" hidden>Activer les alertes sonores</button>
               {aArrhes.size > 0 && (
                 <a href={vueArrhes ? '?' : '?vue=arrhes'} class:list={['lien-arrhes', { actif: vueArrhes }]}>
                   Arrhes à recevoir <span class="lien-arrhes-n">{aRelancer.length}</span>
@@ -151,7 +176,9 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
               </form>
             </div>
           </header>
+          <button type="button" id="alerte" class="alerte" hidden></button>
 
+          <div id="zone">
           {vueArrhes ? (
             <main class="detail">
               <div class="detail-tete">
@@ -257,6 +284,11 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
                           <h3>{c.nom}</h3>
                           <a class="tel" href={`tel:${c.telephone.replace(/\s/g, '')}`}>{c.telephone}</a>
                           {c.email && <a class="mail" href={`mailto:${c.email}`}>{c.email}</a>}
+                          {c.sms && c.statut !== 'annulee' && (
+                            <a class="sms" href={smsPrete(c)}>
+                              Souhaite un SMS · <span>préparer « commande prête »</span>
+                            </a>
+                          )}
                         </div>
                         <span class:list={['statut', `statut--${c.statut}`]}>{STATUTS[c.statut]}</span>
                       </div>
@@ -305,15 +337,193 @@ const pluriel = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`;
           </main>
           </>
           )}
+          </div>
         </div>
       )
     }
   </body>
 </html>
 
+<script>
+  // Tablette de la boutique : toutes les 20 s, on regarde s'il y a une nouvelle
+  // commande. Si oui : son, bandeau, et le planning se met à jour sans recharger
+  // la page (le son reste activé). L'écran reste allumé tant que les alertes sont actives.
+  const gestion = document.querySelector<HTMLElement>('.gestion');
+  const bouton = document.getElementById('alertes') as HTMLButtonElement | null;
+  const alerte = document.getElementById('alerte') as HTMLButtonElement | null;
+  if (gestion && bouton && alerte) {
+    let derniere = gestion.dataset.derniere ?? '';
+    let audio: AudioContext | null = null;
+    bouton.hidden = false;
+    try {
+      if (localStorage.getItem('alertes') === '1') {
+        bouton.textContent = 'Touchez pour réactiver les alertes';
+        bouton.classList.add('a-reactiver');
+      }
+    } catch {
+      /* stockage indisponible */
+    }
+
+    const sonner = () => {
+      if (!audio) return;
+      const t0 = audio.currentTime;
+      [0, 0.18, 0.36, 1, 1.18, 1.36].forEach((d, i) => {
+        const o = audio!.createOscillator();
+        const g = audio!.createGain();
+        o.frequency.value = [880, 1108, 1318][i % 3];
+        g.gain.setValueAtTime(0.0001, t0 + d);
+        g.gain.exponentialRampToValueAtTime(0.6, t0 + d + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.3);
+        o.connect(g).connect(audio!.destination);
+        o.start(t0 + d);
+        o.stop(t0 + d + 0.32);
+      });
+    };
+    const garderEcranAllume = async () => {
+      try {
+        await (navigator as Navigator & { wakeLock?: { request(t: 'screen'): Promise<unknown> } }).wakeLock?.request('screen');
+      } catch {
+        /* non pris en charge : sans gravité */
+      }
+    };
+    bouton.addEventListener('click', async () => {
+      audio ??= new AudioContext();
+      await audio.resume();
+      sonner();
+      garderEcranAllume();
+      bouton.textContent = 'Alertes sonores activées';
+      bouton.classList.remove('a-reactiver');
+      bouton.classList.add('actif');
+      try {
+        localStorage.setItem('alertes', '1');
+      } catch {
+        /* idem */
+      }
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && audio) garderEcranAllume();
+    });
+    alerte.addEventListener('click', () => {
+      alerte.hidden = true;
+      const cible = alerte.dataset.lien;
+      if (cible) location.href = cible;
+    });
+
+    const rafraichir = async () => {
+      try {
+        const r = await fetch(location.href, { cache: 'no-store' });
+        if (!r.ok) return;
+        const nouvelle = new DOMParser().parseFromString(await r.text(), 'text/html').getElementById('zone');
+        if (nouvelle) document.getElementById('zone')?.replaceWith(nouvelle);
+      } catch {
+        /* hors ligne : on réessaiera */
+      }
+    };
+    const jourLong = (iso: string) =>
+      new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${iso}T12:00:00Z`));
+    const verifier = async () => {
+      try {
+        const r = await fetch('/commandes?etat=1', { cache: 'no-store' });
+        if (r.status === 401) return location.reload();
+        if (!r.ok) return;
+        const e = (await r.json()) as { id?: string; nom?: string; date?: string; creneau?: string; evenement?: string | null };
+        if (!e.id || e.id === derniere) return;
+        derniere = e.id;
+        alerte.innerHTML = '';
+        const titre = document.createElement('strong');
+        titre.textContent = 'Nouvelle commande';
+        const detail = document.createElement('span');
+        detail.textContent = `${e.evenement ? `${e.evenement} · ` : ''}${e.nom} · retrait ${jourLong(e.date!)}, ${e.creneau}`;
+        const voir = document.createElement('span');
+        voir.className = 'alerte-voir';
+        voir.textContent = 'Voir →';
+        alerte.append(titre, detail, voir);
+        alerte.dataset.lien = `/commandes?jour=${e.date}#${e.id}`;
+        alerte.hidden = false;
+        sonner();
+        await rafraichir();
+      } catch {
+        /* réseau coupé : prochain essai dans 20 s */
+      }
+    };
+    setInterval(verifier, 20_000);
+    setInterval(rafraichir, 120_000);
+  }
+</script>
+
 <style>
   body {
     min-height: 100vh;
+  }
+  /* Tablette tactile : tout un cran plus grand, lisible à bout de bras. */
+  @media (pointer: coarse) and (min-width: 700px) {
+    :global(html) {
+      font-size: 112.5%;
+    }
+  }
+  .alertes {
+    min-height: 40px;
+    padding: 6px 14px;
+    border: 1px solid var(--anthracite);
+    border-radius: 999px;
+    background: var(--blanc);
+    font: 500 0.88rem/1.2 var(--corps);
+    cursor: pointer;
+  }
+  .alertes.actif {
+    border-color: #2f6b34;
+    color: #2f6b34;
+  }
+  .alertes.a-reactiver {
+    background: var(--or);
+    border-color: var(--or);
+    animation: clignoter 1.6s ease-in-out infinite;
+  }
+  @keyframes clignoter {
+    50% {
+      opacity: 0.55;
+    }
+  }
+  .alerte {
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    width: 100%;
+    margin: 14px 0 0;
+    padding: 16px 20px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--or);
+    color: var(--anthracite);
+    font: 400 1.05rem/1.35 var(--corps);
+    text-align: left;
+    box-shadow: 0 12px 30px -12px rgb(21 24 27 / 0.6);
+    cursor: pointer;
+  }
+  .alerte strong {
+    font: italic 700 1.4rem/1 var(--titre);
+  }
+  .alerte-voir {
+    margin-left: auto;
+    font-weight: 500;
+  }
+  .sms {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--or-clair);
+    color: var(--anthracite);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .sms span {
+    text-decoration: underline;
   }
 
   /* Connexion */

@@ -1,22 +1,27 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   ALLERGENES_LABELS,
+  CLE_PANIER,
   UNITES,
+  creneauxPossibles,
   datesDeRetrait,
   formaterDate,
+  formaterHeure,
   formaterPrix,
   libelleTotal,
   platDisponible,
   telephoneValide,
+  versCommandables,
   type Commande,
+  type PlatCommandable,
+  type ProduitVente,
   type ReglesRetrait,
 } from '../lib/commande';
 import ChoixRetrait from './ChoixRetrait';
 import Etapes from './Etapes';
-import type { Plat } from '../lib/data';
 
 interface Props {
-  plats: Plat[];
+  produits: ProduitVente[];
   regles: ReglesRetrait;
   mentionPaiement?: string;
   adresse: string;
@@ -28,13 +33,16 @@ type Etat =
   | { type: 'erreur'; message: string }
   | { type: 'ok'; total: string; date: string; creneau: string; lignes: { nom: string; quantite: number }[] };
 
-const CLE_PANIER = 'commande-click-collect';
 const ETAPES = ['Retrait', 'Vos plats', 'Coordonnées'];
 
-export default function Commander({ plats, regles, mentionPaiement, adresse }: Props) {
+export default function Commander({ produits, regles, mentionPaiement, adresse }: Props) {
+  // Une ligne commandable par variante (demi petit, demi gros…).
+  const plats = useMemo(() => versCommandables(produits), [produits]);
+  const variantesDe = (p: ProduitVente) => plats.filter((c) => c.slug === p.slug || c.slug.startsWith(`${p.slug}~`));
   // Les dates sont calculées dans le navigateur : la page est statique et
   // l'heure limite doit être évaluée au moment de la visite.
   const dates = useMemo(() => datesDeRetrait(regles, plats), [regles, plats]);
+  const [rubrique, setRubrique] = useState('');
   const [date, setDate] = useState('');
   const [creneau, setCreneau] = useState('');
   const [quantites, setQuantites] = useState<Record<string, number>>({});
@@ -45,8 +53,14 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
   const zoneErreur = useRef<HTMLParagraphElement>(null);
   const zoneMerci = useRef<HTMLDivElement>(null);
 
-  const platsDuJour = plats.filter((p) => !date || platDisponible(p, date));
+  const dispo = (c: PlatCommandable) => !date || platDisponible(c, date, undefined, creneau || undefined);
+  const platsDuJour = plats.filter(dispo);
   const lignes = platsDuJour.filter((p) => (quantites[p.slug] ?? 0) > 0);
+  const produitsDuJour = produits.filter((p) => variantesDe(p).some(dispo));
+  const rubriques = [...new Set(produitsDuJour.map((p) => p.rubrique))];
+  const rubriqueActive = rubriques.includes(rubrique) ? rubrique : rubriques[0];
+  const nbDansRubrique = (r: string) =>
+    produitsDuJour.filter((p) => p.rubrique === r).reduce((n, p) => n + variantesDe(p).reduce((m, c) => m + (quantites[c.slug] ?? 0), 0), 0);
   const total = libelleTotal(lignes.map((p) => ({ quantite: quantites[p.slug], total: p.prix * quantites[p.slug] })));
   const auPoids = lignes.some((p) => p.unite === 'kg');
 
@@ -97,7 +111,7 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
       : !creneau
         ? { etape: 0, message: 'Choisissez un horaire de retrait.' }
         : lignes.length === 0
-          ? { etape: 1, message: 'Ajoutez au moins un plat à votre commande.' }
+          ? { etape: 1, message: 'Ajoutez au moins un produit à votre commande.' }
           : etape < 2
             ? null
             : !String(f.get('nom') ?? '').trim()
@@ -119,6 +133,7 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
       date,
       creneau,
       lignes: lignes.map((p) => ({ slug: p.slug, quantite: quantites[p.slug] })),
+      sms: f.get('sms') === 'oui',
       nom: String(f.get('nom') ?? ''),
       telephone: String(f.get('telephone') ?? ''),
       email: String(f.get('email') ?? '') || undefined,
@@ -181,42 +196,97 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
       <Etapes etapes={ETAPES} courante={etape} surChoix={changerEtape} />
       <fieldset className="cc-etape" hidden={etape !== 0}>
         <legend>Quand passez-vous ?</legend>
-        <ChoixRetrait dates={dates} date={date} surDate={setDate} regles={regles} creneau={creneau} surCreneau={setCreneau} />
+        <ChoixRetrait
+          dates={dates}
+          date={date}
+          surDate={setDate}
+          regles={regles}
+          creneau={creneau}
+          surCreneau={setCreneau}
+          creneauxDe={(iso) => creneauxPossibles(regles, plats, iso)}
+        />
       </fieldset>
 
       <fieldset className="cc-etape" hidden={etape !== 1}>
         <legend>Votre commande</legend>
+        {rubriques.length > 1 && (
+          <div className="cc-rubriques" role="tablist" aria-label="Rubriques">
+            {rubriques.map((r) => {
+              const n = nbDansRubrique(r);
+              return (
+                <button key={r} type="button" role="tab" aria-selected={r === rubriqueActive} className={r === rubriqueActive ? 'actif' : ''} onClick={() => setRubrique(r)}>
+                  {r}
+                  {n > 0 && <span className="cc-rubrique-n">{n}</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <ul className="cc-plats">
-          {platsDuJour.map((p) => {
-            const q = quantites[p.slug] ?? 0;
-            return (
-              <li key={p.slug} className={q > 0 ? 'choisi' : ''}>
-                {p.image ? <img src={p.image} alt="" loading="lazy" /> : <div className="cc-vignette" aria-hidden="true" />}
-                <div className="cc-plat-texte">
-                  <h3>{p.nom}</h3>
-                  {p.description && <p>{p.description}</p>}
-                  <p className="cc-meta">
-                    <strong>
-                      {formaterPrix(p.prix)} / {UNITES[p.unite]}
-                    </strong>
-                    {p.precision && <> · {p.precision}</>}
-                  </p>
-                  {p.allergenes.length > 0 && (
-                    <p className="cc-allergenes">Allergènes : {p.allergenes.map((a) => ALLERGENES_LABELS[a] ?? a).join(', ')}</p>
+          {produitsDuJour
+            .filter((p) => p.rubrique === rubriqueActive)
+            .map((p) => {
+              const versions = variantesDe(p).filter(dispo);
+              const q = versions.reduce((n, c) => n + (quantites[c.slug] ?? 0), 0);
+              const quantite = (c: PlatCommandable, libelle: string) => {
+                const n = quantites[c.slug] ?? 0;
+                return (
+                  <div className="cc-quantite">
+                    <button type="button" onClick={() => changer(c.slug, -1, c.quantiteMax)} disabled={n === 0} aria-label={`Retirer : ${libelle}`}>
+                      −
+                    </button>
+                    <output aria-live="polite" aria-label={`Quantité : ${libelle}`}>{n}</output>
+                    <button type="button" onClick={() => changer(c.slug, 1, c.quantiteMax)} disabled={n >= c.quantiteMax} aria-label={`Ajouter : ${libelle}`}>
+                      +
+                    </button>
+                  </div>
+                );
+              };
+              return (
+                <li key={p.slug} className={`${q > 0 ? 'choisi' : ''}${p.variantes.length > 0 ? ' a-variantes' : ''}`}>
+                  {p.image ? <img src={p.image} alt="" loading="lazy" /> : <div className="cc-vignette" aria-hidden="true" />}
+                  <div className="cc-plat-texte">
+                    <h3>{p.nom}</h3>
+                    {p.description && <p>{p.description}</p>}
+                    <p className="cc-meta">
+                      {p.variantes.length === 0 && (
+                        <strong>
+                          {formaterPrix(p.prix)} / {UNITES[p.unite]}
+                        </strong>
+                      )}
+                      {p.variantes.length === 0 && p.precision && ' · '}
+                      {p.precision}
+                    </p>
+                    {p.memeJour && (
+                      <p className="cc-jour-meme">
+                        Aussi le jour même : commandez entre {formaterHeure(p.memeJour.ouverture)} et {formaterHeure(p.memeJour.fin)}
+                      </p>
+                    )}
+                    {p.allergenes.length > 0 && (
+                      <p className="cc-allergenes">Allergènes : {p.allergenes.map((a) => ALLERGENES_LABELS[a] ?? a).join(', ')}</p>
+                    )}
+                  </div>
+                  {p.variantes.length === 0 ? (
+                    quantite(versions[0], p.nom)
+                  ) : (
+                    <ul className="cc-variantes">
+                      {versions.map((c) => {
+                        const v = p.variantes[Number(c.slug.split('~')[1])];
+                        return (
+                          <li key={c.slug}>
+                            <span className="cc-variante-nom">
+                              {v.nom} <strong>{formaterPrix(v.prix)}</strong>
+                              {p.unite !== 'piece' && <small> / {UNITES[p.unite]}</small>}
+                            </span>
+                            {quantite(c, `${p.nom}, ${v.nom}`)}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   )}
-                </div>
-                <div className="cc-quantite">
-                  <button type="button" onClick={() => changer(p.slug, -1, p.quantiteMax)} disabled={q === 0} aria-label={`Retirer un ${p.nom}`}>
-                    −
-                  </button>
-                  <output aria-live="polite" aria-label={`Quantité de ${p.nom}`}>{q}</output>
-                  <button type="button" onClick={() => changer(p.slug, 1, p.quantiteMax)} disabled={q >= p.quantiteMax} aria-label={`Ajouter un ${p.nom}`}>
-                    +
-                  </button>
-                </div>
-              </li>
-            );
-          })}
+                </li>
+              );
+            })}
         </ul>
       </fieldset>
 
@@ -234,6 +304,10 @@ export default function Commander({ plats, regles, mentionPaiement, adresse }: P
           <label className="cc-champ">
             <span>E-mail (pour recevoir un récapitulatif)</span>
             <input name="email" type="email" autoComplete="email" />
+          </label>
+          <label className="cc-option cc-large">
+            <input type="checkbox" name="sms" value="oui" />
+            <span>Me prévenir par SMS quand ma commande est prête</span>
           </label>
           <label className="cc-champ cc-large">
             <span>Une précision ?</span>

@@ -568,3 +568,53 @@
     display: none;
   }
 }
+
+/* Morceau commandable en click & collect */
+.xp-vente {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--or-clair);
+  border-radius: var(--rayon);
+}
+.xp-vente-titre {
+  margin: 0 0 8px !important;
+  font: 500 0.74rem/1.3 var(--corps);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--or-fonce);
+}
+.xp-vente ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.xp-vente li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.xp-ajouter {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--anthracite);
+  color: var(--blanc);
+  font: 500 0.85rem/1 var(--corps);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.xp-ajouter[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+.xp-panier {
+  position: fixed;
+  right: var(--gouttiere);
+  bottom: 20px;
+  z-index: 15;
+  box-shadow: 0 10px 30px -10px rgb(21 24 27 / 0.5);
+}

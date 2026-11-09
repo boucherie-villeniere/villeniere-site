@@ -1,0 +1,14 @@
+{
+  "name": "Commandes — Boucherie Villenière",
+  "short_name": "Commandes",
+  "start_url": "/commandes",
+  "scope": "/commandes",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#faf7f1",
+  "theme_color": "#15181b",
+  "icons": [
+    { "src": "/brand/icone-commandes-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/brand/icone-commandes-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

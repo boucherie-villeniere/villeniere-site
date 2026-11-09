@@ -3,7 +3,7 @@ import Base from '../layouts/Base.astro';
 import EntetePage from '../components/EntetePage.astro';
 import Experience from '../components/Experience.tsx';
 import Pictogramme from '../components/Pictogramme.tsx';
-import { getCuissons, getMorceaux, getProduits, getReglages, getViandes , pagesVisibles } from '../lib/data';
+import { getClickCollect, getCuissons, getMorceaux, getProduits, getProduitsVente, getReglages, getViandes, pagesVisibles } from '../lib/data';
 import '../styles/produits.css';
 
 const p = getProduits();
@@ -11,6 +11,10 @@ const viandes = getViandes();
 const cuissons = getCuissons();
 const morceaux = getMorceaux();
 const r = getReglages();
+// Morceaux aussi vendus en click & collect : même fiche, commandable d'ici.
+const ventes = getClickCollect().actif
+  ? Object.fromEntries(getProduitsVente().filter((v) => v.slug.startsWith('morceau-')).map((v) => [v.slug.slice('morceau-'.length), v]))
+  : {};
 if (!pagesVisibles()['nosProduits']) return Astro.redirect('/');
 ---
 
@@ -28,6 +32,7 @@ if (!pagesVisibles()['nosProduits']) return Astro.redirect('/');
         questionCuisson={p.questionCuisson}
         messageFin={p.messageFin}
         telephone={r.telephone}
+        ventes={ventes}
       />
     </div>
   </section>
