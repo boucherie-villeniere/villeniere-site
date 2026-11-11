@@ -6,13 +6,22 @@ affichage: les-deux
 decor: flocons
 surtitre: Noël 2026
 titre: Passez vos commandes pour les fêtes !
-accroche: Foie gras maison, volailles festives des Landes, de Bresse et de la ferme Tauzin, rôtis farcis à nos farces fines… Réservez dès maintenant.
-texte: |-
-  Pour les fêtes, la boucherie se met sur son trente-et-un : foie gras mi-cuit maison, nature ou aux épices, volailles festives Label Rouge, rôtis de poularde et de chapon farcis à la farce fine de votre choix.
+accroche: >-
+  Foie gras maison, volailles festives des Landes, de Bresse et de la ferme
+  Tauzin, rôtis farcis à nos farces fines… Réservez dès maintenant.
+texte: >-
+  Pour les fêtes, la boucherie se met sur son trente-et-un : foie gras mi-cuit
+  maison, nature ou aux épices, volailles festives Label Rouge, rôtis de
+  poularde et de chapon farcis à la farce fine de votre choix.
 
-  Les volailles entières peuvent être farcies avec l’une de nos farces maison : pensez à le préciser lors de votre commande.
 
-  Commandez en boutique, par téléphone ou par SMS. Pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins, à retrouver en boutique.
+  Les volailles entières peuvent être farcies avec l’une de nos farces maison :
+  pensez à le préciser lors de votre commande.
+
+
+  Commandez en boutique, par téléphone ou par SMS. Pour accompagner ces plats,
+  Benjamin des Joyeuses Quilles vous a fait sa sélection de vins, à retrouver en
+  boutique.
 bouton:
   texte: Voir le menu de Noël
   lien: /noel#carte
@@ -21,210 +30,427 @@ carte:
   titre: Passez vos commandes pour les fêtes !
   rubriques:
     - titre: Foie gras
+      encadres: []
+      colonnes: []
       produits:
         - nom: Foie gras frais
           detail: lobe d’environ 500 g
           prix: 95
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: piece
           poids: 0.5
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Foie gras mi-cuit maison nature ou aux épices
+          unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Ballotin de 150 g
           detail: 2 à 3 personnes
           prix: 27.9
           unite: piece
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Ballotin de 300 g
           detail: 4 à 6 personnes
           prix: 49.9
           unite: piece
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
+      nouvellePage: false
     - titre: Volailles festives
+      encadres: []
+      colonnes: []
       produits:
         - nom: Poularde des Landes Label Rouge
-          avecSauce: true
           detail: 4 à 6 pers.
-          prix: 20.9
+          prix: 21.5
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 4
           personnesMax: 6
           farce: true
-        - nom: Chapon des Landes Label Rouge
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Chapon des Landes Label Rouge
           detail: 6 à 8 pers.
-          prix: 24.9
+          prix: 25.5
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 6
           personnesMax: 8
           farce: true
-        - nom: Poularde de la ferme Tauzin
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Poularde de la ferme Tauzin
           detail: 4 à 6 pers.
           prix: 25.9
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 4
           personnesMax: 6
           farce: true
-        - nom: Chapon de la ferme Tauzin
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Chapon de la ferme Tauzin
           detail: 6 à 8 pers.
           prix: 31.5
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 6
           personnesMax: 8
           farce: true
-        - nom: Poularde de Bresse
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Poularde de Bresse
           prix: 49.9
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 4
           personnesMax: 6
           farce: true
-        - nom: Chapon de Bresse
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Chapon de Bresse
           prix: 59.9
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 6
           personnesMax: 8
           farce: true
-        - nom: Pintade chaponnée ferme Tauzin
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Pintade chaponnée ferme Tauzin
           detail: 4 à 6 pers.
           prix: 32.5
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 4
           personnesMax: 6
           farce: true
-        - nom: Oie fermière d’Anjou Label Rouge
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Oie fermière d’Anjou Label Rouge
           detail: 8 à 12 pers.
           prix: 38
           unite: kg
+          prixVariantes: []
+          commandable: true
           saisie: personnes
           personnesMin: 8
           personnesMax: 12
           farce: true
-        - nom: Magret de canard IGP Sud-Ouest
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Magret de canard IGP Sud-Ouest
           detail: 1 pour 2 pers.
           prix: 38.9
           unite: kg
-      note: |-
-        Les volailles entières peuvent être farcies avec l’une de nos farces maison (environ 500 g par volaille).
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: true
+          allergenes: []
+      note: >-
+        Les volailles entières peuvent être farcies avec l’une de nos farces
+        maison (environ 500 g par volaille).
+
         Merci de nous en faire la demande lors de votre commande.
+      nouvellePage: false
     - titre: Nos rôtis de volailles festives
-      nouvellePage: true
       intro: 'Les rôtis de volailles festives se présentent sous deux formes :'
       encadres:
         - illustration: melon
           titre: Melon
-          texte: Nous utilisons un quart de volaille désossée, farcie de la farce fine de votre choix. Il est formé en melon (comme une grosse paupiette).
+          texte: >-
+            Nous utilisons un quart de volaille désossée, farcie de la farce
+            fine de votre choix. Il est formé en melon (comme une grosse
+            paupiette).
         - illustration: roti-allonge
           titre: Rôti allongé
-          texte: Nous farcissons une demi-volaille désossée. Il est formé comme un rôti classique.
+          texte: >-
+            Nous farcissons une demi-volaille désossée. Il est formé comme un
+            rôti classique.
       colonnes:
         - Pommes caramélisées et châtaignes
         - Morilles et crème
         - Figue et foie gras
       produits:
         - nom: Rôti de poularde en melon
-          avecSauce: true
           detail: Pour 3 pers., 600 g environ
           unite: la-piece
-          prixVariantes: [24, 26, 29]
-        - nom: Rôti de poularde allongé
+          prixVariantes:
+            - 24
+            - 26
+            - 29
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Rôti de poularde allongé
           detail: Pour 5-6 pers., 1,2 kg environ
           unite: la-piece
-          prixVariantes: [45, 49, 53]
-        - nom: Rôti de chapon en melon
+          prixVariantes:
+            - 45
+            - 49
+            - 53
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Rôti de chapon en melon
           detail: Pour 4 pers., 900 g environ
           unite: la-piece
-          prixVariantes: [36, 42, 45]
-        - nom: Rôti de chapon allongé
+          prixVariantes:
+            - 36
+            - 42
+            - 45
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Rôti de chapon allongé
           detail: Pour 9-10 pers., 1,8 kg environ
           unite: la-piece
-          prixVariantes: [69, 78, 82]
-      note: La base de notre farce fine est composée de viande de porc et de veau, de foies de volaille, le tout haché avec un mélange d’herbes et d’aromates, ainsi que du cognac.
-    - titre: Bœuf
+          prixVariantes:
+            - 69
+            - 78
+            - 82
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: true
+          allergenes: []
+      note: >-
+        La base de notre farce fine est composée de viande de porc et de veau,
+        de foies de volaille, le tout haché avec un mélange d’herbes et
+        d’aromates, ainsi que du cognac.
       nouvellePage: true
+    - titre: Bœuf
+      encadres: []
+      colonnes: []
       produits:
         - nom: Côte de bœuf maturée
-          avecSauce: true
           prix: 40.9
           unite: kg
-        - nom: Filet de bœuf en rôti ou en tournedos
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Filet de bœuf en rôti ou en tournedos
           prix: 59.9
           unite: kg
-        - nom: Filet de bœuf brut
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Filet de bœuf brut
           detail: pour bœuf Wellington
           prix: 68.5
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: true
+          allergenes: []
+      nouvellePage: true
     - titre: Agneau
+      encadres: []
+      colonnes: []
       produits:
         - nom: Carré de côtes premières
-          avecSauce: true
           detail: 6/7 côtes
           prix: 35
           unite: la-piece
-        - nom: Carré de côtes découvertes
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Carré de côtes découvertes
           detail: 5 côtes
           prix: 27.5
           unite: la-piece
-        - nom: Noisette d’agneau
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Noisette d’agneau
           detail: petit rôti dans le filet
           prix: 42.9
           unite: kg
-        - nom: Gigot d’agneau avec os
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
           avecSauce: true
+          allergenes: []
+        - nom: Gigot d’agneau avec os
           detail: pour vos gigots de 7 heures
           prix: 37.5
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: true
+          allergenes: []
+      nouvellePage: false
     - titre: Mais aussi
+      encadres: []
+      colonnes: []
       produits:
         - nom: Boudin blanc nature
           prix: 24.9
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Boudin blanc aux morilles
           prix: 29.9
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Pâtés en croûte maison Nonam
+          unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Le Festif
-          detail: Cochon du Perche, foie gras, magret de canard, confit d’échalotes aux fruits secs
+          detail: >-
+            Cochon du Perche, foie gras, magret de canard, confit d’échalotes
+            aux fruits secs
           prix: 88
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Canard, pain d’épices, cranberries
-          detail: Cochon du Perche, canard sauvage, pain d’épices maison, cranberries, noisettes torréfiées
+          detail: >-
+            Cochon du Perche, canard sauvage, pain d’épices maison, cranberries,
+            noisettes torréfiées
           prix: 85
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Accompagnements
+          unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
+          allergenes: []
         - nom: Gratin dauphinois maison
           prix: 15.9
           unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
+          accompagnement: false
+          avecSauce: false
           allergenes:
             - lait
         - nom: Sauce morille maison
           detail: comprise avec le plat choisi
+          unite: kg
+          prixVariantes: []
+          commandable: true
+          saisie: poids
+          farce: false
           accompagnement: true
-  commande:
-    actif: true
-    dateLimite: 2026-12-20
-    retraitDu: 2026-12-19
-    retraitAu: 2026-12-31
-    montantArrhes: 30
-    mentionArrhes: Des arrhes de 30 € sont à régler avant le 20 décembre pour valider votre commande. La boutique vous précisera les modalités. Le solde se règle au retrait.
-    message: Commandez directement sur la carte avec le bouton +, puis retirez votre commande en boutique.
+          avecSauce: false
+          allergenes: []
+      nouvellePage: false
   farces:
     - nom: Pommes caramélisées et châtaignes
       prix100g: 3.5
@@ -234,5 +460,19 @@ carte:
       prix100g: 3.5
   farceGrammes: 500
   mentionAllergenes: 'Allergènes : liste complète disponible sur demande en boutique.'
-  piedDeCarte: Et pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa sélection de vins ! À retrouver en boutique.
-  lienQR: ''
+  piedDeCarte: >-
+    Et pour accompagner ces plats, Benjamin des Joyeuses Quilles vous a fait sa
+    sélection de vins ! À retrouver en boutique.
+  commande:
+    actif: true
+    dateLimite: 2026-12-20
+    retraitDu: 2026-12-19
+    retraitAu: 2026-12-31
+    montantArrhes: 30
+    mentionArrhes: >-
+      Des arrhes de 30 € sont à régler avant le 20 décembre pour valider votre
+      commande. La boutique vous précisera les modalités. Le solde se règle au
+      retrait.
+    message: >-
+      Commandez directement sur la carte avec le bouton +, puis retirez votre
+      commande en boutique.
