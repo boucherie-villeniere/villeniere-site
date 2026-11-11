@@ -291,7 +291,7 @@ carte:
           avecSauce: true
           allergenes: []
         - nom: Filet de bœuf en rôti ou en tournedos
-          prix: 59.9
+          prix: 62.9
           unite: kg
           prixVariantes: []
           commandable: true
@@ -302,7 +302,7 @@ carte:
           allergenes: []
         - nom: Filet de bœuf brut
           detail: pour bœuf Wellington
-          prix: 68.5
+          prix: 70.9
           unite: kg
           prixVariantes: []
           commandable: true
