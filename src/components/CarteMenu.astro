@@ -3,7 +3,7 @@
 // Chaque titre, produit ou note est un bloc .cm-bloc : la version imprimable les
 // répartit sur les pages A5, la version web les range par rubrique dans des onglets.
 import { ALLERGENES_LABELS } from '../lib/commande';
-import { prixCarte, UNITES_CARTE, type Carte, type ProduitCarte } from '../lib/data';
+import { prixCarte, prixKgFarce, UNITES_CARTE, type Carte, type ProduitCarte } from '../lib/data';
 import { idProduit } from '../lib/evenement';
 
 interface Props {
@@ -16,7 +16,7 @@ const boutons = mode === 'web' && !!carte.commande?.actif;
 const commandable = (p: ProduitCarte) => boutons && p.commandable !== false;
 const avecBouton = (p: ProduitCarte) => commandable(p) && (p.prix != null || !!p.accompagnement);
 const grammesFarce = carte.farceGrammes ?? 500;
-const farcesChiffrees = (carte.farces ?? []).filter((f) => f.prix100g);
+const farcesChiffrees = (carte.farces ?? []).map((f) => ({ nom: f.nom, kg: prixKgFarce(f) })).filter((f) => f.kg);
 
 const estIntertitre = (p: ProduitCarte) => p.prix == null && !p.detail && !(p.prixVariantes ?? []).some((x) => x != null);
 const allergenes = (p: ProduitCarte) => (p.allergenes ?? []).map((a) => ALLERGENES_LABELS[a] ?? a).join(', ');
@@ -144,9 +144,16 @@ const ILLUSTRATIONS: Record<string, string> = {
           )}
           {r.note && <p class="cm-bloc cm-note">{r.note}</p>}
           {farcesChiffrees.length > 0 && (r.produits ?? []).some((p) => p.farce) && (
-            <p class="cm-bloc cm-note">
-              Nos farces (environ {grammesFarce} g par volaille) : {farcesChiffrees.map((f) => `${f.nom}, ${prixCarte(f.prix100g!)} €/100 g`).join(' · ')}
-            </p>
+            <div class="cm-bloc cm-note cm-farces">
+              <p>Nos farces (environ {grammesFarce} g par volaille) :</p>
+              <ul>
+                {farcesChiffrees.map((f) => (
+                  <li>
+                    {f.nom} : <span class="cm-farce-prix">{prixCarte(f.kg!)} €/kg</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {mode === 'web' && suivante && (
             <button type="button" class="cm-suivante" data-onglet={indexRubrique + 1}>
@@ -295,6 +302,23 @@ const ILLUSTRATIONS: Record<string, string> = {
     margin: 0.5em auto 0.9em;
     max-width: 34em;
     white-space: pre-line;
+  }
+  /* Farces : une ligne par farce. */
+  .cm-farces {
+    white-space: normal;
+  }
+  .cm-farces p {
+    margin: 0 0 0.25em;
+  }
+  .cm-farces ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .cm-farce-prix {
+    font-style: normal;
+    color: var(--anthracite);
+    white-space: nowrap;
   }
   .cm-pied {
     color: var(--cm-or);

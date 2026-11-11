@@ -213,11 +213,17 @@ export interface ProduitCarte {
   quantiteMax?: number;
 }
 
+/** Prix au kilo d'une farce (accepte l'ancien prix aux 100 g). */
+export const prixKgFarce = (f: { prixKg?: number | null; prix100g?: number | null }) =>
+  f.prixKg ?? (f.prix100g != null ? Math.round(f.prix100g * 1000) / 100 : null);
+
 export interface FarceCarte {
   nom: string;
-  /** Prix aux 100 g, modifiable dans l'admin. */
+  /** Prix au kilo, modifiable dans l'admin. */
+  prixKg?: number | null;
+  /** Ancien champ (prix aux 100 g), lu seulement si prixKg est vide. */
   prix100g?: number | null;
-  /** Montant par volaille, calculé (prix aux 100 g × quantité de farce). */
+  /** Montant par volaille, calculé (prix au kilo × quantité de farce). */
   supplement?: number | null;
 }
 

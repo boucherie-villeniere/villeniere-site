@@ -360,8 +360,9 @@ const flocons = t.decor === 'flocons';
   .page-contenu {
     height: 100%;
     overflow: hidden;
-    font-size: 8.6pt;
-    line-height: 1.35;
+    /* Corps lisible à l'impression (clients âgés) ; interligne resserré pour garder la place. */
+    font-size: 9.8pt;
+    line-height: 1.22;
   }
   .page-contenu--centre {
     display: flex;
@@ -382,20 +383,25 @@ const flocons = t.decor === 'flocons';
     margin-top: 0.3em;
   }
   #pages .carte-menu--impression .cm-ligne {
-    padding: 0.22em 0;
+    padding: 0.18em 0;
+  }
+  /* Rôtis : un peu d'air entre les noms des farces et la première ligne de prix. */
+  #pages .carte-menu--impression .cm-entetes {
+    padding-bottom: 0.3em;
+    margin-bottom: 0.45em;
   }
   #pages .carte-menu--impression .cm-prix {
     font-size: 11pt;
   }
   #pages .carte-menu--impression .cm-variantes,
   #pages .carte-menu--impression .cm-entetes {
-    grid-template-columns: 1fr repeat(var(--n), 13mm);
+    grid-template-columns: 1fr repeat(var(--n), 15mm);
   }
   #pages .carte-menu--impression .cm-variantes .cm-prix {
     font-size: 10pt;
   }
   #pages .carte-menu--impression .cm-entete {
-    font-size: 7.4pt;
+    font-size: 8.4pt;
   }
   #pages .carte-menu--impression .cm-encadres {
     gap: 4mm;
@@ -449,7 +455,7 @@ const flocons = t.decor === 'flocons';
     margin: 0 0 1.5mm;
     padding: 0.6mm 4mm;
     border: 0.5pt solid var(--or);
-    font-size: 7.5pt;
+    font-size: 8.4pt;
     color: var(--gris);
   }
   .dos-boutique img {
@@ -458,7 +464,7 @@ const flocons = t.decor === 'flocons';
   }
   .dos-boutique p:last-child {
     margin: 0;
-    font-size: 9pt;
+    font-size: 10pt;
     color: var(--gris);
   }
   .dos-contacts {
@@ -483,7 +489,7 @@ const flocons = t.decor === 'flocons';
   }
   .dos-qr-texte {
     margin: 0;
-    font-size: 8.5pt;
+    font-size: 9.5pt;
     color: var(--gris);
   }
   .dos-qr-texte strong {
@@ -492,7 +498,7 @@ const flocons = t.decor === 'flocons';
   .dos-arrhes {
     margin: 0;
     max-width: 100mm;
-    font-size: 8.5pt;
+    font-size: 9.5pt;
     font-style: italic;
     color: var(--gris);
   }
@@ -528,6 +534,10 @@ const flocons = t.decor === 'flocons';
     .feuille {
       box-shadow: none;
       break-after: page;
+    }
+    /* Pas de feuille blanche en fin d'impression. */
+    #pages > :last-child {
+      break-after: auto;
     }
     * {
       -webkit-print-color-adjust: exact;

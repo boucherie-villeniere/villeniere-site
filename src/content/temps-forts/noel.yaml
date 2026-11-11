@@ -453,12 +453,12 @@ carte:
           allergenes: []
       nouvellePage: false
   farces:
-    - nom: Pommes caramélisées et châtaignes
-      prix100g: 3.5
     - nom: Morilles et crème
-      prix100g: 3.5
+      prixKg: 32.5
     - nom: Figue et foie gras
-      prix100g: 3.5
+      prixKg: 34.5
+    - nom: Pommes caramélisées et châtaignes
+      prixKg: 26.5
   farceGrammes: 500
   mentionAllergenes: 'Allergènes : liste complète disponible sur demande en boutique.'
   piedDeCarte: >-

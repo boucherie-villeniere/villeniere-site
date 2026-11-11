@@ -486,13 +486,13 @@ export default config({
             farces: fields.array(
               fields.object({
                 nom: fields.text({ label: 'Nom de la farce' }),
-                prix100g: fields.number({ label: 'Prix aux 100 g (€)', description: 'Vide : aucun montant n’est annoncé au client.', step: 0.01 }),
+                prixKg: fields.number({ label: 'Prix au kilo (€/kg)', description: 'Vide : aucun montant n’est annoncé au client.', step: 0.01 }),
               }),
               { label: 'Farces proposées sur les volailles entières', itemLabel: (p) => p.fields.nom.value },
             ),
             farceGrammes: fields.integer({
               label: 'Quantité de farce par volaille (g)',
-              description: 'Sert à calculer le prix de la farce : prix aux 100 g × cette quantité.',
+              description: 'Sert à calculer le prix de la farce par volaille : prix au kilo × cette quantité.',
               defaultValue: 500,
               validation: { min: 50, max: 3000 },
             }),

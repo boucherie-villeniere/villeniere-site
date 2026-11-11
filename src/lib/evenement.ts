@@ -4,7 +4,7 @@
 // Ce fichier est aussi chargé dans le navigateur : pas d'import de valeurs depuis data.ts.
 
 import { formaterPrix, prixCarte, UNITES_CARTE, type PlatCommandable, type ReglesRetrait } from './commande';
-import type { Carte, ClickCollect, FarceCarte, ProduitCarte, TempsFort } from './data';
+import { prixKgFarce, type Carte, type ClickCollect, type FarceCarte, type ProduitCarte, type TempsFort } from './data';
 
 export interface ProduitCommandable extends PlatCommandable {
   /** Texte d'aide : prix au kilo, précision… */
@@ -95,14 +95,17 @@ export function slugAvecOptions(slug: string, o: OptionsLigne) {
   return [slug, o.personnes != null && `p${o.personnes}`, o.poids != null && `k${o.poids}`, o.farce != null && `f${o.farce}`, o.sauce != null && `s${o.sauce}`].filter(Boolean).join('|');
 }
 
-/** Farces de la carte avec leur montant par volaille (prix aux 100 g × quantité de farce). */
+/** Farces de la carte avec leur montant par volaille (prix au kilo × quantité de farce). */
 export function farcesAvecPrix(carte?: Carte): FarceCarte[] {
   const grammes = carte?.farceGrammes ?? 500;
-  return (carte?.farces ?? []).map((f) => ({ ...f, supplement: f.prix100g ? arrondi((f.prix100g * grammes) / 100) : null }));
+  return (carte?.farces ?? []).map((f) => {
+    const kg = prixKgFarce(f);
+    return { ...f, prixKg: kg, supplement: kg ? arrondi((kg * grammes) / 1000) : null };
+  });
 }
 
 export const libelleFarce = (f: FarceCarte) =>
-  f.supplement && f.prix100g ? `${f.nom} · ${prixCarte(f.prix100g)} €/100 g, soit ≈ ${formaterPrix(f.supplement)}` : f.nom;
+  f.supplement && f.prixKg ? `${f.nom} · ${prixCarte(f.prixKg)} €/kg, soit ≈ ${formaterPrix(f.supplement)}` : f.nom;
 
 /** Reconstruit une ligne (nom, prix) depuis son identifiant ; null si les choix ne sont pas valables. */
 export function ligneDepuisSlug(produits: ProduitCommandable[], farces: FarceCarte[], slug: string): ProduitCommandable | null {
