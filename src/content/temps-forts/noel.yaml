@@ -430,7 +430,7 @@ carte:
           avecSauce: false
           allergenes: []
         - nom: Gratin dauphinois maison
-          prix: 15.9
+          prix: 16.9
           unite: kg
           prixVariantes: []
           commandable: true
@@ -441,8 +441,9 @@ carte:
           allergenes:
             - lait
         - nom: Sauce morille maison
-          detail: comprise avec le plat choisi
-          unite: kg
+          detail: (sachet de 500g)
+          prix: 12.5
+          unite: la-piece
           prixVariantes: []
           commandable: true
           saisie: poids
