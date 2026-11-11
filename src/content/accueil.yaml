@@ -1,17 +1,27 @@
 titre: Votre boucherie de quartier à Romainville
-sousTitre: Viandes d’éleveurs choisis, saucisses et farces faites maison, poulets rôtis à la broche… et des conseils, toujours.
-image: /images/accueil/facade.webp
+sousTitre: >-
+  Viandes d’éleveurs choisis, saucisses et farces faites maison, poulets rôtis à
+  la broche… et des conseils, toujours.
+image: /images/accueil/image.jpg
 engagements:
   - titre: Des élevages choisis
-    texte: Nous privilégions l’élevage en plein air et travaillons avec des producteurs que nous connaissons.
+    texte: >-
+      Nous privilégions l’élevage en plein air et travaillons avec des
+      producteurs que nous connaissons.
   - titre: Tout est fait maison
-    texte: Saucisses, farces, pâtés et plats cuisinés sont préparés chaque jour dans notre atelier.
+    texte: >-
+      Saucisses, farces, pâtés et plats cuisinés sont préparés chaque jour dans
+      notre atelier.
   - titre: Le conseil du boucher
-    texte: Une découpe sur mesure, une cuisson à réussir ? Demandez-nous, c’est notre métier.
+    texte: >-
+      Une découpe sur mesure, une cuisson à réussir ? Demandez-nous, c’est notre
+      métier.
 sections:
   - titre: La rôtissoire tourne
-    texte: |-
-      Poulets fermiers, grenailles dorées au jus, gratin dauphinois maison… Nos plats du jour sont à réserver en ligne et à retirer en boutique, sans attendre.
+    texte: >-
+      Poulets fermiers, grenailles dorées au jus, gratin dauphinois maison… Nos
+      plats du jour sont à réserver en ligne et à retirer en boutique, sans
+      attendre.
+
 
       Texte provisoire, à remplacer par celui de la boucherie.
-    image: ''
