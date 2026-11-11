@@ -365,7 +365,7 @@ carte:
       encadres: []
       colonnes: []
       produits:
-        - nom: Boudin blanc nature
+        - nom: Boudin blanc maison
           prix: 24.9
           unite: kg
           prixVariantes: []
@@ -375,7 +375,7 @@ carte:
           accompagnement: false
           avecSauce: false
           allergenes: []
-        - nom: Boudin blanc aux morilles
+        - nom: Boudin blanc aux morilles maison
           prix: 29.9
           unite: kg
           prixVariantes: []
