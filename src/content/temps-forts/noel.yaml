@@ -109,7 +109,7 @@ carte:
           allergenes: []
         - nom: Poularde de la ferme Tauzin
           detail: 4 à 6 pers.
-          prix: 25.9
+          prix: 27.5
           unite: kg
           prixVariantes: []
           commandable: true
@@ -122,7 +122,7 @@ carte:
           allergenes: []
         - nom: Chapon de la ferme Tauzin
           detail: 6 à 8 pers.
-          prix: 31.5
+          prix: 32.5
           unite: kg
           prixVariantes: []
           commandable: true
@@ -159,7 +159,7 @@ carte:
           allergenes: []
         - nom: Pintade chaponnée ferme Tauzin
           detail: 4 à 6 pers.
-          prix: 32.5
+          prix: 34.5
           unite: kg
           prixVariantes: []
           commandable: true
