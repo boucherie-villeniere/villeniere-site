@@ -394,11 +394,9 @@ carte:
           accompagnement: false
           avecSauce: false
           allergenes: []
-        - nom: Le Festif
-          detail: >-
-            Cochon du Perche, foie gras, magret de canard, confit d’échalotes
-            aux fruits secs
-          prix: 88
+        - nom: La Folie des Grandeurs
+          detail: Cochon, foie gras de canard, ris de veau au vin jaune, châtaignes
+          prix: 95
           unite: kg
           prixVariantes: []
           commandable: true
@@ -409,9 +407,9 @@ carte:
           allergenes: []
         - nom: Canard, pain d’épices, cranberries
           detail: >-
-            Cochon du Perche, canard sauvage, pain d’épices maison, cranberries,
-            noisettes torréfiées
-          prix: 85
+            Cochon, canard sauvage, pain d’épices maison, airelles, noisettes
+            torréfiées
+          prix: 88
           unite: kg
           prixVariantes: []
           commandable: true
