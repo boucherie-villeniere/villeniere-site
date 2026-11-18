@@ -436,8 +436,7 @@ carte:
           farce: false
           accompagnement: false
           avecSauce: false
-          allergenes:
-            - lait
+          allergenes: []
         - nom: Sauce morille maison
           detail: (sachet de 500g)
           prix: 12.5
