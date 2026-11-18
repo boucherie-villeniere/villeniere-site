@@ -376,7 +376,7 @@ carte:
           avecSauce: false
           allergenes: []
         - nom: Boudin blanc aux morilles maison
-          prix: 29.9
+          prix: 31.5
           unite: kg
           prixVariantes: []
           commandable: true
