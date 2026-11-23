@@ -21,9 +21,7 @@ texte: >-
   pensez à le préciser lors de votre commande.
 
 
-  Commandez en boutique, par téléphone ou par SMS. Pour accompagner ces plats,
-  Benjamin des Joyeuses Quilles vous a fait sa sélection de vins, à retrouver en
-  boutique.
+  Commandez en boutique, par téléphone ou par SMS.
 bouton:
   texte: Voir le menu de Noël
   lien: /noel#carte
