@@ -8,19 +8,19 @@ pages:
   nosProduits: true
 horaires:
   - jour: lun
-    plages: À compléter
+    plages: Fermé
   - jour: mar
-    plages: À compléter
+    plages: 9h - 19h30
   - jour: mer
-    plages: À compléter
+    plages: 9h - 19h30
   - jour: jeu
-    plages: À compléter
+    plages: 9h - 13h30 / 15h30 - 19h30
   - jour: ven
-    plages: À compléter
+    plages: 9h - 19h30
   - jour: sam
-    plages: À compléter
+    plages: 9h - 19h30
   - jour: dim
-    plages: À compléter
+    plages: 9h - 13h
 legal:
   raisonSociale: À compléter
   siret: À compléter
