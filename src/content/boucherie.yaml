@@ -1,15 +1,19 @@
 titre: La Villenière
-chapo: Une boucherie de quartier ouverte en 2020 à Romainville, par Christelle et son équipe.
-image: ''
+chapo: >-
+  Une boucherie de quartier ouverte en 2020 à Romainville, par Christelle. Comme
+  un air de campagne à la ville.
+image: /images/boucherie/image.jpg
 chapitres:
   - titre: Notre histoire
-    texte: |-
-      Texte provisoire : racontez ici l’origine du nom Villenière, l’ouverture de la boutique et ce qui vous anime.
-
-      Cette page est modifiable depuis l’espace d’administration.
-    image: ''
+    texte: >-
+      La Villenière est partie d'une idée folle, un défi que Christelle s'est
+      lancée après une longue carrière commerciale chez un créateur
+      d'accessoires de mode. 
   - titre: Le fait maison
-    texte: |-
-      Toutes nos saucisses sont des créations maison, embossées dans des boyaux naturels. Le porc que nous vendons est élevé en plein air, et c’est le même que nous utilisons pour toutes nos préparations : saucisses, pâtés, farces.
-    image: ''
+    texte: >-
+      Toutes nos saucisses sont des créations maison, embossées dans des boyaux
+      naturels. Le porc que nous vendons est élevé en plein air, et c’est le
+      même que nous utilisons pour toutes nos préparations : saucisses, pâtés,
+      farces.
+    image: /images/boucherie/chapitres/1/image.jpeg
 galerie: []
