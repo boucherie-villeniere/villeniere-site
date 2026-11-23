@@ -1,11 +1,18 @@
 nom: Poulet rôti fermier
 actif: true
-description: Poulet fermier rôti à la broche, arrosé de son jus.
+description: Poulet fermier rôti (Label Rouge). Petit calibre
 prix: 16.9
 unite: piece
-precision: env. 1,4 kg, pour 4 personnes
-image: ''
-jours: []
+precision: env. 0.9 kg, pour 3 à 4 personnes
+variantes:
+  - nom: Demi petit poulet
+    prix: 8.5
+jours:
+  - ven
+  - sam
+  - dim
 quantiteMax: 4
+memeJour:
+  actif: false
 allergenes: []
 ordre: 1
