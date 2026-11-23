@@ -1,3 +1,6 @@
+annonce: >-
+  La carte de Noël est disonible ! - Vous pouvez désormais commander directement
+  sur le site
 adresse: 89 avenue du Président Wilson
 codePostal: '93230'
 ville: Romainville
@@ -5,7 +8,7 @@ telephone: 01 41 71 88 02
 instagram: https://www.instagram.com/villeniere/
 pages:
   laBoucherie: true
-  nosProduits: true
+  nosProduits: false
 horaires:
   - jour: lun
     plages: Fermé
